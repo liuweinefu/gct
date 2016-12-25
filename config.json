@@ -1,0 +1,10 @@
+{
+    "db": {
+        "host": "localhost",
+        "user": "root",
+        "password": "liu6wei5",
+        "database": "jobwork",
+        "connectionLimit": 512,
+        "multipleStatements": true
+    }
+}
