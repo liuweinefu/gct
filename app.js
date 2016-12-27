@@ -12,9 +12,6 @@ global.mysqlPool = require('mysql').createPool(require('./config').db);
 global.allPrivileges = [];
 //项目添加******************************************************************
 
-var index = require('./routes/index');
-var users = require('./routes/users');
-
 
 var app = express();
 
@@ -42,20 +39,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 //初始化allPrivileges 及 xhr检测***************************************************************
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
     if (!allPrivileges) {
-        mysqlPool.getConnection(function (err, con) {
-            con.query('SELECT id,name,url,type FROM privileges', function (err, rows) {
+        mysqlPool.getConnection(function(err, con) {
+            con.query('SELECT id,name,url,type FROM privilege', function(err, rows) {
                 con.release();
-                if (err) { next(new Error('privileges 初始化错误')) };
+                if (err) { next(new Error('权限初始化错误')) };
                 allPrivileges = rows;
                 next();
             });
         });
-    } 
+    }
 });
 
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
     //req.xhr不能完全判断是否ajax请求，在之后的ajax请求处理时，强制约定设置res.locals.xhr
     res.locals.xhr = req.xhr;
     next();
@@ -65,7 +62,7 @@ app.use(function (req, res, next) {
 //初始化allPrivileges 及 xhr检测***************************************************************
 
 //登录权限检测***************************************************************
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
     // console.log("check login-----------start");
     // console.log(req.path);
     // console.log("check login-----------end");
@@ -103,7 +100,8 @@ app.use(function (req, res, next) {
 
 
 
-
+var index = require('./routes/index');
+var users = require('./routes/users');
 
 app.use('/', index);
 app.use('/users', users);
@@ -114,14 +112,14 @@ app.use('/users', users);
 
 
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
     var err = new Error('Not Found');
     err.status = 404;
     next(err);
 });
 
 //xhr模式回复错误
-app.use(function (err, req, res, next) {
+app.use(function(err, req, res, next) {
     if (req.xhr || res.locals.xhr) {
         return res.json({
             success: false,
@@ -134,7 +132,7 @@ app.use(function (err, req, res, next) {
 
 
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function(err, req, res, next) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
