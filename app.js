@@ -40,7 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //初始化allPrivileges 及 xhr检测***************************************************************
 app.use(function(req, res, next) {
-    if (!allPrivileges) {
+    if (allPrivileges.length === 0) {
         mysqlPool.getConnection(function(err, con) {
             con.query('SELECT id,name,url,type FROM privilege', function(err, rows) {
                 con.release();
@@ -49,6 +49,8 @@ app.use(function(req, res, next) {
                 next();
             });
         });
+    } else {
+        next();
     }
 });
 
