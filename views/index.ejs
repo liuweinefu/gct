@@ -1,11 +1,259 @@
 <!DOCTYPE html>
+
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-  </body>
+
+<head>
+    <meta charset="UTF-8">
+    <title>东北林业大学毕业生就业管理系统</title>
+    <link rel="stylesheet" type="text/css" href="./easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="./easyui/themes/icon.css">
+    <script type="text/javascript" src="./easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="./easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="./easyui/datagrid-cellediting.js"></script>
+    <script type="text/javascript" src="./easyui/locale/easyui-lang-zh_CN.js"></script>
+    <!--<script type="text/javascript" src="./javascripts/bluebird.min.js"></script>-->
+    <!--<script type="text/javascript" src="./jscode/webF.js"></script>-->
+    <!--<script type="text/javascript" src="./jscode/local.js"></script>-->
+
+
+</head>
+
+<body class="easyui-layout">
+    <div data-options="region:'north',title:'North Title',split:true" style="height:100px;"></div>
+    <div data-options="region:'south',title:'South Title',split:true" style="height:100px;"></div>
+    <div data-options="region:'east',iconCls:'icon-reload',title:'East',split:true" style="width:100px;"></div>
+    <div data-options="region:'west',title:'West',split:true" style="width:100px;"></div>
+    <div data-options="region:'center',title:'center title'" style="padding:5px;background:#eee;"></div>
+
+
+
+
+    <!--<div id="mainMenu"></div>
+    <div id="mainTab"></div>
+    <div id="mainWindow"></div>
+    <div id="mainImport"></div>
+    <div id="mainfooter"></div>-->
+
+
+    <div id="loginDialog" class="easyui-dialog" title="请登录" data-options="closed:true,closable: false," style="width:380px;height:250px;padding:10px">
+        <form id="loginForm" method="post">
+            <div style="margin-bottom:20px">
+                <input class="easyui-textbox" id="userName" name="userName" style="width:90%" data-options="label:'用户名:',required:true,type:'text'">
+            </div>
+            <div style="margin-bottom:20px">
+                <input class="easyui-textbox" id="userPass" name="userPass" style="width:90%" data-options="label:'密码:',required:true,type:'password'">
+            </div>
+            <div>
+                <p id="captchaPIC" style="text-align:center" onclick="login.captcha()">
+                </p>
+            </div>
+            <div style="margin-bottom:10px">
+                <input class="easyui-textbox" id="captcha" name="captcha" style="width:50%" data-options="label:'验证码:',required:true, ">
+                <a href="javascript:void(0)" class="easyui-linkbutton" onclick=" login.submit()" style="width:80px;float:right;margin-right:40px ">登录</a>
+            </div>
+        </form>
+    </div>
+
+
+    <script>
+        //初始化main变量
+        main = {};
+        main._addMainWindow = function(window) {}
+        main.openMainWindow = function(window) {
+            let mainWindow = $('#mainWindow');
+            mainWindow.window({
+                title: window.name,
+                width: 800,
+                height: 600,
+                collapsible: false,
+                minimizable: false,
+                maximizable: false,
+                modal: true,
+                href: window.url,
+                onClose: function() {
+                    //console.log('window close!');
+                }
+            });
+        }
+        main._addMainTab = function(tab) {
+            let mainTab = $('#mainTab');
+            mainTab.tabs('add', {
+                title: tab.name,
+                iconCls: tab.ico,
+                selected: true,
+                href: tab.url,
+                //closable: true
+            })
+        }
+        main.openMainTab = function(tab) {
+            let mainTab = $('#mainTab').tabs({
+                plain: true,
+                narrow: true,
+                height: 500,
+            });
+            let thisTab = mainTab.tabs('getTab', tab.name);
+            if (isEmpty(thisTab)) {
+                this._addMainTab(tab);
+            } else {
+                mainTab.tabs('select', tab.name)
+            }
+            //console.log('selectMainTab');
+        }
+        main.setUser = function(user) {
+            //console.log('setUser');
+        }
+
+        main.setMenu = function(menus) {
+            //console.log('setMenu');
+            //console.log(menus);
+            let mainMenu = $('#mainMenu').tabs();
+            //mainMenu.panel('clear');
+            for (let i = 0, maxT = mainMenu.tabs('tabs').length; i < maxT; i++) {
+                mainMenu.tabs('close', 0);
+            }
+            mainMenu.tabs({
+                plain: true,
+                narrow: true
+            })
+            let selectTab = null;
+            for (let item of menus) {
+                if (item.url === '') {
+                    mainMenu.tabs('add', {
+                        title: item.name,
+                        selected: true,
+                        closable: false
+                    })
+                    selectTab = mainMenu.tabs('getSelected');
+                } else {
+                    let lb = $('<div></div>');
+                    lb.linkbutton({
+                        size: 'large',
+                        text: item.name,
+                        onClick: function() {
+                            main.openMainWindow(item);
+                            return;
+                        },
+                    });
+                    if (selectTab === null) {
+                        mainMenu.tabs('add', {
+                            title: '菜单',
+                            iconCls: 'icon-large-smartart',
+                            selected: true,
+                            closable: false
+                        })
+                        selectTab = mainMenu.tabs('getSelected');
+                        lb.appendTo(selectTab);
+                    } else {
+                        lb.appendTo(selectTab);
+                    }
+                }
+            }
+        };
+        main.setTab = function(tabs) {
+            // console.log("setTab");
+            for (let item of tabs) {
+                if (item.url !== '') {
+                    main.openMainTab(item);
+                }
+            }
+            //console.log(tabs);
+
+        }
+        main.init = function(data) {
+                main.setUser(data.user);
+                main.setMenu(data.menus);
+                main.setTab(data.tabs);
+
+            }
+            // main.loginSubmit = function() {
+            //     console.log("I'm login.Submit");
+            //     $('#loginForm').form('submit', {
+            //         url: '/login',
+            //         success: function(data) {
+            //             data = $.parseJSON(data)
+            //             console.log('authentication:' + data.authentication);
+            //             $('#authentication').textbox('setValue', data.authentication);
+            //             //alert(data);
+            //             if (data.success) {
+            //                 main.init(data);
+            //                 $('#loginDialog').window('close');
+            //                 //console.log('setMenu2');
+            //             }
+
+        //         }
+        //     });
+        // }
+
+
+        login = {};
+        login.captcha = function() {
+            //console.log('setCaptcha');
+            $.post('login/captcha', {}, function(data) {
+                // $.parseJSON(data);
+                $('#captchaPIC').html(data.captcha);
+            });
+
+        };
+        login.submit = function() {
+            //console.log("I'm login.Submit");
+            $('#loginForm').form('submit', {
+                url: '/login',
+                success: function(data) {
+                    data = $.parseJSON(data);
+                    //console.log('authentication:' + data.authentication);
+                    //$('#authentication').textbox('setValue', data.authentication);
+                    //alert(data);
+                    if (data.success) {
+                        main.init(data);
+                        $('#loginDialog').window('close');
+                        //console.log('setMenu2');
+                    } else {
+                        function escape2Html(str) {
+                            var arrEntities = {
+                                'lt': '<',
+                                'gt': '>',
+                                'nbsp': ' ',
+                                'amp': '&',
+                                'quot': '"'
+                            };
+                            return str.replace(/&(lt|gt|nbsp|amp|quot);/ig, function(all, t) {
+                                return arrEntities[t];
+                            });
+                        }
+                        //console.log(data.message);
+                        $('#loginDialog').dialog('setTitle', '请登录&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' + data.message);
+                        $('#captchaPIC').html(escape2Html(data.captcha));
+                    }
+
+                }
+            });
+        }
+
+        //dom加载后开始执行
+        $(function() {
+
+            $.post('/login', {}, function(data) {
+                //let value = $.parseJSON(data);
+                if (data.success) {
+                    main.init(data);
+                } else {
+                    //$('#authentication').textbox('setValue', data.authentication);
+                    //console.log(data);
+                    $('#loginDialog').dialog('setTitle', '请登录&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' + data.message);
+                    $('#captchaPIC').html(data.captcha);
+                    $('#loginDialog').window('open');
+
+                    //响应回车，提交表单
+                    $('#loginDialog').window('window').keydown(function(e) {
+                        if (e.key === 'Enter') {
+                            login.submit();
+                        }
+                    });
+                }
+            })
+
+        })
+    </script>
+</body>
+
 </html>
