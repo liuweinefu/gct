@@ -9,6 +9,8 @@ var bodyParser = require('body-parser');
 //项目添加******************************************************************
 global.Promise = require('bluebird');
 global.mysqlPool = require('mysql').createPool(require('./config').db);
+mysqlPool.getConnectionAsync = Promise.promisify(mysqlPool.getConnection);
+global.F = require('./baseFunction');
 global.allPrivileges = [];
 //项目添加******************************************************************
 

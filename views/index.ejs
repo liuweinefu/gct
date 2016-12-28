@@ -19,13 +19,17 @@
 </head>
 
 <body class="easyui-layout">
-    <div data-options="region:'north',title:'North Title',split:true" style="height:100px;"></div>
-    <div data-options="region:'south',title:'South Title',split:true" style="height:100px;"></div>
-    <div data-options="region:'east',iconCls:'icon-reload',title:'East',split:true" style="width:100px;"></div>
-    <div data-options="region:'west',title:'West',split:true" style="width:100px;"></div>
-    <div data-options="region:'center',title:'center title'" style="padding:5px;background:#eee;"></div>
-
-
+    <!--<div data-options="region:'north',title:'North Title',split:true" style="height:100px;"></div>-->
+    <div data-options="region:'south'" style="height:50px;">gct 2016-</div>
+    <!--<div data-options="region:'east',iconCls:'icon-reload',title:'East',split:true" style="width:100px;"></div>-->
+    <div data-options="region:'west',title:'菜单',split:true" style="width:100px;">
+        <div id="mainMenu"></div>
+    </div>
+    <div data-options="region:'center'" style="padding:5px;background:#eee;">
+        <div id="mainTab"></div>
+    </div>
+    <div id="mainfooter"></div>
+    <!--<body>-->
 
 
     <!--<div id="mainMenu"></div>
@@ -35,7 +39,7 @@
     <div id="mainfooter"></div>-->
 
 
-    <div id="loginDialog" class="easyui-dialog" title="请登录" data-options="closed:true,closable: false," style="width:380px;height:250px;padding:10px">
+    <div id="loginDialog" class="easyui-dialog" title="请登录" data-options="closed:<%- closeLoginDialog %>,closable: false," style="width:380px;height:250px;padding:10px">
         <form id="loginForm" method="post">
             <div style="margin-bottom:20px">
                 <input class="easyui-textbox" id="userName" name="userName" style="width:90%" data-options="label:'用户名:',required:true,type:'text'">
@@ -45,6 +49,7 @@
             </div>
             <div>
                 <p id="captchaPIC" style="text-align:center" onclick="login.captcha()">
+                    <%- captchaPIC %>
                 </p>
             </div>
             <div style="margin-bottom:10px">
@@ -58,23 +63,23 @@
     <script>
         //初始化main变量
         main = {};
-        main._addMainWindow = function(window) {}
-        main.openMainWindow = function(window) {
-            let mainWindow = $('#mainWindow');
-            mainWindow.window({
-                title: window.name,
-                width: 800,
-                height: 600,
-                collapsible: false,
-                minimizable: false,
-                maximizable: false,
-                modal: true,
-                href: window.url,
-                onClose: function() {
-                    //console.log('window close!');
-                }
-            });
-        }
+        // main._addMainWindow = function(window) {}
+        // main.openMainWindow = function(window) {
+        //     let mainWindow = $('#mainWindow');
+        //     mainWindow.window({
+        //         title: window.name,
+        //         width: 800,
+        //         height: 600,
+        //         collapsible: false,
+        //         minimizable: false,
+        //         maximizable: false,
+        //         modal: true,
+        //         href: window.url,
+        //         onClose: function() {
+        //             //console.log('window close!');
+        //         }
+        //     });
+        // }
         main._addMainTab = function(tab) {
             let mainTab = $('#mainTab');
             mainTab.tabs('add', {
@@ -104,8 +109,6 @@
         }
 
         main.setMenu = function(menus) {
-            //console.log('setMenu');
-            //console.log(menus);
             let mainMenu = $('#mainMenu').tabs();
             //mainMenu.panel('clear');
             for (let i = 0, maxT = mainMenu.tabs('tabs').length; i < maxT; i++) {
@@ -136,7 +139,7 @@
                     });
                     if (selectTab === null) {
                         mainMenu.tabs('add', {
-                            title: '菜单',
+                            title: '基本菜单',
                             iconCls: 'icon-large-smartart',
                             selected: true,
                             closable: false
@@ -160,35 +163,16 @@
 
         }
         main.init = function(data) {
-                main.setUser(data.user);
-                main.setMenu(data.menus);
-                main.setTab(data.tabs);
-
-            }
-            // main.loginSubmit = function() {
-            //     console.log("I'm login.Submit");
-            //     $('#loginForm').form('submit', {
-            //         url: '/login',
-            //         success: function(data) {
-            //             data = $.parseJSON(data)
-            //             console.log('authentication:' + data.authentication);
-            //             $('#authentication').textbox('setValue', data.authentication);
-            //             //alert(data);
-            //             if (data.success) {
-            //                 main.init(data);
-            //                 $('#loginDialog').window('close');
-            //                 //console.log('setMenu2');
-            //             }
-
-        //         }
-        //     });
-        // }
+            main.setUser(data.user);
+            main.setMenu(data.menus);
+            main.setTab(data.tabs);
+        }
 
 
         login = {};
         login.captcha = function() {
             //console.log('setCaptcha');
-            $.post('login/captcha', {}, function(data) {
+            $.post('/captcha', {}, function(data) {
                 // $.parseJSON(data);
                 $('#captchaPIC').html(data.captcha);
             });
@@ -197,7 +181,7 @@
         login.submit = function() {
             //console.log("I'm login.Submit");
             $('#loginForm').form('submit', {
-                url: '/login',
+                url: '/',
                 success: function(data) {
                     data = $.parseJSON(data);
                     //console.log('authentication:' + data.authentication);
@@ -221,8 +205,12 @@
                             });
                         }
                         //console.log(data.message);
-                        $('#loginDialog').dialog('setTitle', '请登录&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' + data.message);
-                        $('#captchaPIC').html(escape2Html(data.captcha));
+                        $.messager.alert('登录错误', data.message, 'info', function() {
+                            $('#captchaPIC').html(escape2Html(data.captcha));
+                            $('#loginDialog').dialog('open');
+                        });
+                        // $('#loginDialog').dialog('setTitle', '请登录&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' + data.message);
+                        // $('#captchaPIC').html(escape2Html(data.captcha));
                     }
 
                 }
@@ -231,26 +219,52 @@
 
         //dom加载后开始执行
         $(function() {
-
-            $.post('/login', {}, function(data) {
-                //let value = $.parseJSON(data);
-                if (data.success) {
-                    main.init(data);
-                } else {
-                    //$('#authentication').textbox('setValue', data.authentication);
-                    //console.log(data);
-                    $('#loginDialog').dialog('setTitle', '请登录&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' + data.message);
-                    $('#captchaPIC').html(data.captcha);
-                    $('#loginDialog').window('open');
-
-                    //响应回车，提交表单
-                    $('#loginDialog').window('window').keydown(function(e) {
-                        if (e.key === 'Enter') {
-                            login.submit();
-                        }
-                    });
+            //响应回车，提交表单
+            $('#loginDialog').dialog('window').keydown(function(e) {
+                if (e.key === 'Enter') {
+                    login.submit();
                 }
-            })
+            });
+
+
+            if ($('#loginDialog').dialog('options').closed) {
+                $.post('/', {}, function(data) {
+                    if (data.success) {
+                        $('#loginDialog').dialog('close');
+                        main.init(data);
+                    } else {
+                        $.messager.alert('登录错误', data.message, 'info', function() {
+                            $('#captchaPIC').html(data.captcha);
+                            $('#loginDialog').dialog('open');
+                        });
+                        //window.location.reload();
+                        //location.reload();
+                    }
+                })
+            }
+
+
+
+
+            // $.post('/login', {}, function(data) {
+            //     //let value = $.parseJSON(data);
+            //     if (data.success) {
+            //         main.init(data);
+            //     } else {
+            //         //$('#authentication').textbox('setValue', data.authentication);
+            //         //console.log(data);
+            //         $('#loginDialog').dialog('setTitle', '请登录&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' + data.message);
+            //         $('#captchaPIC').html(data.captcha);
+            //         $('#loginDialog').window('open');
+
+            //         //响应回车，提交表单
+            //         $('#loginDialog').window('window').keydown(function(e) {
+            //             if (e.key === 'Enter') {
+            //                 login.submit();
+            //             }
+            //         });
+            //     }
+            // })
 
         })
     </script>

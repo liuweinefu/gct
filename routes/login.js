@@ -1,23 +1,18 @@
 var express = require('express');
 var router = express.Router();
-//var crypto = require('crypto');
 var md5 = require('md5');
-var svgCaptcha = require('svg-captcha');
 
-//GET lgin操作模板
-/*
-router.get('/*', function(req, res) {
-    console.log(":/login get");
-    //res.sendFile('login.html', { root: __dirname + '/../template', });
-    //res.sendFile('login.html', { root: './template' });
+//GET login操作模板
+router.get(function(req, res) {
+    res.redirect('/');
 })
-*/
+
 
 
 //根据post内容进行认证
 router.post('/', function(req, res, next) {
     //已登录则返回user
-    if(req.session.isLogin === true){
+    if (req.session.isLogin === true) {
         return res.json({
             success: true,
             message: '登录成功',
@@ -34,7 +29,7 @@ router.post('/', function(req, res, next) {
         return res.json({
             success: false,
             message: '用户名不能为空',
-            captcha: _captcha(req),
+            captcha: F.captcha(req),
         });
 
     };
@@ -42,7 +37,7 @@ router.post('/', function(req, res, next) {
         return res.json({
             success: false,
             message: '密码不能为空',
-            captcha: _captcha(req),
+            captcha: F.captcha(req),
         });
 
     };
@@ -50,7 +45,7 @@ router.post('/', function(req, res, next) {
         return res.json({
             success: false,
             message: '验证码不能为空',
-            captcha: _captcha(req),
+            captcha: F.captcha(req),
         });
     };
 
@@ -59,7 +54,7 @@ router.post('/', function(req, res, next) {
         return res.json({
             success: false,
             message: '验证码错误',
-            captcha: _captcha(req),
+            captcha: F.captcha(req),
         });
 
     };
@@ -77,7 +72,7 @@ router.post('/', function(req, res, next) {
         })
         .then(function(rows) {
             currentCon.release();
-            if ( rows.length !== 1) {
+            if (rows.length !== 1) {
                 return Promise.reject(new Error('view_user_role'));
             } else {
                 let role = rows[0];
@@ -121,21 +116,21 @@ router.post('/', function(req, res, next) {
 });
 
 
-function _captcha(req) {
-    let captcha = svgCaptcha.create({
-        size: 4, // 驗證碼長度
-        ignoreChars: '0o1il', // 驗證碼字符中排除 0o1il
-        noise: 1, // 干擾綫條的數量
-        color: true, // 驗證碼的字符有顔色
-        //background: '#cc9966' // 驗證碼圖片背景顔色
-    });
-    req.session.captcha = captcha.text;
-    return captcha.data;
-};
+// function _captcha(req) {
+//     let captcha = svgCaptcha.create({
+//         size: 4, // 驗證碼長度
+//         ignoreChars: '0o1il', // 驗證碼字符中排除 0o1il
+//         noise: 1, // 干擾綫條的數量
+//         color: true, // 驗證碼的字符有顔色
+//         //background: '#cc9966' // 驗證碼圖片背景顔色
+//     });
+//     req.session.captcha = captcha.text;
+//     return captcha.data;
+// };
 
 router.post('/captcha', function(req, res) {
     res.json({
-        captcha: _captcha(req),
+        captcha: F.captcha(req),
     });
 });
 
