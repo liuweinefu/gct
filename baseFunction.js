@@ -14,4 +14,6 @@ function captcha(req) {
 
 
 
-module.exports = { captcha: captcha, };
+module.exports = {
+    captcha: captcha,
+};

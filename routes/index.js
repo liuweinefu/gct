@@ -4,31 +4,22 @@ var md5 = require('md5');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-    res.locals.closeLoginDialog = true;
-    if (req.session.hasLogged !== true) {
-        res.locals.closeLoginDialog = false;
-        res.render('index', {
-            captchaPIC: F.captcha(req),
-        });
-    } else {
-        res.render('index');
-    }
+    res.render('index');
     //res.render('index', { title: 'Express' });
-
 });
 
 router.post('/', function(req, res, next) {
+    res.locals.xhr = true;
+    //console.log(req.xhr);
     //已登录则返回user
     if (req.session.hasLogged === true) {
-        return res.json({
+        res.json({
             success: true,
             message: '登录成功',
-            user: {
-                name: req.session.user.name,
-                role: req.session.user.role_name
-            },
-            menus: req.session.menus
+            user: req.session.user,
+            menus: req.session.menus,
         });
+        return;
     }
 
     //登录数据项不能有空项
@@ -57,7 +48,7 @@ router.post('/', function(req, res, next) {
     };
 
     //验证码错误
-    if (req.body.captcha.toUpperCase() !== req.session.captcha.toUpperCase()) {
+    if (!req.session.captcha || req.body.captcha.toUpperCase() !== req.session.captcha.toUpperCase()) {
         return res.json({
             success: false,
             message: '验证码错误',
@@ -71,52 +62,57 @@ router.post('/', function(req, res, next) {
     let userPass = md5(req.body.userPass);
 
     let currentCon = null;
-    return mysqlPool.getConnectionAsync()
+    mysqlPool.getConnectionAsync()
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('SELECT id,name,role_id,role_name,phone,other_contacts,remark,last_login_time,menus,privileges FROM view_user_role WHERE name= ? and pass = ?', [userName, userPass]);
+            return currentCon.queryAsync('SELECT id,name,phone,other_contacts,last_login_time,remark,user_role_name,menus,privileges,base_wage,deduction_wage FROM view_user WHERE name= ? and pass = ?', [userName, userPass]);
         })
         .then(function(rows) {
-            currentCon.release();
-            if (rows.length !== 1) {
-                return Promise.reject(new Error('view_user_role'));
-            } else {
-                let role = rows[0];
-                let menus = [];
-                let privileges = [];
-                for (let i in allPrivileges) {
-                    if (role.menus === 'all') {
-                        if (allPrivileges[i].type === 'menu') {
-                            menus.push(allPrivileges[i]);
-                        }
-                    } else if (role.menus.indexOf(allPrivileges[i].id) !== -1) {
+            if (rows.length !== 1) { return Promise.reject(new Error('用户错误')); }
+            let user = rows[0];
+            let menus = [];
+            let privileges = [];
+            for (let i in allPrivileges) {
+                if (user.menus === 'all') {
+                    if (allPrivileges[i].type === 'menu') {
                         menus.push(allPrivileges[i]);
                     }
-
-                    if (role.privileges === 'all') {
-                        privileges.push(allPrivileges[i].url);
-                    } else if (role.privileges.indexOf(allPrivileges[i].id) !== -1) {
-                        privileges.push(allPrivileges[i].url);
-                    }
+                } else if (user.menus.indexOf(allPrivileges[i].id) !== -1) {
+                    menus.push(allPrivileges[i]);
                 }
 
-                req.session.menus = menus;
-                req.session.privileges = privileges;
-                req.session.hasLogged = true;
-                return res.json({
-                    success: true,
-                    message: '登录成功',
-                    user: {
-                        name: req.session.user.name,
-                        role: req.session.user.role_name
-                    },
-                    menus: req.session.menus,
-                });
+                if (user.privileges === 'all') {
+                    privileges.push(allPrivileges[i].url);
+                } else if (user.privileges.indexOf(allPrivileges[i].id) !== -1) {
+                    privileges.push(allPrivileges[i].url);
+                }
             }
 
+            req.session.hasLogged = true;
+            req.session.user = Object.assign({}, user); //浅层拷贝
+            delete req.session.user.menus;
+            delete req.session.user.privileges;
+            req.session.menus = menus;
+            req.session.privileges = privileges;
+            return currentCon.queryAsync('UPDATE user SET last_login_time=? WHERE id= ? ', [new Date(), req.session.user.id]);
+        })
+        .then(function(row) {
+            currentCon.release();
+            if (row.changedRows !== 1) { return Promise.reject(new Error('登陆时间更新错误')); }
+            res.json({
+                success: true,
+                message: '登录成功',
+                user: req.session.user,
+                menus: req.session.menus,
+            });
+            return;
         })
         .catch(function(err) {
+            req.session.destroy(function(destoy_err) {
+                // next(new Error('destroy err'));
+                console.err(destoy_err);
+            });
             next(err);
         });
 

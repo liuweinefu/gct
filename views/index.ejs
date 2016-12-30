@@ -22,8 +22,9 @@
     <!--<div data-options="region:'north',title:'North Title',split:true" style="height:100px;"></div>-->
     <div data-options="region:'south'" style="height:50px;">gct 2016-</div>
     <!--<div data-options="region:'east',iconCls:'icon-reload',title:'East',split:true" style="width:100px;"></div>-->
-    <div data-options="region:'west',title:'菜单',split:true" style="width:100px;">
-        <div id="mainMenu"></div>
+    <div data-options="region:'west',title:'菜单',split:true" style="width:150px;">
+        <ul id="mainMenu"></ul>
+        <!--<div id="mainMenu"></div>-->
     </div>
     <div data-options="region:'center'" style="padding:5px;background:#eee;">
         <div id="mainTab"></div>
@@ -39,7 +40,7 @@
     <div id="mainfooter"></div>-->
 
 
-    <div id="loginDialog" class="easyui-dialog" title="请登录" data-options="closed:<%- closeLoginDialog %>,closable: false," style="width:380px;height:250px;padding:10px">
+    <div id="loginDialog" class="easyui-dialog" title="请登录" data-options="closed:true,closable: false," style="width:380px;height:250px;padding:10px">
         <form id="loginForm" method="post">
             <div style="margin-bottom:20px">
                 <input class="easyui-textbox" id="userName" name="userName" style="width:90%" data-options="label:'用户名:',required:true,type:'text'">
@@ -48,9 +49,7 @@
                 <input class="easyui-textbox" id="userPass" name="userPass" style="width:90%" data-options="label:'密码:',required:true,type:'password'">
             </div>
             <div>
-                <p id="captchaPIC" style="text-align:center" onclick="login.captcha()">
-                    <%- captchaPIC %>
-                </p>
+                <p id="captchaPIC" style="text-align:center" onclick="login.captcha()"> </p>
             </div>
             <div style="margin-bottom:10px">
                 <input class="easyui-textbox" id="captcha" name="captcha" style="width:50%" data-options="label:'验证码:',required:true, ">
@@ -80,92 +79,133 @@
         //         }
         //     });
         // }
-        main._addMainTab = function(tab) {
-            let mainTab = $('#mainTab');
-            mainTab.tabs('add', {
-                title: tab.name,
-                iconCls: tab.ico,
-                selected: true,
-                href: tab.url,
-                //closable: true
-            })
-        }
-        main.openMainTab = function(tab) {
-            let mainTab = $('#mainTab').tabs({
-                plain: true,
-                narrow: true,
-                height: 500,
-            });
-            let thisTab = mainTab.tabs('getTab', tab.name);
-            if (isEmpty(thisTab)) {
-                this._addMainTab(tab);
-            } else {
-                mainTab.tabs('select', tab.name)
-            }
-            //console.log('selectMainTab');
-        }
+        // main._addMainTab = function(tab) {
+        //     let mainTab = $('#mainTab');
+        //     mainTab.tabs('add', {
+        //         title: tab.name,
+        //         iconCls: tab.ico,
+        //         selected: true,
+        //         href: tab.url,
+        //         //closable: true
+        //     })
+        // }
+        // main.openMainTab = function(tab) {
+        //     let mainTab = $('#mainTab').tabs({
+        //         plain: true,
+        //         narrow: true,
+        //         height: 500,
+        //     });
+        //     let thisTab = mainTab.tabs('getTab', tab.name);
+        //     if (isEmpty(thisTab)) {
+        //         this._addMainTab(tab);
+        //     } else {
+        //         mainTab.tabs('select', tab.name)
+        //     }
+        //     //console.log('selectMainTab');
+        // }
         main.setUser = function(user) {
             //console.log('setUser');
         }
-
         main.setMenu = function(menus) {
-            let mainMenu = $('#mainMenu').tabs();
-            //mainMenu.panel('clear');
-            for (let i = 0, maxT = mainMenu.tabs('tabs').length; i < maxT; i++) {
-                mainMenu.tabs('close', 0);
+            function _setTree(tree, item) {
+                tree.id = item.id;
+                tree.text = item.name;
+                tree.attributes = {
+                    url: item.url
+                };
+                tree.children = [];
             }
-            mainMenu.tabs({
-                plain: true,
-                narrow: true
-            })
-            let selectTab = null;
-            for (let item of menus) {
-                if (item.url === '') {
-                    mainMenu.tabs('add', {
-                        title: item.name,
-                        selected: true,
-                        closable: false
-                    })
-                    selectTab = mainMenu.tabs('getSelected');
-                } else {
-                    let lb = $('<div></div>');
-                    lb.linkbutton({
-                        size: 'large',
-                        text: item.name,
-                        onClick: function() {
-                            main.openMainWindow(item);
-                            return;
-                        },
-                    });
-                    if (selectTab === null) {
-                        mainMenu.tabs('add', {
-                            title: '基本菜单',
-                            iconCls: 'icon-large-smartart',
-                            selected: true,
-                            closable: false
-                        })
-                        selectTab = mainMenu.tabs('getSelected');
-                        lb.appendTo(selectTab);
-                    } else {
-                        lb.appendTo(selectTab);
-                    }
-                }
-            }
-        };
-        main.setTab = function(tabs) {
-            // console.log("setTab");
-            for (let item of tabs) {
-                if (item.url !== '') {
-                    main.openMainTab(item);
-                }
-            }
-            //console.log(tabs);
 
-        }
+            function _mountTree(tree, item) {
+                let node = {};
+                node.id = item.id;
+                node.text = item.name;
+                node.attributes = {
+                    url: item.url
+                };
+                tree.children.push(node);
+            }
+
+
+            let list = [];
+            let tree = {};
+            for (item of menus) {
+                if (!item.url) {
+                    if (Object.keys(tree).length === 0) {
+                        _setTree(tree, item);
+                    } else {
+                        list.push(tree);
+                        tree = {};
+                        _setTree(tree, item);
+                    }
+                } else {
+                    _mountTree(tree, item)
+                }
+            }
+            //初始化菜单
+            $('#mainMenu').tree({
+                data: list
+            });
+
+
+
+            // let mainMenu = $('#mainMenu').tabs();
+            // //mainMenu.panel('clear');
+            // for (let i = 0, maxT = mainMenu.tabs('tabs').length; i < maxT; i++) {
+            //     mainMenu.tabs('close', 0);
+            // }
+            // mainMenu.tabs({
+            //     plain: true,
+            //     narrow: true
+            // })
+            // let selectTab = null;
+            // for (let item of menus) {
+            //     if (item.url === '') {
+            //         mainMenu.tabs('add', {
+            //             title: item.name,
+            //             selected: true,
+            //             closable: false
+            //         })
+            //         selectTab = mainMenu.tabs('getSelected');
+            //     } else {
+            //         let lb = $('<div></div>');
+            //         lb.linkbutton({
+            //             size: 'large',
+            //             text: item.name,
+            //             onClick: function() {
+            //                 main.openMainWindow(item);
+            //                 return;
+            //             },
+            //         });
+            //         if (selectTab === null) {
+            //             mainMenu.tabs('add', {
+            //                 title: '基本菜单',
+            //                 iconCls: 'icon-large-smartart',
+            //                 selected: true,
+            //                 closable: false
+            //             })
+            //             selectTab = mainMenu.tabs('getSelected');
+            //             lb.appendTo(selectTab);
+            //         } else {
+            //             lb.appendTo(selectTab);
+            //         }
+            //     }
+            // }
+        };
+        // main.setTab = function(tabs) {
+        //     // console.log("setTab");
+        //     for (let item of tabs) {
+        //         if (item.url !== '') {
+        //             main.openMainTab(item);
+        //         }
+        //     }
+        //     //console.log(tabs);
+
+        // }
         main.init = function(data) {
             main.setUser(data.user);
             main.setMenu(data.menus);
-            main.setTab(data.tabs);
+            // main.setTab(data.tabs);
         }
 
 
@@ -184,13 +224,9 @@
                 url: '/',
                 success: function(data) {
                     data = $.parseJSON(data);
-                    //console.log('authentication:' + data.authentication);
-                    //$('#authentication').textbox('setValue', data.authentication);
-                    //alert(data);
                     if (data.success) {
                         main.init(data);
-                        $('#loginDialog').window('close');
-                        //console.log('setMenu2');
+                        $('#loginDialog').dialog('close');
                     } else {
                         function escape2Html(str) {
                             var arrEntities = {
@@ -204,13 +240,10 @@
                                 return arrEntities[t];
                             });
                         }
-                        //console.log(data.message);
                         $.messager.alert('登录错误', data.message, 'info', function() {
                             $('#captchaPIC').html(escape2Html(data.captcha));
                             $('#loginDialog').dialog('open');
                         });
-                        // $('#loginDialog').dialog('setTitle', '请登录&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' + data.message);
-                        // $('#captchaPIC').html(escape2Html(data.captcha));
                     }
 
                 }
@@ -226,45 +259,17 @@
                 }
             });
 
-
-            if ($('#loginDialog').dialog('options').closed) {
-                $.post('/', {}, function(data) {
-                    if (data.success) {
-                        $('#loginDialog').dialog('close');
-                        main.init(data);
-                    } else {
-                        $.messager.alert('登录错误', data.message, 'info', function() {
-                            $('#captchaPIC').html(data.captcha);
-                            $('#loginDialog').dialog('open');
-                        });
-                        //window.location.reload();
-                        //location.reload();
-                    }
-                })
-            }
+            $.post('/', {}, function(data) {
+                if (data.success) {
+                    main.init(data);
+                    $('#loginDialog').dialog('close');
+                } else {
+                    $('#captchaPIC').html(data.captcha);
+                    $('#loginDialog').dialog('open');
+                }
+            })
 
 
-
-
-            // $.post('/login', {}, function(data) {
-            //     //let value = $.parseJSON(data);
-            //     if (data.success) {
-            //         main.init(data);
-            //     } else {
-            //         //$('#authentication').textbox('setValue', data.authentication);
-            //         //console.log(data);
-            //         $('#loginDialog').dialog('setTitle', '请登录&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' + data.message);
-            //         $('#captchaPIC').html(data.captcha);
-            //         $('#loginDialog').window('open');
-
-            //         //响应回车，提交表单
-            //         $('#loginDialog').window('window').keydown(function(e) {
-            //             if (e.key === 'Enter') {
-            //                 login.submit();
-            //             }
-            //         });
-            //     }
-            // })
 
         })
     </script>
