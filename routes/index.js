@@ -24,36 +24,39 @@ router.post('/', function(req, res, next) {
 
     //登录数据项不能有空项
     if (!req.body.userName) {
-        return res.json({
+        res.json({
             success: false,
             message: '用户名不能为空',
             captcha: F.captcha(req),
         });
+         return;
 
     };
     if (!req.body.userPass) {
-        return res.json({
+        res.json({
             success: false,
             message: '密码不能为空',
             captcha: F.captcha(req),
         });
-
+return ;
     };
     if (!req.body.captcha) {
-        return res.json({
+         res.json({
             success: false,
             message: '验证码不能为空',
             captcha: F.captcha(req),
         });
+        return;
     };
 
     //验证码错误
     if (!req.session.captcha || req.body.captcha.toUpperCase() !== req.session.captcha.toUpperCase()) {
-        return res.json({
+        res.json({
             success: false,
             message: '验证码错误',
             captcha: F.captcha(req),
         });
+         return;
 
     };
 

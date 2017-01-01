@@ -123,7 +123,13 @@
                 node.attributes = {
                     url: item.url
                 };
-                tree.children.push(node);
+                if(Array.isArray(tree.children)){
+  tree.children.push(node);
+                }else{
+                    $.messager.alert('初始化错误', '菜单载入错误', 'info', function() {
+console.log('后台数据库错误');
+                        });
+              }
             }
 
 
@@ -143,8 +149,34 @@
                 }
             }
             //初始化菜单
-            $('#mainMenu').tree({
-                data: list
+            $('#mainMenu').tree({                
+                data: list,
+                onClick: function(node){
+                    console.log(node);
+                    if($('#mainMenu').tree('isLeaf',node.target)){
+                                //     let mainTab = $('#mainTab').tabs({
+        //         plain: true,
+        //         narrow: true,
+        //         height: 500,
+        //     });
+        //     let thisTab = mainTab.tabs('getTab', tab.name);
+        //     if (isEmpty(thisTab)) {
+        //         this._addMainTab(tab);
+        //     } else {
+        //         mainTab.tabs('select', tab.name)
+        //     }
+                        //打开tab
+                    }else{
+                        if(node.state === 'open'){
+                            $('#mainMenu').tree('collapseAll',node.target)     
+                        }else{
+                            $('#mainMenu').tree('expandAll',node.target)    
+                        }
+                   
+                    }
+
+	            },
+
             });
 
 
