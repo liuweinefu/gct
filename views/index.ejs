@@ -79,34 +79,29 @@
         //         }
         //     });
         // }
-        // main._addMainTab = function(tab) {
-        //     let mainTab = $('#mainTab');
-        //     mainTab.tabs('add', {
-        //         title: tab.name,
-        //         iconCls: tab.ico,
-        //         selected: true,
-        //         href: tab.url,
-        //         //closable: true
-        //     })
-        // }
-        // main.openMainTab = function(tab) {
-        //     let mainTab = $('#mainTab').tabs({
-        //         plain: true,
-        //         narrow: true,
-        //         height: 500,
-        //     });
-        //     let thisTab = mainTab.tabs('getTab', tab.name);
-        //     if (isEmpty(thisTab)) {
-        //         this._addMainTab(tab);
-        //     } else {
-        //         mainTab.tabs('select', tab.name)
-        //     }
-        //     //console.log('selectMainTab');
-        // }
+        main._addMainTab = function(tab) {
+            if (tab.closeable === undefined) {
+                tab.closeable = false;
+            }
+            $('#mainTab').tabs('add', {
+                title: tab.name,
+                selected: true,
+                href: tab.url,
+                closable: tab.closeable,
+            })
+        }
+        main.openMainTab = function(tab) {
+            if (!($('#mainTab').tabs('getTab', tab.name))) {
+                this._addMainTab(tab);
+            } else {
+                $('#mainTab').tabs('select', tab.name)
+            }
+        }
         main.setUser = function(user) {
             //console.log('setUser');
         }
-        main.setMenu = function(menus) {
+
+        main._builtMenuList = function(menus) {
             function _setTree(tree, item) {
                 tree.id = item.id;
                 tree.text = item.name;
@@ -123,16 +118,14 @@
                 node.attributes = {
                     url: item.url
                 };
-                if(Array.isArray(tree.children)){
-  tree.children.push(node);
-                }else{
+                if (Array.isArray(tree.children)) {
+                    tree.children.push(node);
+                } else {
                     $.messager.alert('初始化错误', '菜单载入错误', 'info', function() {
-console.log('后台数据库错误');
-                        });
-              }
+                        console.log('后台数据库错误');
+                    });
+                }
             }
-
-
             let list = [];
             let tree = {};
             for (item of menus) {
@@ -148,96 +141,62 @@ console.log('后台数据库错误');
                     _mountTree(tree, item)
                 }
             }
+            return list;
+        }
+
+        main.setMenu = function(menus) {
+
             //初始化菜单
-            $('#mainMenu').tree({                
-                data: list,
-                onClick: function(node){
-                    console.log(node);
-                    if($('#mainMenu').tree('isLeaf',node.target)){
-                                //     let mainTab = $('#mainTab').tabs({
-        //         plain: true,
-        //         narrow: true,
-        //         height: 500,
-        //     });
-        //     let thisTab = mainTab.tabs('getTab', tab.name);
-        //     if (isEmpty(thisTab)) {
-        //         this._addMainTab(tab);
-        //     } else {
-        //         mainTab.tabs('select', tab.name)
-        //     }
+            $('#mainMenu').tree({
+                data: main._builtMenuList(menus),
+                onClick: function(node) {
+                    //console.log(node);
+                    if ($('#mainMenu').tree('isLeaf', node.target)) {
                         //打开tab
-                    }else{
-                        if(node.state === 'open'){
-                            $('#mainMenu').tree('collapseAll',node.target)     
-                        }else{
-                            $('#mainMenu').tree('expandAll',node.target)    
+                        let tab = {};
+                        tab.name = node.text;
+                        tab.url = node.attributes.url;
+                        tab.closeable = true;
+
+                        if (tab.url !== '') {
+                            main.openMainTab(tab);
+                        } else {
+                            $.messager.alert('菜单错误', tab.name + '无有效url', 'info', function() {});
                         }
-                   
+
+                    } else {
+                        if (node.state === 'open') {
+                            $('#mainMenu').tree('collapseAll', node.target)
+                        } else {
+                            $('#mainMenu').tree('expandAll', node.target)
+                        }
+
                     }
 
-	            },
+                },
 
             });
 
 
-
-            // let mainMenu = $('#mainMenu').tabs();
-            // //mainMenu.panel('clear');
-            // for (let i = 0, maxT = mainMenu.tabs('tabs').length; i < maxT; i++) {
-            //     mainMenu.tabs('close', 0);
-            // }
-            // mainMenu.tabs({
-            //     plain: true,
-            //     narrow: true
-            // })
-            // let selectTab = null;
-            // for (let item of menus) {
-            //     if (item.url === '') {
-            //         mainMenu.tabs('add', {
-            //             title: item.name,
-            //             selected: true,
-            //             closable: false
-            //         })
-            //         selectTab = mainMenu.tabs('getSelected');
-            //     } else {
-            //         let lb = $('<div></div>');
-            //         lb.linkbutton({
-            //             size: 'large',
-            //             text: item.name,
-            //             onClick: function() {
-            //                 main.openMainWindow(item);
-            //                 return;
-            //             },
-            //         });
-            //         if (selectTab === null) {
-            //             mainMenu.tabs('add', {
-            //                 title: '基本菜单',
-            //                 iconCls: 'icon-large-smartart',
-            //                 selected: true,
-            //                 closable: false
-            //             })
-            //             selectTab = mainMenu.tabs('getSelected');
-            //             lb.appendTo(selectTab);
-            //         } else {
-            //             lb.appendTo(selectTab);
-            //         }
-            //     }
-            // }
         };
-        // main.setTab = function(tabs) {
-        //     // console.log("setTab");
-        //     for (let item of tabs) {
-        //         if (item.url !== '') {
-        //             main.openMainTab(item);
-        //         }
-        //     }
-        //     //console.log(tabs);
-
-        // }
+        main.setTab = function(tabs) {
+            $('#mainTab').tabs({
+                plain: true,
+                narrow: true,
+                fit: true,
+            });
+            for (let tab of tabs) {
+                if (tab.url !== '') {
+                    main.openMainTab(tab);
+                } else {
+                    $.messager.alert('初始化菜单错误', tab.name + '无有效url', 'info', function() {});
+                }
+            }
+        }
         main.init = function(data) {
             main.setUser(data.user);
             main.setMenu(data.menus);
-            // main.setTab(data.tabs);
+            main.setTab(data.tabs);
         }
 
 

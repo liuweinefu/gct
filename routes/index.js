@@ -18,6 +18,7 @@ router.post('/', function(req, res, next) {
             message: '登录成功',
             user: req.session.user,
             menus: req.session.menus,
+            tabs: req.session.tabs,
         });
         return;
     }
@@ -29,7 +30,7 @@ router.post('/', function(req, res, next) {
             message: '用户名不能为空',
             captcha: F.captcha(req),
         });
-         return;
+        return;
 
     };
     if (!req.body.userPass) {
@@ -38,10 +39,10 @@ router.post('/', function(req, res, next) {
             message: '密码不能为空',
             captcha: F.captcha(req),
         });
-return ;
+        return;
     };
     if (!req.body.captcha) {
-         res.json({
+        res.json({
             success: false,
             message: '验证码不能为空',
             captcha: F.captcha(req),
@@ -56,7 +57,7 @@ return ;
             message: '验证码错误',
             captcha: F.captcha(req),
         });
-         return;
+        return;
 
     };
 
@@ -69,14 +70,21 @@ return ;
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('SELECT id,name,phone,other_contacts,last_login_time,remark,user_role_name,menus,privileges,base_wage,deduction_wage FROM view_user WHERE name= ? and pass = ?', [userName, userPass]);
+            return currentCon.queryAsync('SELECT id,name,phone,other_contacts,last_login_time,remark,user_role_name,privileges,menus,tabs,base_wage,deduction_wage FROM view_user WHERE name= ? and pass = ?', [userName, userPass]);
         })
         .then(function(rows) {
             if (rows.length !== 1) { return Promise.reject(new Error('用户错误')); }
             let user = rows[0];
-            let menus = [];
             let privileges = [];
+            let menus = [];
+            let tabs = [];
             for (let i in allPrivileges) {
+                if (user.privileges === 'all') {
+                    privileges.push(allPrivileges[i].url);
+                } else if (user.privileges.indexOf(allPrivileges[i].id) !== -1) {
+                    privileges.push(allPrivileges[i].url);
+                }
+
                 if (user.menus === 'all') {
                     if (allPrivileges[i].type === 'menu') {
                         menus.push(allPrivileges[i]);
@@ -85,19 +93,20 @@ return ;
                     menus.push(allPrivileges[i]);
                 }
 
-                if (user.privileges === 'all') {
-                    privileges.push(allPrivileges[i].url);
-                } else if (user.privileges.indexOf(allPrivileges[i].id) !== -1) {
-                    privileges.push(allPrivileges[i].url);
+
+                if (user.tabs.indexOf(allPrivileges[i].id) !== -1) {
+                    tabs.push(allPrivileges[i]);
                 }
+
             }
 
             req.session.hasLogged = true;
             req.session.user = Object.assign({}, user); //浅层拷贝
             delete req.session.user.menus;
             delete req.session.user.privileges;
-            req.session.menus = menus;
             req.session.privileges = privileges;
+            req.session.menus = menus;
+            req.session.tabs = tabs;
             return currentCon.queryAsync('UPDATE user SET last_login_time=? WHERE id= ? ', [new Date(), req.session.user.id]);
         })
         .then(function(row) {
@@ -108,6 +117,7 @@ return ;
                 message: '登录成功',
                 user: req.session.user,
                 menus: req.session.menus,
+                tabs: req.session.tabs,
             });
             return;
         })
