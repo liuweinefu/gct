@@ -1,0 +1,258 @@
+<!--用户管理页面 -->
+<table id="privileges_table">
+</table>
+<div id="privileges_table_toolbar">
+    <table>
+        <tr>
+            <td style="width:40%">
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:privileges.tbSearchName,menu:'#privileges_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="privileges_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'name'">权限名</div>
+                    <div data-options="name:'url'">url地址</div>
+                    <div data-options="name:'type'">类型</div>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="privileges.import()">导入(<ins>W</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="privileges.export()">导出(<ins>Q</ins>)</a>
+                    <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="privileges.add()">增加(<ins>A</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="privileges.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="privileges.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="privileges.redo()">撤销(<ins>R</ins>)</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    privileges = {};
+    //表格字段设置*************************************************************************
+    privileges.fields = [];
+    privileges.fields[0] = [];
+    privileges.fields[0].push({
+        field: 'ck',
+        checkbox: true
+    });
+    privileges.fields[0].push({
+        field: 'id',
+        title: '权限ID',
+        width: 60,
+        sortable: true
+    });
+    privileges.fields[0].push({
+        field: 'name',
+        title: '权限名',
+        width: 160,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    privileges.fields[0].push({
+        field: 'url',
+        title: 'url地址',
+        width: 160,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    privileges.fields[0].push({
+        field: 'type',
+        title: '类型',
+        width: 80,
+        sortable: true,
+        editor: {
+            type: 'combobox',
+            options: {
+                panelWidth: 160,
+                valueField: 'label',
+                textField: 'value',
+                data: [{
+                    label: 'menu',
+                    value: 'menu'
+                }, {
+                    label: 'tab',
+                    value: 'tab'
+                }, {
+                    label: 'url',
+                    value: 'url'
+                }]
+            }
+        }
+    });
+
+    //表格初始化*************************************************************************
+    $('#privileges_table').datagrid({
+        idField: 'id',
+        //loadMsg: '数据加载中,请稍后',
+        fit: true,
+        singleSelect: false,
+        url: '/privileges',
+        method: 'post',
+        toolbar: '#privileges_table_toolbar',
+        striped: true,
+        pagination: true,
+        rownumbers: true,
+        pageNumber: 1,
+        pageSize: '30',
+        pageList: [30, 50, 100],
+        sortName: 'id',
+        remoteSort: false,
+        multiSort: true,
+        columns: privileges.fields,
+        //根据字段类型设置编辑器初始状态
+        onCellEdit: function(index, field, value) {
+            var ed = $(this).datagrid('getEditor', {
+                index: index,
+                field: field
+            });
+            switch (field) {
+                case 'type':
+                    $(ed.target).combobox('textbox').select();
+                    $(ed.target).combobox('showPanel');
+                    break;
+                default:
+                    $(ed.target).textbox('textbox').select();
+                    break;
+            }
+        },
+        // onBeginEdit: function(index, row) {
+        //     console.log([1, 2, 6].indexOf(row.id));
+        //     if ([1, 2, 6].indexOf(row.id) !== -1) {
+        //         console.log(index);
+        //         $('#privileges_table').datagrid('endEdit', index);
+        //     }
+        // }
+    }).datagrid('enableCellEditing');
+
+    //绑定菜单按钮的键盘设置*************************************************************************
+    privileges.keydown = function(e) {
+        //console.log(e);
+        if (e.altKey === false) {
+            return;
+        }
+        switch (e.key) {
+            case "w":
+                privileges.import();
+                break;
+            case "q":
+                privileges.export();
+                break;
+            case "s":
+                privileges.save();
+                break;
+            case "a":
+                privileges.add();
+                break;
+            case "d":
+                privileges.delete();
+                break;
+            case "r":
+                privileges.redo();
+                break;
+
+        }
+    };
+    $('#privileges_table').datagrid('getPanel').keydown(privileges.keydown);
+
+
+    //button设置*************************************************************************
+    privileges.tbSearchName = function(value, name) {
+        //$('#privileges_table').datagrid('unselectAll');
+        //s$('#privileges_table').datagrid('uncheckAll');
+        $('#privileges_table').datagrid('load', {
+            name: name,
+            value: value
+        });
+
+    };
+
+    privileges.save = function() {
+        //console.log($('#privileges_table').datagrid('cell'));
+        //接受当前编辑内容，并结束编辑
+        if (isNotEmpty($('#privileges_table').datagrid('cell'))) {
+            $('#privileges_table').datagrid('endEdit', $('#privileges_table').datagrid('cell').index);
+        };
+
+
+        $('#privileges_table').datagrid('loading');
+        let sendObject = {}
+        sendObject.insert = $('#privileges_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#privileges_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#privileges_table').datagrid('getChanges', 'updated');
+        let sendString = JSON.stringify(sendObject);
+        sendObject = {
+            value: sendString
+        };
+        //console.log(JSON.stringify(sendObject));
+
+        let ajaxPromise = $.post('/privileges/save', sendObject);
+        $.when(ajaxPromise)
+            .done(function(ajaxBack) {
+                //console.log(ajaxBack);
+                //$('#privileges_table').datagrid('acceptChanges');
+                $('#privileges_table').datagrid('reload');
+                $('#privileges_table').datagrid('loaded');
+            })
+            .fail(function(err) {
+                //console.log(err);
+                $.messager.alert('保存失败', '请检查数据是否符合要求', 'warning');
+                //$('#privileges_table').datagrid('rejectChanges');
+                $('#privileges_table').datagrid('reload');
+                $('#privileges_table').datagrid('loaded');
+
+            });
+
+    };
+
+    privileges.add = function() {
+        $('#privileges_table').datagrid('appendRow', {
+            id: 'N ' + Math.round(Math.random() * 1000),
+            name: '新权限' + Math.round(Math.random() * 1000),
+        });
+    };
+    privileges.delete = function() {
+
+        let allChecked = $('#privileges_table').datagrid('getChecked');
+        let allDeleteId = [];
+        allChecked.map(function(c) {
+            allDeleteId.push(c.id);
+        });
+        for (let id of allDeleteId) {
+            $('#privileges_table').datagrid('deleteRow', $('#privileges_table').datagrid('getRowIndex', id));
+        }
+
+    };
+    privileges.redo = function() {
+        $('#privileges_table').datagrid('rejectChanges');
+    };
+    privileges.export = function() {
+        window.location.href = "privileges/exportExcel";
+    };
+    privileges.import = function() {
+
+        //let mainImport = $('#mainImport');
+        //console.log(mainImport);
+        //mainImport.panel('destroy');
+        $('#mainImport').window({
+            title: '权限信息导入',
+            width: 800,
+            height: 600,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            modal: true,
+            href: 'privileges/importExcel',
+            onClose: function() {
+                $('#privileges_table').datagrid('reload');
+                //console.log('window close!');
+            }
+        });
+
+    };
+</script>

@@ -1,0 +1,235 @@
+<!--用户管理页面 -->
+<table id="roles_table">
+</table>
+<div id="roles_table_toolbar">
+    <table>
+        <tr>
+            <td style="width:40%">
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:roles.tbSearchName,menu:'#roles_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="roles_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'name'">角色名</div>
+                    <!--<div data-options="name:'workunit'">工作单位</div>
+                    <div data-options="name:'remark'">备注</div>-->
+                </div>
+            </td>
+            <td>
+                <div>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="roles.import()">导入(<ins>W</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="roles.export()">导出(<ins>Q</ins>)</a>
+                    <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="roles.add()">增加(<ins>A</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="roles.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="roles.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="roles.redo()">撤销(<ins>R</ins>)</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    roles = {};
+    //表格字段设置*************************************************************************
+    roles.fields = [];
+    roles.fields[0] = [];
+    roles.fields[0].push({
+        field: 'ck',
+        checkbox: true
+    });
+    roles.fields[0].push({
+        field: 'id',
+        title: '角色ID',
+        width: 60,
+        sortable: true
+    });
+    roles.fields[0].push({
+        field: 'name',
+        title: '角色名',
+        width: 80,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    roles.fields[0].push({
+        field: 'menus',
+        title: '菜单项',
+        width: 80,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    roles.fields[0].push({
+        field: 'tabs',
+        title: '标签项',
+        width: 80,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    roles.fields[0].push({
+        field: 'privileges',
+        title: '权限',
+        width: 80,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+
+    //表格初始化*************************************************************************
+    $('#roles_table').datagrid({
+        idField: 'id',
+        //loadMsg: '数据加载中,请稍后',
+        fit: true,
+        singleSelect: false,
+        url: '/roles',
+        method: 'post',
+        toolbar: '#roles_table_toolbar',
+        striped: true,
+        pagination: true,
+        rownumbers: true,
+        pageNumber: 1,
+        pageSize: '30',
+        pageList: [30, 50, 100],
+        sortName: 'id',
+        remoteSort: false,
+        multiSort: true,
+        columns: roles.fields,
+        //根据字段类型设置编辑器初始状态
+        onCellEdit: function(index, field, value) {
+            var ed = $(this).datagrid('getEditor', {
+                index: index,
+                field: field
+            });
+            switch (field) {
+                default: $(ed.target).textbox('textbox').select();
+                break;
+            }
+        },
+    }).datagrid('enableCellEditing');
+
+    //绑定菜单按钮的键盘设置*************************************************************************
+    roles.keydown = function(e) {
+        //console.log(e);
+        if (e.altKey === false) {
+            return;
+        }
+        switch (e.key) {
+            case "w":
+                roles.import();
+                break;
+            case "q":
+                roles.export();
+                break;
+            case "s":
+                roles.save();
+                break;
+            case "a":
+                roles.add();
+                break;
+            case "d":
+                roles.delete();
+                break;
+            case "r":
+                roles.redo();
+                break;
+
+        }
+    };
+    $('#roles_table').datagrid('getPanel').keydown(roles.keydown);
+
+
+    //button设置*************************************************************************
+    roles.tbSearchName = function(value, name) {
+        //$('#roles_table').datagrid('unselectAll');
+        //s$('#roles_table').datagrid('uncheckAll');
+        $('#roles_table').datagrid('load', {
+            name: name,
+            value: value
+        });
+
+    };
+
+    roles.save = function() {
+        //console.log($('#roles_table').datagrid('cell'));
+        //接受当前编辑内容，并结束编辑
+        if (isNotEmpty($('#roles_table').datagrid('cell'))) {
+            $('#roles_table').datagrid('endEdit', $('#roles_table').datagrid('cell').index);
+        };
+
+
+        $('#roles_table').datagrid('loading');
+        let sendObject = {}
+        sendObject.insert = $('#roles_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#roles_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#roles_table').datagrid('getChanges', 'updated');
+        let sendString = JSON.stringify(sendObject);
+        sendObject = {
+            value: sendString
+        };
+
+        let ajaxPromise = $.post('/roles/save', sendObject);
+        $.when(ajaxPromise)
+            .done(function(ajaxBack) {
+                $('#roles_table').datagrid('reload');
+                $('#roles_table').datagrid('loaded');
+            })
+            .fail(function(err) {
+                $.messager.alert('保存失败', '请检查数据是否符合要求', 'warning');
+                $('#roles_table').datagrid('reload');
+                $('#roles_table').datagrid('loaded');
+
+            });
+
+    };
+
+    roles.add = function() {
+        $('#roles_table').datagrid('appendRow', {
+            id: 'N ' + Math.round(Math.random() * 1000),
+            name: '新角色' + Math.round(Math.random() * 1000),
+            menus: '[1]',
+            tabs: '[1]',
+            privileges: '[1]'
+        });
+    };
+    roles.delete = function() {
+
+        let allChecked = $('#roles_table').datagrid('getChecked');
+        let allDeleteId = [];
+        allChecked.map(function(c) {
+            allDeleteId.push(c.id);
+        });
+        for (let id of allDeleteId) {
+            $('#roles_table').datagrid('deleteRow', $('#roles_table').datagrid('getRowIndex', id));
+        }
+
+    };
+    roles.redo = function() {
+        $('#roles_table').datagrid('rejectChanges');
+    };
+    roles.export = function() {
+        window.location.href = "roles/exportExcel";
+    };
+    roles.import = function() {
+        $('#mainImport').window({
+            title: '角色信息导入',
+            width: 800,
+            height: 600,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            modal: true,
+            href: 'roles/importExcel',
+            onClose: function() {
+                $('#roles_table').datagrid('reload');
+            }
+        });
+
+    };
+</script>

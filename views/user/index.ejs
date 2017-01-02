@@ -1,0 +1,303 @@
+<!--用户管理页面 -->
+<table id="users_table">
+</table>
+<div id="users_table_toolbar">
+    <table>
+        <tr>
+            <td style="width:40%">
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:users.tbSearchName,menu:'#users_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="users_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'name'">用户名</div>
+                    <div data-options="name:'workunit'">工作单位</div>
+                    <div data-options="name:'remark'">备注</div>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="users.import()">导入(<ins>W</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="users.export()">导出(<ins>Q</ins>)</a>
+                    <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="users.add()">增加(<ins>A</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="users.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="users.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="users.redo()">撤销(<ins>R</ins>)</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    users = {};
+    //表格字段设置*************************************************************************
+    users.fields = [];
+    users.fields[0] = [];
+    users.fields[0].push({
+        field: 'ck',
+        checkbox: true
+    });
+    users.fields[0].push({
+        field: 'id',
+        title: '用户ID',
+        width: 60,
+        sortable: true
+    });
+    users.fields[0].push({
+        field: 'name',
+        title: '用户名',
+        width: 80,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+
+    users.fields[0].push({
+        field: 'pass',
+        title: '密码',
+        width: 100,
+        formatter: function(value, row, index) {
+            return '******';
+        },
+        editor: {
+            type: 'passwordbox',
+            options: {
+                prompt: '重置密码',
+                showEye: true
+            }
+        },
+
+    });
+    users.fields[0].push({
+        field: 'role',
+        title: '用户角色',
+        width: 120,
+        limitToList: true,
+        editor: {
+            type: 'combobox',
+            options: {
+                panelWidth: 160,
+                valueField: 'role',
+                textField: 'role',
+                mode: 'local',
+                //mode: 'remote',
+                url: 'users/roles',
+                method: 'post',
+                //对用户输入进行快速反应
+                // onChange: function(newV, oldV) {
+                //     if (isEmpty(newV)) {
+                //         return;
+                //     }
+                //     let allData = $(this).combobox('getData');
+                //     if (isEmpty(allData)) {
+                //         return;
+                //     }
+                //     for (let s of allData) {
+                //         if (s.role.search(newV) !== -1) {
+                //             $(this).combobox('select', s.role);
+                //             break;
+                //         }
+                //     };
+                // },
+
+            }
+        }
+    });
+    users.fields[0].push({
+        field: 'nfxyzy',
+        title: '年份专业权限',
+        width: 80,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    users.fields[0].push({
+        field: 'workunit',
+        title: '工作单位',
+        width: 80,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    //表格初始化*************************************************************************
+    $('#users_table').datagrid({
+        idField: 'id',
+        //loadMsg: '数据加载中,请稍后',
+        fit: true,
+        singleSelect: false,
+        url: '/users',
+        method: 'post',
+        toolbar: '#users_table_toolbar',
+        striped: true,
+        pagination: true,
+        rownumbers: true,
+        pageNumber: 1,
+        pageSize: '30',
+        pageList: [30, 50, 100],
+        sortName: 'id',
+        remoteSort: false,
+        multiSort: true,
+        columns: users.fields,
+        //根据字段类型设置编辑器初始状态
+        onCellEdit: function(index, field, value) {
+            var ed = $(this).datagrid('getEditor', {
+                index: index,
+                field: field
+            });
+            //console.log(ed);
+            switch (field) {
+                case 'role':
+                    //(function() {
+                    $(ed.target).combobox('textbox').select();
+                    $(ed.target).combobox('showPanel');
+
+
+                    //})();
+                    break;
+                default:
+                    //(function() {
+                    $(ed.target).textbox('textbox').select();
+
+                    //})();
+                    break;
+            }
+        },
+        onBeginEdit: function(index, row) {
+
+        }
+    }).datagrid('enableCellEditing');
+
+    //绑定菜单按钮的键盘设置*************************************************************************
+    users.keydown = function(e) {
+        //console.log(e);
+        if (e.altKey === false) {
+            return;
+        }
+        switch (e.key) {
+            case "w":
+                users.import();
+                break;
+            case "q":
+                users.export();
+                break;
+            case "s":
+                users.save();
+                break;
+            case "a":
+                users.add();
+                break;
+            case "d":
+                users.delete();
+                break;
+            case "r":
+                users.redo();
+                break;
+
+        }
+    };
+    $('#users_table').datagrid('getPanel').keydown(users.keydown);
+
+
+    //button设置*************************************************************************
+    users.tbSearchName = function(value, name) {
+        //$('#users_table').datagrid('unselectAll');
+        //s$('#users_table').datagrid('uncheckAll');
+        $('#users_table').datagrid('load', {
+            name: name,
+            value: value
+        });
+
+    };
+
+    users.save = function() {
+        //console.log($('#users_table').datagrid('cell'));
+        //接受当前编辑内容，并结束编辑
+        if (isNotEmpty($('#users_table').datagrid('cell'))) {
+            $('#users_table').datagrid('endEdit', $('#users_table').datagrid('cell').index);
+        };
+
+
+        $('#users_table').datagrid('loading');
+        let sendObject = {}
+        sendObject.insert = $('#users_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#users_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#users_table').datagrid('getChanges', 'updated');
+        let sendString = JSON.stringify(sendObject);
+        sendObject = {
+            value: sendString
+        };
+        //console.log(JSON.stringify(sendObject));
+
+        let ajaxPromise = $.post('/users/save', sendObject);
+        $.when(ajaxPromise)
+            .done(function(ajaxBack) {
+                //console.log(ajaxBack);
+                //$('#users_table').datagrid('acceptChanges');
+                $('#users_table').datagrid('reload');
+                $('#users_table').datagrid('loaded');
+            })
+            .fail(function(err) {
+                //console.log(err);
+                $.messager.alert('保存失败', '请检查数据是否符合要求', 'warning');
+                //$('#users_table').datagrid('rejectChanges');
+                $('#users_table').datagrid('reload');
+                $('#users_table').datagrid('loaded');
+
+            });
+
+    };
+
+    users.add = function() {
+        $('#users_table').datagrid('appendRow', {
+            id: 'N ' + Math.round(Math.random() * 1000),
+            name: '新用户' + Math.round(Math.random() * 1000),
+            pass: '',
+            role: '0 新用户',
+            nfxyzy: '[0]',
+            workunit: '东北林业大学'
+        });
+    };
+    users.delete = function() {
+
+        let allChecked = $('#users_table').datagrid('getChecked');
+        let allDeleteId = [];
+        allChecked.map(function(c) {
+            allDeleteId.push(c.id);
+        });
+        for (let id of allDeleteId) {
+            $('#users_table').datagrid('deleteRow', $('#users_table').datagrid('getRowIndex', id));
+        }
+
+    };
+    users.redo = function() {
+        $('#users_table').datagrid('rejectChanges');
+    };
+    users.export = function() {
+        window.location.href = "users/exportExcel";
+    };
+    users.import = function() {
+
+        //let mainImport = $('#mainImport');
+        //console.log(mainImport);
+        //mainImport.panel('destroy');
+        $('#mainImport').window({
+            title: '用户信息导入',
+            width: 800,
+            height: 600,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            modal: true,
+            href: 'users/importExcel',
+            onClose: function() {
+                $('#users_table').datagrid('reload');
+                //console.log('window close!');
+            }
+        });
+
+    };
+</script>

@@ -105,10 +105,16 @@ app.use(function(req, res, next) {
 
 
 var index = require('./routes/index');
-var users = require('./routes/users');
+var privilege = require('./routes/privilege');
+var role = require('./routes/role');
+var userRole = require('./routes/userRole');
+
+
 
 app.use('/', index);
-app.use('/users', users);
+app.use('/privilege', privilege);
+app.use('/user', user);
+app.use('/userRole', userRole);
 
 
 
