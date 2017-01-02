@@ -219,6 +219,10 @@ var executeQueries = function(queries, backResults) {
 var filterImportPostData = function(arrayData) {
     if (!Array.isArray(arrayData) || arrayData.length === 0) {
         return Promise.resolve({});
+        // return Promise.resolve({
+        //     newData: [],
+        //     oldData: []
+        // });
     }
 
     let currentCon = null;
@@ -302,21 +306,21 @@ router.post('/importExcel', function(req, res, next) {
         case 'add':
             filterImportPostData(req.body.postData)
                 .then(function(Data) {
-                    if (F.isEmpty(Data)) {
+                    if (Data.newData === undefined || Data.newData.length === 0) {
                         return Promise.resolve([]);
                     }
                     return executeQueries(buildInsertQueries(Data.newData), true);
                 })
                 .then(function(value) {
                     let backNumber = 0;
-                    if (F.isNotEmpty(value) && Array.isArray(value)) {
+                    if (Array.isArray(value) && value.length !== 0) {
                         backNumber = value
                             .map(element => element.affectedRows)
                             .reduce(function(previousValue, currentValue, index, array) {
                                 return previousValue + currentValue;
                             });
                     } else {
-                        backNumber = F.isSet(value.affectedRows) ? value.affectedRows : 0;
+                        backNumber = value.affectedRows !== undefined ? value.affectedRows : 0;
                     }
                     res.json({
                         err: false,
@@ -325,15 +329,11 @@ router.post('/importExcel', function(req, res, next) {
                     //res.status(200).end();
                 })
                 .catch(function(err) {
-                    console.log('privilege/inmportExcel/add Err------------------------------------------start');
-                    console.log(err);
-                    console.log('privilege/inmportExcel/add Err------------------------------------------end');
                     res.json({
-                            err: true,
-                            message: '添加失败',
+                        err: true,
+                        message: '添加失败',
 
-                        })
-                        //res.status(500).end();
+                    })
                 });
             break;
         case 'update':
