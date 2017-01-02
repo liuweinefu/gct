@@ -1,12 +1,12 @@
 <!--用户管理页面 -->
-<table id="privileges_table">
+<table id="privilege_table">
 </table>
-<div id="privileges_table_toolbar">
+<div id="privilege_table_toolbar">
     <table>
         <tr>
             <td style="width:40%">
-                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:privileges.tbSearchName,menu:'#privileges_table_toolbar_serchbox_mm'" style="width:80%">
-                <div id="privileges_table_toolbar_serchbox_mm" style="width:120px">
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:privilege.tbSearchName,menu:'#privilege_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="privilege_table_toolbar_serchbox_mm" style="width:120px">
                     <div data-options="name:'name'">权限名</div>
                     <div data-options="name:'url'">url地址</div>
                     <div data-options="name:'type'">类型</div>
@@ -14,34 +14,34 @@
             </td>
             <td>
                 <div>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="privileges.import()">导入(<ins>W</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="privileges.export()">导出(<ins>Q</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="privilege.import()">导入(<ins>W</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="privilege.export()">导出(<ins>Q</ins>)</a>
                     <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="privileges.add()">增加(<ins>A</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="privileges.delete()">删除(<ins>D</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="privileges.save()">保存(<ins>S</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="privileges.redo()">撤销(<ins>R</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="privilege.add()">增加(<ins>A</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="privilege.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="privilege.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="privilege.redo()">撤销(<ins>R</ins>)</a>
                 </div>
             </td>
         </tr>
     </table>
 </div>
 <script>
-    privileges = {};
+    privilege = {};
     //表格字段设置*************************************************************************
-    privileges.fields = [];
-    privileges.fields[0] = [];
-    privileges.fields[0].push({
+    privilege.fields = [];
+    privilege.fields[0] = [];
+    privilege.fields[0].push({
         field: 'ck',
         checkbox: true
     });
-    privileges.fields[0].push({
+    privilege.fields[0].push({
         field: 'id',
         title: '权限ID',
         width: 60,
         sortable: true
     });
-    privileges.fields[0].push({
+    privilege.fields[0].push({
         field: 'name',
         title: '权限名',
         width: 160,
@@ -51,7 +51,7 @@
             options: {}
         }
     });
-    privileges.fields[0].push({
+    privilege.fields[0].push({
         field: 'url',
         title: 'url地址',
         width: 160,
@@ -61,7 +61,7 @@
             options: {}
         }
     });
-    privileges.fields[0].push({
+    privilege.fields[0].push({
         field: 'type',
         title: '类型',
         width: 80,
@@ -87,14 +87,14 @@
     });
 
     //表格初始化*************************************************************************
-    $('#privileges_table').datagrid({
+    $('#privilege_table').datagrid({
         idField: 'id',
         //loadMsg: '数据加载中,请稍后',
         fit: true,
         singleSelect: false,
-        url: '/privileges',
+        url: '/privilege',
         method: 'post',
-        toolbar: '#privileges_table_toolbar',
+        toolbar: '#privilege_table_toolbar',
         striped: true,
         pagination: true,
         rownumbers: true,
@@ -104,7 +104,7 @@
         sortName: 'id',
         remoteSort: false,
         multiSort: true,
-        columns: privileges.fields,
+        columns: privilege.fields,
         //根据字段类型设置编辑器初始状态
         onCellEdit: function(index, field, value) {
             var ed = $(this).datagrid('getEditor', {
@@ -125,116 +125,116 @@
         //     console.log([1, 2, 6].indexOf(row.id));
         //     if ([1, 2, 6].indexOf(row.id) !== -1) {
         //         console.log(index);
-        //         $('#privileges_table').datagrid('endEdit', index);
+        //         $('#privilege_table').datagrid('endEdit', index);
         //     }
         // }
     }).datagrid('enableCellEditing');
 
     //绑定菜单按钮的键盘设置*************************************************************************
-    privileges.keydown = function(e) {
+    privilege.keydown = function(e) {
         //console.log(e);
         if (e.altKey === false) {
             return;
         }
         switch (e.key) {
             case "w":
-                privileges.import();
+                privilege.import();
                 break;
             case "q":
-                privileges.export();
+                privilege.export();
                 break;
             case "s":
-                privileges.save();
+                privilege.save();
                 break;
             case "a":
-                privileges.add();
+                privilege.add();
                 break;
             case "d":
-                privileges.delete();
+                privilege.delete();
                 break;
             case "r":
-                privileges.redo();
+                privilege.redo();
                 break;
 
         }
     };
-    $('#privileges_table').datagrid('getPanel').keydown(privileges.keydown);
+    $('#privilege_table').datagrid('getPanel').keydown(privilege.keydown);
 
 
     //button设置*************************************************************************
-    privileges.tbSearchName = function(value, name) {
-        //$('#privileges_table').datagrid('unselectAll');
-        //s$('#privileges_table').datagrid('uncheckAll');
-        $('#privileges_table').datagrid('load', {
+    privilege.tbSearchName = function(value, name) {
+        //$('#privilege_table').datagrid('unselectAll');
+        //s$('#privilege_table').datagrid('uncheckAll');
+        $('#privilege_table').datagrid('load', {
             name: name,
             value: value
         });
 
     };
 
-    privileges.save = function() {
-        //console.log($('#privileges_table').datagrid('cell'));
+    privilege.save = function() {
+        //console.log($('#privilege_table').datagrid('cell'));
         //接受当前编辑内容，并结束编辑
-        if (isNotEmpty($('#privileges_table').datagrid('cell'))) {
-            $('#privileges_table').datagrid('endEdit', $('#privileges_table').datagrid('cell').index);
+        if (isNotEmpty($('#privilege_table').datagrid('cell'))) {
+            $('#privilege_table').datagrid('endEdit', $('#privilege_table').datagrid('cell').index);
         };
 
 
-        $('#privileges_table').datagrid('loading');
+        $('#privilege_table').datagrid('loading');
         let sendObject = {}
-        sendObject.insert = $('#privileges_table').datagrid('getChanges', 'inserted');
-        sendObject.delete = $('#privileges_table').datagrid('getChanges', 'deleted');
-        sendObject.update = $('#privileges_table').datagrid('getChanges', 'updated');
+        sendObject.insert = $('#privilege_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#privilege_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#privilege_table').datagrid('getChanges', 'updated');
         let sendString = JSON.stringify(sendObject);
         sendObject = {
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
 
-        let ajaxPromise = $.post('/privileges/save', sendObject);
+        let ajaxPromise = $.post('/privilege/save', sendObject);
         $.when(ajaxPromise)
             .done(function(ajaxBack) {
                 //console.log(ajaxBack);
-                //$('#privileges_table').datagrid('acceptChanges');
-                $('#privileges_table').datagrid('reload');
-                $('#privileges_table').datagrid('loaded');
+                //$('#privilege_table').datagrid('acceptChanges');
+                $('#privilege_table').datagrid('reload');
+                $('#privilege_table').datagrid('loaded');
             })
             .fail(function(err) {
                 //console.log(err);
                 $.messager.alert('保存失败', '请检查数据是否符合要求', 'warning');
-                //$('#privileges_table').datagrid('rejectChanges');
-                $('#privileges_table').datagrid('reload');
-                $('#privileges_table').datagrid('loaded');
+                //$('#privilege_table').datagrid('rejectChanges');
+                $('#privilege_table').datagrid('reload');
+                $('#privilege_table').datagrid('loaded');
 
             });
 
     };
 
-    privileges.add = function() {
-        $('#privileges_table').datagrid('appendRow', {
+    privilege.add = function() {
+        $('#privilege_table').datagrid('appendRow', {
             id: 'N ' + Math.round(Math.random() * 1000),
             name: '新权限' + Math.round(Math.random() * 1000),
         });
     };
-    privileges.delete = function() {
+    privilege.delete = function() {
 
-        let allChecked = $('#privileges_table').datagrid('getChecked');
+        let allChecked = $('#privilege_table').datagrid('getChecked');
         let allDeleteId = [];
         allChecked.map(function(c) {
             allDeleteId.push(c.id);
         });
         for (let id of allDeleteId) {
-            $('#privileges_table').datagrid('deleteRow', $('#privileges_table').datagrid('getRowIndex', id));
+            $('#privilege_table').datagrid('deleteRow', $('#privilege_table').datagrid('getRowIndex', id));
         }
 
     };
-    privileges.redo = function() {
-        $('#privileges_table').datagrid('rejectChanges');
+    privilege.redo = function() {
+        $('#privilege_table').datagrid('rejectChanges');
     };
-    privileges.export = function() {
-        window.location.href = "privileges/exportExcel";
+    privilege.export = function() {
+        window.location.href = "privilege/exportExcel";
     };
-    privileges.import = function() {
+    privilege.import = function() {
 
         //let mainImport = $('#mainImport');
         //console.log(mainImport);
@@ -247,9 +247,9 @@
             minimizable: false,
             maximizable: false,
             modal: true,
-            href: 'privileges/importExcel',
+            href: 'privilege/importExcel',
             onClose: function() {
-                $('#privileges_table').datagrid('reload');
+                $('#privilege_table').datagrid('reload');
                 //console.log('window close!');
             }
         });

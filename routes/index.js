@@ -8,9 +8,8 @@ router.get('/', function(req, res, next) {
     //res.render('index', { title: 'Express' });
 });
 
+
 router.post('/', function(req, res, next) {
-    res.locals.xhr = true;
-    //console.log(req.xhr);
     //已登录则返回user
     if (req.session.hasLogged === true) {
         res.json({

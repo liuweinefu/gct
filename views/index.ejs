@@ -124,9 +124,8 @@
                 if (Array.isArray(tree.children)) {
                     tree.children.push(node);
                 } else {
-                    $.messager.alert('初始化错误', '菜单载入错误', 'info', function() {
-                        console.log('后台数据库错误');
-                    });
+
+                    $.messager.alert('初始化错误', '菜单载入错误', 'warning');
                 }
             }
             let list = [];
@@ -164,7 +163,7 @@
                         if (tab.url !== '') {
                             main.openMainTab(tab);
                         } else {
-                            $.messager.alert('菜单错误', tab.name + '无有效url', 'info', function() {});
+                            $.messager.alert('菜单错误', tab.name + '无有效url', 'warning');
                         }
 
                     } else {
@@ -192,7 +191,7 @@
                 if (tab.url !== '') {
                     main.openMainTab(tab);
                 } else {
-                    $.messager.alert('初始化菜单错误', tab.name + '无有效url', 'info', function() {});
+                    $.messager.alert('初始化菜单错误', tab.name + '无有效url', 'warning');
                 }
             }
         }
@@ -234,7 +233,7 @@
                                 return arrEntities[t];
                             });
                         }
-                        $.messager.alert('登录错误', data.message, 'info', function() {
+                        $.messager.alert('登录错误', data.message, 'warning', function() {
                             $('#captchaPIC').html(escape2Html(data.captcha));
                             $('#loginDialog').dialog('open');
                         });

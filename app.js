@@ -61,7 +61,11 @@ app.use(function(req, res, next) {
     res.locals.xhr = req.xhr;
     next();
 })
-
+app.post('/', function(req, res, next) {
+    //默认设置所有post都是Ajax操作
+    res.locals.xhr = true;
+    next();
+});
 
 //初始化allPrivileges 及 xhr检测***************************************************************
 
@@ -105,16 +109,16 @@ app.use(function(req, res, next) {
 
 
 var index = require('./routes/index');
-var privilege = require('./routes/privilege');
-var role = require('./routes/role');
-var userRole = require('./routes/userRole');
+// var privilege = require('./routes/privilege');
+// // var user = require('./routes/user');
+// // var userRole = require('./routes/userRole');
 
 
 
 app.use('/', index);
-app.use('/privilege', privilege);
-app.use('/user', user);
-app.use('/userRole', userRole);
+// app.use('/privilege', privilege);
+// // app.use('/user', user);
+// // app.use('/userRole', userRole);
 
 
 
