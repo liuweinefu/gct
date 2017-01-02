@@ -190,24 +190,19 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-
-        let ajaxPromise = $.post('/privilege/save', sendObject);
-        $.when(ajaxPromise)
-            .done(function(ajaxBack) {
-                //console.log(ajaxBack);
-                //$('#privilege_table').datagrid('acceptChanges');
+        $.post('/privilege/save', sendObject)
+            .done(function(data) {
+                if (data.err) {
+                    $.messager.alert('成功', data.message, 'info');
+                } else {
+                    $.messager.alert('失败', data.message, 'warning');
+                }
                 $('#privilege_table').datagrid('reload');
                 $('#privilege_table').datagrid('loaded');
             })
             .fail(function(err) {
-                //console.log(err);
-                $.messager.alert('保存失败', '请检查数据是否符合要求', 'warning');
-                //$('#privilege_table').datagrid('rejectChanges');
-                $('#privilege_table').datagrid('reload');
-                $('#privilege_table').datagrid('loaded');
-
+                $.messager.alert('失败', '请检查网络连接', 'warning');
             });
-
     };
 
     privilege.add = function() {

@@ -81,14 +81,39 @@ router.post('/save', function(req, res, next) {
     //console.log('req.body');
     req.body = JSON.parse(req.body.value);
     let executePromise = [];
-    executePromise[0] = executeQueries(buildInsertQueries(req.body.insert));
-    executePromise[1] = executeQueries(buildUpdateQueries(req.body.update));
-    executePromise[2] = executeQueries(buildDeleteQueries(req.body.delete));
+    executePromise[0] = executeQueries(buildInsertQueries(req.body.insert), true);
+    executePromise[1] = executeQueries(buildUpdateQueries(req.body.update), true);
+    executePromise[2] = executeQueries(buildDeleteQueries(req.body.delete), true);
 
     Promise.all(executePromise)
         .then(function(values) {
-            res.status(200).end();
-        });
+            let message = '';
+            let count = 0;
+            count = countBackNumber(values[0]);
+            if (count !== 0) {
+                message = message + '成功添加:' + count + '条数据,'
+            }
+            count = countBackNumber(values[1]);
+            if (count !== 0) {
+                message = message + '成功更新:' + count + '条数据,'
+            }
+            count = countBackNumber(values[2]);
+            if (count !== 0) {
+                message = message + '成功删除:' + count + '条数据,'
+            }
+            res.json({
+                err: false,
+                message: message.slice(0, -1),
+            });
+            //res.status(200).end();
+        })
+        .catch(function(err) {
+            res.json({
+                err: true,
+                //message: err.message
+                mesage: '保存失败'
+            });
+        })
 });
 
 
@@ -253,6 +278,21 @@ var filterImportPostData = function(arrayData) {
         })
 };
 
+var countBackNumber = function(value, isCopy) {
+    let backNumber = 0;
+    if (Array.isArray(value) && value.length !== 0) {
+        if (typeof isCopy === 'boolean' && isCopy === true) { value.shift(); }; //删除记录清除
+        backNumber = value
+            .map(element => element.affectedRows)
+            .reduce(function(previousValue, currentValue, index, array) {
+                return previousValue + currentValue;
+            });
+    } else {
+        backNumber = value.affectedRows !== undefined ? value.affectedRows : 0;
+    };
+    return backNumber;
+}
+
 router.post('/importExcel', function(req, res, next) {
     req.body = JSON.parse(req.body.value);
     //数据格式检查
@@ -312,181 +352,130 @@ router.post('/importExcel', function(req, res, next) {
                     return executeQueries(buildInsertQueries(Data.newData), true);
                 })
                 .then(function(value) {
-                    let backNumber = 0;
-                    if (Array.isArray(value) && value.length !== 0) {
-                        backNumber = value
-                            .map(element => element.affectedRows)
-                            .reduce(function(previousValue, currentValue, index, array) {
-                                return previousValue + currentValue;
-                            });
-                    } else {
-                        backNumber = value.affectedRows !== undefined ? value.affectedRows : 0;
-                    }
                     res.json({
                         err: false,
-                        message: '成功添加:' + backNumber + '条数据',
+                        message: '成功添加:' + countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
                 })
                 .catch(function(err) {
                     res.json({
                         err: true,
+                        //message:err.message,
                         message: '添加失败',
-
                     })
                 });
             break;
         case 'update':
             filterImportPostData(req.body.postData)
                 .then(function(Data) {
-                    if (F.isEmpty(Data)) {
+                    if (Data.oldData === undefined || Data.oldData.length === 0) {
                         return Promise.resolve([]);
                     }
                     return executeQueries(buildUpdateQueries(Data.oldData, ['name']), true);
                 })
                 .then(function(value) {
-                    let backNumber = 0;
-                    if (F.isNotEmpty(value) && Array.isArray(value)) {
-                        backNumber = value
-                            .map(element => element.affectedRows)
-                            .reduce(function(previousValue, currentValue, index, array) {
-                                return previousValue + currentValue;
-                            });
-                    } else {
-                        backNumber = F.isSet(value.affectedRows) ? value.affectedRows : 0;
-                    }
                     res.json({
                         err: false,
-                        message: '成功更新:' + backNumber + '条数据',
+                        message: '成功更新:' + countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
                 })
                 .catch(function(err) {
-                    console.log('privilege/inmportExcel/update Err------------------------------------------start');
-                    console.log(err);
-                    console.log('privilege/inmportExcel/update Err------------------------------------------end');
                     res.json({
-                            err: true,
-                            message: '更新失败',
-
-                        })
-                        //res.status(500).end();
+                        err: true,
+                        //message:err.message,
+                        message: '更新失败',
+                    });
+                    //res.status(500).end();
                 });
             break;
         case 'addAndUpdate':
             filterImportPostData(req.body.postData)
                 .then(function(Data) {
-                    if (F.isEmpty(Data)) {
-                        return Promise.resolve([]);
+                    let insertQueries = [];
+                    if (Data.newData !== undefined && Data.newData.length !== 0) {
+                        insertQueries = buildInsertQueries(Data.newData);
                     }
-                    let insertAndbuildUpdateQueries = F.isEmpty(Data.newData) ? [] : buildInsertQueries(Data.newData);
-                    insertAndbuildUpdateQueries = F.isEmpty(Data.oldData) ? insertAndbuildUpdateQueries.concat([]) : insertAndbuildUpdateQueries.concat(buildUpdateQueries(Data.oldData, ['name']));
-                    return executeQueries(insertAndbuildUpdateQueries, true);
+                    let updateQueries = [];
+                    if (Data.oldData !== undefined && Data.oldData.length !== 0) {
+                        updateQueries = buildUpdateQueries(Data.oldData, ['name']);
+                    }
+                    let insertAndUpdateQueries = insertQueries.concat(updateQueries);
+                    if (insertAndUpdateQueries.length === 0) {
+                        return Promise.resolve([]);
+                    } else {
+                        return executeQueries(insertAndUpdateQueries, true);
+                    }
                 })
                 .then(function(value) {
-                    let backNumber = 0;
-                    if (F.isNotEmpty(value) && Array.isArray(value)) {
-                        backNumber = value
-                            .map(element => element.affectedRows)
-                            .reduce(function(previousValue, currentValue, index, array) {
-                                return previousValue + currentValue;
-                            });
-                    } else {
-                        backNumber = F.isSet(value.affectedRows) ? value.affectedRows : 0;
-                    }
                     res.json({
                         err: false,
-                        message: '成功添加及更新:' + backNumber + '条数据',
+                        message: '成功添加及更新:' + countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
                 })
                 .catch(function(err) {
-                    console.log('privilege/inmportExcel/addAndUpdate Err------------------------------------------start');
-                    console.log(err);
-                    console.log('privilege/inmportExcel/addAndUpdate Err------------------------------------------end');
                     res.json({
-                            err: true,
-                            message: '添加或更新失败',
-
-                        })
-                        //res.status(500).end();
+                        err: true,
+                        //message:err.message,
+                        message: '添加或更新失败',
+                    });
+                    //res.status(500).end();
                 });
             break;
         case 'delete':
             filterImportPostData(req.body.postData)
                 .then(function(Data) {
-                    if (F.isEmpty(Data)) {
+                    if (Data.oldData === undefined || Data.oldData.length === 0) {
                         return Promise.resolve([]);
                     }
                     return executeQueries(buildDeleteQueries(Data.oldData, ['name']), true);
                 })
                 .then(function(value) {
-                    let backNumber = 0;
-                    if (F.isNotEmpty(value) && Array.isArray(value)) {
-                        backNumber = value
-                            .map(element => element.affectedRows)
-                            .reduce(function(previousValue, currentValue, index, array) {
-                                return previousValue + currentValue;
-                            });
-                    } else {
-                        backNumber = F.isSet(value.affectedRows) ? value.affectedRows : 0;
-                    }
                     res.json({
                         err: false,
-                        message: '成功删除:' + backNumber + '条数据',
+                        message: '成功删除:' + countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
                 })
                 .catch(function(err) {
-                    console.log('privilege/inmportExcel/delete Err------------------------------------------start');
-                    console.log(err);
-                    console.log('privilege/inmportExcel/delete Err------------------------------------------end');
                     res.json({
-                            err: true,
-                            message: '更新删除',
-
-                        })
-                        //res.status(500).end();
+                        err: true,
+                        //message:err.message,
+                        message: '删除失败',
+                    });
+                    //res.status(500).end();
                 });
             break;
 
         case 'copy':
             filterImportPostData(req.body.postData)
                 .then(function(Data) {
-                    if (F.isEmpty(Data)) {
-                        return Promise.resolve([]);
+                    let copyData = [];
+                    if (Data.newData !== undefined && Data.oldData !== undefined) {
+                        copyData = Data.newData.concat(Data.oldData);
                     }
-                    let copyData = Data.newData.concat(Data.oldData);
-                    return executeQueries(['delete from privilege'].concat(buildInsertQueries(copyData)), true);
+                    if (copyData.length === 0) {
+                        return Promise.resolve([]);
+                    } else {
+                        return executeQueries(['delete from privilege'].concat(buildInsertQueries(copyData)), true);
+                    }
                 })
                 .then(function(value) {
-                    let backNumber = 0;
-                    if (F.isNotEmpty(value) && Array.isArray(value)) {
-                        value.shift(); //删除记录清除
-                        backNumber = value
-                            .map(element => element.affectedRows)
-                            .reduce(function(previousValue, currentValue, index, array) {
-                                return previousValue + currentValue;
-                            });
-                    } else {
-                        backNumber = F.isSet(value.affectedRows) ? value.affectedRows : 0;
-                    }
                     res.json({
                         err: false,
-                        message: '成功添加:' + backNumber + '条数据',
+                        message: '成功添加:' + countBackNumber(value, true) + '条数据',
                     });
                     //res.status(200).end();
                 })
                 .catch(function(err) {
-                    console.log('privilege/inmportExcel/add Err------------------------------------------start');
-                    console.log(err);
-                    console.log('privilege/inmportExcel/add Err------------------------------------------end');
                     res.json({
-                            err: true,
-                            message: '添加失败',
-
-                        })
-                        //res.status(500).end();
+                        err: true,
+                        //message:err.message,
+                        message: 'copy失败',
+                    });
+                    //res.status(500).end();
                 });
             break;
     }
