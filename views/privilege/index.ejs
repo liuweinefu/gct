@@ -2,7 +2,7 @@
 <table id="privilege_table">
 </table>
 <div id="privilege_table_toolbar">
-    <table>
+    <table style="width:100%">
         <tr>
             <td style="width:40%">
                 <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:privilege.tbSearchName,menu:'#privilege_table_toolbar_serchbox_mm'" style="width:80%">
@@ -75,9 +75,6 @@
                 data: [{
                     label: 'menu',
                     value: 'menu'
-                }, {
-                    label: 'tab',
-                    value: 'tab'
                 }, {
                     label: 'url',
                     value: 'url'
@@ -170,12 +167,13 @@
             value: value
         });
 
+
     };
 
     privilege.save = function() {
         //console.log($('#privilege_table').datagrid('cell'));
         //接受当前编辑内容，并结束编辑
-        if (isNotEmpty($('#privilege_table').datagrid('cell'))) {
+        if ($('#privilege_table').datagrid('cell')) {
             $('#privilege_table').datagrid('endEdit', $('#privilege_table').datagrid('cell').index);
         };
 
@@ -185,6 +183,13 @@
         sendObject.insert = $('#privilege_table').datagrid('getChanges', 'inserted');
         sendObject.delete = $('#privilege_table').datagrid('getChanges', 'deleted');
         sendObject.update = $('#privilege_table').datagrid('getChanges', 'updated');
+        if (sendObject.insert.length === 0 && sendObject.delete.length === 0 && sendObject.update.length === 0) {
+            $.messager.alert('提示', '没有更改', 'info', function() {
+                $('#privilege_table').datagrid('loaded');
+                $('#privilege_table').datagrid('getPanel').focus(); //重置焦点
+            });
+            return;
+        }
         let sendString = JSON.stringify(sendObject);
         sendObject = {
             value: sendString
@@ -192,16 +197,16 @@
         //console.log(JSON.stringify(sendObject));
         $.post('/privilege/save', sendObject)
             .done(function(data) {
-                if (data.err) {
-                    $.messager.alert('成功', data.message, 'info');
-                } else {
-                    $.messager.alert('失败', data.message, 'warning');
-                }
+                $.messager.alert('提示', data.message, 'info', function() {
+                    $('#privilege_table').datagrid('getPanel').focus(); //重置焦点
+                });
                 $('#privilege_table').datagrid('reload');
                 $('#privilege_table').datagrid('loaded');
             })
             .fail(function(err) {
-                $.messager.alert('失败', '请检查网络连接', 'warning');
+                $.messager.alert('失败', '请检查网络连接', 'warning', function() {
+                    $('#privilege_table').datagrid('getPanel').focus(); //重置焦点
+                });
             });
     };
 
@@ -209,18 +214,21 @@
         $('#privilege_table').datagrid('appendRow', {
             id: 'N ' + Math.round(Math.random() * 1000),
             name: '新权限' + Math.round(Math.random() * 1000),
+            type: 'menu',
         });
     };
     privilege.delete = function() {
 
-        let allChecked = $('#privilege_table').datagrid('getChecked');
+        let allChecked = $('#privilege_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
         let allDeleteId = [];
-        allChecked.map(function(c) {
-            allDeleteId.push(c.id);
-        });
-        for (let id of allDeleteId) {
+        if (Array.isArray(allChecked) && allChecked.length != 0) {
+            allChecked.forEach(function(item) {
+                allDeleteId.push(item.id);
+            })
+        };
+        allDeleteId.forEach(function(id) {
             $('#privilege_table').datagrid('deleteRow', $('#privilege_table').datagrid('getRowIndex', id));
-        }
+        });
 
     };
     privilege.redo = function() {

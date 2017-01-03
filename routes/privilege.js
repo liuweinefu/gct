@@ -91,29 +91,22 @@ router.post('/save', function(req, res, next) {
             let count = 0;
             count = countBackNumber(values[0]);
             if (count !== 0) {
-                message = message + '成功添加:' + count + '条数据,'
+                message = message + '添加:' + count + '条数据,<br>'
             }
             count = countBackNumber(values[1]);
             if (count !== 0) {
-                message = message + '成功更新:' + count + '条数据,'
+                message = message + '更新:' + count + '条数据,<br>'
             }
             count = countBackNumber(values[2]);
             if (count !== 0) {
-                message = message + '成功删除:' + count + '条数据,'
+                message = message + '删除:' + count + '条数据'
             }
             res.json({
                 err: false,
                 message: message.slice(0, -1),
             });
             //res.status(200).end();
-        })
-        .catch(function(err) {
-            res.json({
-                err: true,
-                //message: err.message
-                mesage: '保存失败'
-            });
-        })
+        });
 });
 
 
@@ -123,7 +116,7 @@ var buildInsertQueries = function(arrayData) {
         return queries;
     }
     for (item of arrayData) {
-        if ((typeof item.name) !== 'string' || item.name.tirm() === '') { continue; }
+        if ((typeof item.name) !== 'string' || item.name.trim() === '') { continue; }
         let query = ''
         for (let key in item) {
             switch (key) {
@@ -149,8 +142,7 @@ var buildUpdateQueries = function(arrayData, keys) {
     keys = Array.isArray(keys) && keys.length !== 0 ? keys : ['id'];
 
     for (item of arrayData) {
-        if (F.isEmpty(item.name)) { continue; }
-        if ((typeof item.name) !== 'string' || item.name.tirm() === '') { continue; }
+        if ((typeof item.name) !== 'string' || item.name.trim() === '') { continue; }
 
         let query = ''
         for (let key in item) {
@@ -236,18 +228,11 @@ var executeQueries = function(queries, backResults) {
                 return Promise.resolve('complete!');
             }
         })
-        .catch(function(err) {
-            return Promise.reject(err);
-        });
 }
 
 var filterImportPostData = function(arrayData) {
     if (!Array.isArray(arrayData) || arrayData.length === 0) {
         return Promise.resolve({});
-        // return Promise.resolve({
-        //     newData: [],
-        //     oldData: []
-        // });
     }
 
     let currentCon = null;
@@ -263,7 +248,7 @@ var filterImportPostData = function(arrayData) {
             let oldData = [];
             let newData = [];
             for (item of arrayData) {
-                if ((typeof item.name) !== 'string' || item.name.tirm() === '') { continue; }
+                if ((typeof item.name) !== 'string' || item.name.trim() === '') { continue; }
                 if (itemNames.indexOf(item.name) === -1) {
                     newData.push(item);
                 } else {
@@ -357,13 +342,6 @@ router.post('/importExcel', function(req, res, next) {
                         message: '成功添加:' + countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
-                })
-                .catch(function(err) {
-                    res.json({
-                        err: true,
-                        //message:err.message,
-                        message: '添加失败',
-                    })
                 });
             break;
         case 'update':
@@ -380,14 +358,6 @@ router.post('/importExcel', function(req, res, next) {
                         message: '成功更新:' + countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
-                })
-                .catch(function(err) {
-                    res.json({
-                        err: true,
-                        //message:err.message,
-                        message: '更新失败',
-                    });
-                    //res.status(500).end();
                 });
             break;
         case 'addAndUpdate':
@@ -414,14 +384,6 @@ router.post('/importExcel', function(req, res, next) {
                         message: '成功添加及更新:' + countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
-                })
-                .catch(function(err) {
-                    res.json({
-                        err: true,
-                        //message:err.message,
-                        message: '添加或更新失败',
-                    });
-                    //res.status(500).end();
                 });
             break;
         case 'delete':
@@ -438,17 +400,8 @@ router.post('/importExcel', function(req, res, next) {
                         message: '成功删除:' + countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
-                })
-                .catch(function(err) {
-                    res.json({
-                        err: true,
-                        //message:err.message,
-                        message: '删除失败',
-                    });
-                    //res.status(500).end();
                 });
             break;
-
         case 'copy':
             filterImportPostData(req.body.postData)
                 .then(function(Data) {
@@ -468,18 +421,9 @@ router.post('/importExcel', function(req, res, next) {
                         message: '成功添加:' + countBackNumber(value, true) + '条数据',
                     });
                     //res.status(200).end();
-                })
-                .catch(function(err) {
-                    res.json({
-                        err: true,
-                        //message:err.message,
-                        message: 'copy失败',
-                    });
-                    //res.status(500).end();
                 });
             break;
     }
-
 });
 
 
