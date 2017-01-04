@@ -82,7 +82,7 @@ router.post('/', function(req, res, next) {
                 total: rows[0][0].count,
                 rows: rows[1]
             })
-        })
+        });
 });
 
 router.post('/save', function(req, res, next) {
@@ -434,5 +434,31 @@ router.post('/importExcel', function(req, res, next) {
     }
 });
 
+router.post('/privileges', function(req, res, next) {
 
+    let selectQueries = [];
+    selectQueries.push('select id,name,url,type from privilege');
+
+    // let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
+    // let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
+    // let offset = (page - 1) * rows;
+    // let query = '';
+
+    // if (!req.body.name || !req.body.value) {
+    //     query = 'SELECT id,name,base_wage,deduction_wage,privileges,menus,tabs FROM user_role limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+    // } else {
+    //     query = 'SELECT id,name,base_wage,deduction_wage,privileges,menus,tabs FROM user_role where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+    // };
+    // selectQueries.push(query);
+
+
+    //let executePromise = executeQueries(selectQueries, 'selectQueries', true);
+    //Promise.all(executePromise)
+    executeQueries(selectQueries, true)
+        .then(function(rows) {
+            //console.log(rows);
+            res.json(rows)
+        });
+
+});
 module.exports = router

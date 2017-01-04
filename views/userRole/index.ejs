@@ -85,8 +85,40 @@
         width: 100,
         sortable: false,
         editor: {
-            type: 'textbox',
-            options: {}
+            type: 'combogrid',
+            options: {
+                panelWidth: 420,
+                //value: [1, 2],
+                editable: false,
+                multiple: true,
+                striped: true,
+                fitColumns: true,
+                idField: 'id',
+                textField: 'id',
+                url: 'userRole/privileges',
+                columns: [
+                    [{
+                        field: 'ck',
+                        checkbox: true
+                    }, {
+                        field: 'id',
+                        title: '权限id',
+                        width: 60
+                    }, {
+                        field: 'name',
+                        title: '权限名称',
+                        width: 100
+                    }, {
+                        field: 'url',
+                        title: 'URL地址',
+                        width: 140
+                    }, {
+                        field: 'type',
+                        title: '权限类型',
+                        width: 100
+                    }]
+                ]
+            }
         }
     });
     userRole.fields[0].push({
@@ -262,8 +294,8 @@
     userRole.add = function() {
         $('#userRole_table').datagrid('appendRow', {
             id: 'N ' + Math.round(Math.random() * 1000),
-            name: '新权限' + Math.round(Math.random() * 1000),
-            type: 'menu',
+            name: '新类型' + Math.round(Math.random() * 1000),
+            base_wage: 0,
         });
     };
     userRole.delete = function() {
@@ -292,7 +324,7 @@
         //console.log(mainImport);
         //mainImport.panel('destroy');
         $('#mainImport').window({
-            title: '权限信息导入',
+            title: '员工类型导入',
             width: 800,
             height: 600,
             collapsible: false,

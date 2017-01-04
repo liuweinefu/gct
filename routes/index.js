@@ -73,22 +73,31 @@ router.post('/', function(req, res, next) {
         })
         .then(function(rows) {
             if (rows.length !== 1) { return Promise.reject(new Error('用户错误')); }
-            let user = rows[0];
+            let user = Object.assign({}, rows[0]); //浅层拷贝
+            user.privileges = user.privileges.split(',');
+            user.menus = user.menus.split(',');
+            user.tabs = user.tabs.split(',');
             let privileges = [];
             let menus = [];
             let tabs = [];
             for (let i in allPrivileges) {
-                if (user.privileges === 'all') {
-                    privileges.push(allPrivileges[i].url);
-                } else if (user.privileges.indexOf(allPrivileges[i].id) !== -1) {
+                // if (user.privileges === 'all') {
+                //     privileges.push(allPrivileges[i].url);
+                // } else if (user.privileges.indexOf(allPrivileges[i].id) !== -1) {
+                //     privileges.push(allPrivileges[i].url);
+                // }
+                if (user.privileges.indexOf(allPrivileges[i].id) !== -1) {
                     privileges.push(allPrivileges[i].url);
                 }
 
-                if (user.menus === 'all') {
-                    if (allPrivileges[i].type === 'menu') {
-                        menus.push(allPrivileges[i]);
-                    }
-                } else if (user.menus.indexOf(allPrivileges[i].id) !== -1) {
+                // if (user.menus === 'all') {
+                //     if (allPrivileges[i].type === 'menu') {
+                //         menus.push(allPrivileges[i]);
+                //     }
+                // } else if (user.menus.indexOf(allPrivileges[i].id) !== -1) {
+                //     menus.push(allPrivileges[i]);
+                // }
+                if (user.menus.indexOf(allPrivileges[i].id) !== -1) {
                     menus.push(allPrivileges[i]);
                 }
 
@@ -100,9 +109,10 @@ router.post('/', function(req, res, next) {
             }
 
             req.session.hasLogged = true;
-            req.session.user = Object.assign({}, user); //浅层拷贝
+            req.session.user = user;
             delete req.session.user.menus;
             delete req.session.user.privileges;
+            delete req.session.user.tabs;
             req.session.privileges = privileges;
             req.session.menus = menus;
             req.session.tabs = tabs;
