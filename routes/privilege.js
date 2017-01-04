@@ -3,14 +3,21 @@ var router = express.Router();
 //var crypto = require('crypto');
 var xlsx = require('node-xlsx').default;
 
-/* GET privilege . */
+var getPathName = function() {
+    if (__filename.lastIndexOf('\\') !== -1) {
+        return './' + __filename.substr(__filename.lastIndexOf('\\') + 1, __filename.lastIndexOf('.') - __filename.lastIndexOf('\\') - 1) + '/';
+    } else {
+        return './' + __filename.substr(__filename.lastIndexOf('/') + 1, __filename.lastIndexOf('.') - __filename.lastIndexOf('/') - 1) + '/';
+    }
+}
 
 router.get('/', function(req, res, next) {
-    res.render('./privilege/index');
+    // res.render('./privilege/index');
+    res.render(getPathName() + 'index');
 });
 
 router.get('/importExcel', function(req, res, next) {
-    res.render('./privilege/importExcel');
+    res.render(getPathName() + 'importExcel');
 });
 
 router.get('/exportExcel', function(req, res, next) {

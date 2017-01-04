@@ -51,7 +51,7 @@
 
 
     //**************************模板定义块*************************************************start
-    importExcel.postURL = '/users/importExcel';
+    importExcel.postURL = '/privilege/importExcel';
     importExcel._initFieldsTable = function() {
         $('#importExcel_fieldsTable').datagrid({
             height: 460,
@@ -85,7 +85,8 @@
                         $('#importExcel_fieldsTable').datagrid('updateRow', {
                             index: index,
                             row: {
-                                majorKeys: isEmpty(changes.importKeys) ? '<span style="color:red;">请选择主键</span>' : 'Y'
+                                //majorKeys: isEmpty(changes.importKeys) ? '<span style="color:red;">请选择主键</span>' : 'Y'
+                                majorKeys: typeof changes.importKeys === 'string' && changes.importKeys.trim() !== '' ? 'Y' : '<span style="color:red;">请选择主键</span>'
                             }
                         });
                         break;
@@ -109,27 +110,6 @@
 
     importExcel._setFieldsTable = function() {
         $('#importExcel_fieldsTable').datagrid({
-            data: [{
-                keys: 'name',
-                importKeys: importExcel._setKeys(['name', '用户名']),
-                majorKeys: importExcel._setKeys(['name', '用户名'], true)
-            }, {
-                keys: 'pass',
-                importKeys: importExcel._setKeys(['pass', '密码']),
-                majorKeys: ''
-            }, {
-                keys: 'role_id',
-                importKeys: importExcel._setKeys(['role_id', '角色ID']),
-                majorKeys: ''
-            }, {
-                keys: 'zydm',
-                importKeys: importExcel._setKeys(['zydm', '年份专业权限']),
-                majorKeys: ''
-            }, {
-                keys: 'workunit',
-                importKeys: importExcel._setKeys(['workunit', '工作单位']),
-                majorKeys: ''
-            }],
             columns: [
                 [{
                     field: 'keys',
@@ -163,6 +143,19 @@
                     align: 'center',
                 }]
             ],
+            data: [{
+                keys: 'name',
+                importKeys: importExcel._setKeys(['name', '权限名']),
+                majorKeys: importExcel._setKeys(['name', '权限名'], true)
+            }, {
+                keys: 'url',
+                importKeys: importExcel._setKeys(['url', 'url地址']),
+                majorKeys: ''
+            }, {
+                keys: 'type',
+                importKeys: importExcel._setKeys(['type', '类型']),
+                majorKeys: ''
+            }],
         });
     };
     //**************************模板定义块*************************************************end
@@ -171,8 +164,8 @@
 
     importExcel._setKeys = function(keys, isMajorKeys) {
         //isMajorKeys = isEmpty(isMajorKeys) ? false : true;
-        isMajorKeys = isEmpty(isMajorKeys) ? false : isMajorKeys;
-        if (isEmpty(keys) || !Array.isArray(keys)) {
+        isMajorKeys = typeof isMajorKeys === 'boolean' ? isMajorKeys : false;
+        if (!Array.isArray(keys) || keys.length === 0) {
             return;
         }
         let returnString = '';
@@ -183,7 +176,7 @@
             }
 
         }
-        if (isMajorKeys === true) {
+        if (isMajorKeys) {
             return returnString !== '' ? 'Y' : '<span style="color:red;">请选择主键</span>';
         }
         return returnString;
@@ -219,13 +212,10 @@
     }
 
     importExcel.parseXLSX = function(e, listAll) {
-        listAll = isEmpty(listAll) ? false : true;
+        listAll = typeof listAll === 'boolean' ? listAll : false;
+
         //只读取第一个文件的第一个表格
-        if (isEmpty(e.target.files)) {
-            //考虑是否清空所有之前的设置
-            return;
-        };
-        $('#importExcel_listTable').datagrid('loading');
+        //$('#importExcel_listTable').datagrid('loading');
         let reader = new FileReader();
         reader.readAsBinaryString(e.target.files[0]); //第一个文件
         reader.onload = function(file) {
@@ -235,13 +225,13 @@
             });
             importExcel.Data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); //第一个表格
 
-            if (isEmpty(importExcel.Data)) {
-                $.messager.alert('导入数据格式错误', '无有效数据', 'warning');
-                $('#importExcel_listTable').datagrid('loadData', []);
-                $('#importExcel_fieldsTable').datagrid('loadData', []);
-                $('#importExcel_listTable').datagrid('loaded');
-                return;
-            };
+            // if (importExcel.Data.length === 0) {
+            //     $.messager.alert('导入数据格式错误', '无有效数据', 'warning');
+            //     $('#importExcel_listTable').datagrid('loadData', []);
+            //     $('#importExcel_fieldsTable').datagrid('loadData', []);
+            //     $('#importExcel_listTable').datagrid('loaded');
+            //     return;
+            // };
 
 
             importExcel.fieldsKeys = [];
@@ -252,22 +242,25 @@
 
             for (let i = importExcel._excelToCount(colBeginAlpha); i <= importExcel._excelToCount(colEndAlpha); i++) {
                 let colObject = workbook.Sheets[workbook.SheetNames[0]][importExcel._countToExcel(i) + colBeginNum];
-                if (isEmpty(colObject)) {
+
+                if (typeof colObject !== 'object' || Object.keys(colObject).length === 0) {
                     importExcel.fieldsKeys = [];
                     break;
                 }
-                if (importExcel.fieldsKeys.indexOf(colObject.v) !== -1) {
+
+                if (typeof colObject.v === 'undefined' || importExcel.fieldsKeys.indexOf(colObject.v) !== -1) {
                     importExcel.fieldsKeys = [];
                     break;
                 }
+
                 importExcel.fieldsKeys.push(colObject.v);
             }
 
-            if (isEmpty(importExcel.fieldsKeys)) {
+            if (importExcel.fieldsKeys.length === 0) {
                 $.messager.alert('导入数据格式错误', '有效数据首行字段为空,或字段名重复', 'warning');
                 $('#importExcel_listTable').datagrid('loadData', []);
                 $('#importExcel_fieldsTable').datagrid('loadData', []);
-                $('#importExcel_listTable').datagrid('loaded');
+                //$('#importExcel_listTable').datagrid('loaded');
                 return;
             };
 
@@ -288,7 +281,7 @@
             } else {
                 let importExcel_listTable_Data = [];
                 for (let i = 0; i < 100; i++) {
-                    if (isEmpty(importExcel.Data[i])) {
+                    if (typeof importExcel.Data[i] === 'undefined') {
                         break;
                     }
                     importExcel_listTable_Data.push(importExcel.Data[i]);
@@ -332,13 +325,14 @@
 
 
     importExcel.beginImport = function(postURL) {
-        postURL = isEmpty(postURL) ? importExcel.postURL : postURL;
+        postURL = typeof postUrl === 'string' ? postURL : importExcel.postURL;
         importExcel.selectStep(3);
         $('#importExcel_importMessage').html('');
         $('#importExcel_importMessage').append('<p>开始整理数据……</p>');
 
         let postKeys = $('#importExcel_fieldsTable').datagrid('getData').rows.filter(function(element) {
-            return isNotEmpty(element.majorKeys);
+            return typeof element.majorKeys === 'string' && element.majorKeys.trim() !== '';
+            //return isNotEmpty(element.majorKeys);
         });
         postKeys = postKeys.map(function(element) {
             return element.keys;
@@ -346,12 +340,13 @@
 
         let postData = [];
         let postFields = $('#importExcel_fieldsTable').datagrid('getData').rows.filter(function(element) {
-            return isNotEmpty(element.importKeys);
+            return typeof element.importKeys === 'string' && element.importKeys.trim() !== '';
+            //return isNotEmpty(element.importKeys);
         });
         importExcel.Data.forEach(function(element) {
             let postElement = {};
             postFields.forEach(function(keyObject) {
-                postElement[keyObject.keys] = element[keyObject.importKeys] === undefined ? '' : element[keyObject.importKeys];
+                postElement[keyObject.keys] = typeof element[keyObject.importKeys] === 'undefined' ? '' : element[keyObject.importKeys];
             })
             postData.push(postElement);
         });
@@ -391,7 +386,7 @@
 
     //选择Tab，公共函数
     importExcel.selectStep = function(step) {
-        if (isNotEmpty($('#importExcel_fieldsTable').datagrid('cell'))) {
+        if ($('#importExcel_fieldsTable').datagrid('cell')) {
             $('#importExcel_fieldsTable').datagrid('endEdit', $('#importExcel_fieldsTable').datagrid('cell').index);
         };
         let disableTabArray = [];
@@ -402,7 +397,7 @@
                 execute = true;
                 break;
             case 1:
-                if (isEmpty($('#importExcel_listTable').datagrid('getData').rows)) {
+                if ($('#importExcel_listTable').datagrid('getData').total === 0) {
                     $.messager.alert('导入信息错误', '未导入有效EXCEL文件！！！', 'warning');
                     importExcel.selectStep(0);
                     break;
@@ -414,9 +409,9 @@
                 let fieldsArray = $('#importExcel_fieldsTable').datagrid('getData').rows;
 
                 let importKeysArray = [];
-                importKeysArray = fieldsArray.filter(item => isNotEmpty(item.importKeys));
+                importKeysArray = fieldsArray.filter(item => typeof item.importKeys === 'string' && item.importKeys.trim() !== '');
                 //let majorKeys = false;
-                if (isEmpty(importKeysArray)) {
+                if (importKeysArray.length === 0) {
                     $.messager.alert('导入信息错误', '未选中导入字段', 'warning');
                     importExcel.selectStep(1);
                     break;
@@ -424,8 +419,7 @@
 
                 let majorKeysArray = [];
                 majorKeysArray = fieldsArray.filter(item => item.majorKeys === 'Y');
-                console.log(majorKeysArray);
-                if (isEmpty(majorKeysArray)) {
+                if (majorKeysArray.length === 0) {
                     $.messager.alert('导入信息错误', '请选择有主键', 'warning');
                     importExcel.selectStep(1);
                     break;
@@ -470,7 +464,7 @@
 
 
     //页面初始化 --公共执行
-    if (isEmpty(window.XLSX)) {
+    if (typeof window.XLSX === 'undefined') {
         $.getScript('./javascripts/xlsx.full.min.js')
             .done(function() {
                 importExcel.init();

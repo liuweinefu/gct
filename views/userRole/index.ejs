@@ -1,96 +1,145 @@
 <!--用户管理页面 -->
-<table id="roles_table">
+<table id="userRole_table">
 </table>
-<div id="roles_table_toolbar">
-    <table>
+<div id="userRole_table_toolbar">
+    <table style="width:100%">
         <tr>
             <td style="width:40%">
-                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:roles.tbSearchName,menu:'#roles_table_toolbar_serchbox_mm'" style="width:80%">
-                <div id="roles_table_toolbar_serchbox_mm" style="width:120px">
-                    <div data-options="name:'name'">角色名</div>
-                    <!--<div data-options="name:'workunit'">工作单位</div>
-                    <div data-options="name:'remark'">备注</div>-->
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:userRole.tbSearchName,menu:'#userRole_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="userRole_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'name'">员工类型</div>
+                    <div data-options="name:'base_wage'">底薪</div>
                 </div>
             </td>
             <td>
                 <div>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="roles.import()">导入(<ins>W</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="roles.export()">导出(<ins>Q</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="userRole.import()">导入(<ins>W</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="userRole.export()">导出(<ins>Q</ins>)</a>
                     <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="roles.add()">增加(<ins>A</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="roles.delete()">删除(<ins>D</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="roles.save()">保存(<ins>S</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="roles.redo()">撤销(<ins>R</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="userRole.add()">增加(<ins>A</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="userRole.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="userRole.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="userRole.redo()">撤销(<ins>R</ins>)</a>
                 </div>
             </td>
         </tr>
     </table>
 </div>
 <script>
-    roles = {};
+    userRole = {};
     //表格字段设置*************************************************************************
-    roles.fields = [];
-    roles.fields[0] = [];
-    roles.fields[0].push({
+    userRole.fields = [];
+    userRole.fields[0] = [];
+    userRole.fields[0].push({
         field: 'ck',
         checkbox: true
     });
-    roles.fields[0].push({
+    userRole.fields[0].push({
         field: 'id',
-        title: '角色ID',
-        width: 60,
+        title: '员工类型ID',
+        width: 80,
         sortable: true
     });
-    roles.fields[0].push({
+    userRole.fields[0].push({
         field: 'name',
-        title: '角色名',
-        width: 80,
+        title: '员工类型',
+        width: 100,
         sortable: true,
         editor: {
             type: 'textbox',
             options: {}
         }
     });
-    roles.fields[0].push({
-        field: 'menus',
-        title: '菜单项',
-        width: 80,
-        sortable: true,
+    userRole.fields[0].push({
+        field: 'base_wage',
+        title: '底薪',
+        width: 100,
+        sortable: false,
+        align: 'right',
+        halign: 'left',
+        formatter: function(value, row, index) {
+            return '￥' + Number.parseFloat(value).toFixed(2);
+        },
+        editor: {
+            type: 'numberbox',
+            options: {
+                min: 0,
+                precision: 2,
+                prefix: '￥',
+            }
+        }
+    });
+    userRole.fields[0].push({
+        field: 'deduction_wage',
+        title: '提成薪金',
+        width: 100,
+        sortable: false,
         editor: {
             type: 'textbox',
             options: {}
         }
     });
-    roles.fields[0].push({
-        field: 'tabs',
-        title: '标签项',
-        width: 80,
-        sortable: true,
-        editor: {
-            type: 'textbox',
-            options: {}
-        }
-    });
-    roles.fields[0].push({
+    userRole.fields[0].push({
         field: 'privileges',
         title: '权限',
-        width: 80,
-        sortable: true,
+        width: 100,
+        sortable: false,
         editor: {
             type: 'textbox',
             options: {}
         }
     });
+    userRole.fields[0].push({
+        field: 'menus',
+        title: '菜单栏',
+        width: 100,
+        sortable: false,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    userRole.fields[0].push({
+        field: 'tabs',
+        title: '强制显示标签页',
+        width: 100,
+        sortable: false,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    // userRole.fields[0].push({
+    //     field: 'type',
+    //     title: '类型',
+    //     width: 80,
+    //     sortable: false,
+    //     editor: {
+    //         type: 'combobox',
+    //         options: {
+    //             panelWidth: 160,
+    //             valueField: 'label',
+    //             textField: 'value',
+    //             data: [{
+    //                 label: 'menu',
+    //                 value: 'menu'
+    //             }, {
+    //                 label: 'url',
+    //                 value: 'url'
+    //             }]
+    //         }
+    //     }
+    // });
 
     //表格初始化*************************************************************************
-    $('#roles_table').datagrid({
+    $('#userRole_table').datagrid({
         idField: 'id',
         //loadMsg: '数据加载中,请稍后',
         fit: true,
         singleSelect: false,
-        url: '/roles',
+        url: '/userRole',
         method: 'post',
-        toolbar: '#roles_table_toolbar',
+        toolbar: '#userRole_table_toolbar',
         striped: true,
         pagination: true,
         rownumbers: true,
@@ -100,7 +149,7 @@
         sortName: 'id',
         remoteSort: false,
         multiSort: true,
-        columns: roles.fields,
+        columns: userRole.fields,
         //根据字段类型设置编辑器初始状态
         onCellEdit: function(index, field, value) {
             var ed = $(this).datagrid('getEditor', {
@@ -108,126 +157,152 @@
                 field: field
             });
             switch (field) {
+                // case 'privileges':
+                // case 'menus':
+                // case 'tabs':
+                //     $(ed.target).combobox('textbox').select();
+                //     $(ed.target).combobox('showPanel');
+                //     break;
                 default: $(ed.target).textbox('textbox').select();
                 break;
             }
         },
+        // onBeginEdit: function(index, row) {
+        //     console.log([1, 2, 6].indexOf(row.id));
+        //     if ([1, 2, 6].indexOf(row.id) !== -1) {
+        //         console.log(index);
+        //         $('#userRole_table').datagrid('endEdit', index);
+        //     }
+        // }
     }).datagrid('enableCellEditing');
 
     //绑定菜单按钮的键盘设置*************************************************************************
-    roles.keydown = function(e) {
+    userRole.keydown = function(e) {
         //console.log(e);
         if (e.altKey === false) {
             return;
         }
         switch (e.key) {
             case "w":
-                roles.import();
+                userRole.import();
                 break;
             case "q":
-                roles.export();
+                userRole.export();
                 break;
             case "s":
-                roles.save();
+                userRole.save();
                 break;
             case "a":
-                roles.add();
+                userRole.add();
                 break;
             case "d":
-                roles.delete();
+                userRole.delete();
                 break;
             case "r":
-                roles.redo();
+                userRole.redo();
                 break;
 
         }
     };
-    $('#roles_table').datagrid('getPanel').keydown(roles.keydown);
+    $('#userRole_table').datagrid('getPanel').keydown(userRole.keydown);
 
 
     //button设置*************************************************************************
-    roles.tbSearchName = function(value, name) {
-        //$('#roles_table').datagrid('unselectAll');
-        //s$('#roles_table').datagrid('uncheckAll');
-        $('#roles_table').datagrid('load', {
+    userRole.tbSearchName = function(value, name) {
+        //$('#userRole_table').datagrid('unselectAll');
+        //s$('#userRole_table').datagrid('uncheckAll');
+        $('#userRole_table').datagrid('load', {
             name: name,
             value: value
         });
 
+
     };
 
-    roles.save = function() {
-        //console.log($('#roles_table').datagrid('cell'));
+    userRole.save = function() {
+        //console.log($('#userRole_table').datagrid('cell'));
         //接受当前编辑内容，并结束编辑
-        if (isNotEmpty($('#roles_table').datagrid('cell'))) {
-            $('#roles_table').datagrid('endEdit', $('#roles_table').datagrid('cell').index);
+        if ($('#userRole_table').datagrid('cell')) {
+            $('#userRole_table').datagrid('endEdit', $('#userRole_table').datagrid('cell').index);
         };
 
 
-        $('#roles_table').datagrid('loading');
+        $('#userRole_table').datagrid('loading');
         let sendObject = {}
-        sendObject.insert = $('#roles_table').datagrid('getChanges', 'inserted');
-        sendObject.delete = $('#roles_table').datagrid('getChanges', 'deleted');
-        sendObject.update = $('#roles_table').datagrid('getChanges', 'updated');
+        sendObject.insert = $('#userRole_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#userRole_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#userRole_table').datagrid('getChanges', 'updated');
+        if (sendObject.insert.length === 0 && sendObject.delete.length === 0 && sendObject.update.length === 0) {
+            $.messager.alert('提示', '没有更改', 'info', function() {
+                $('#userRole_table').datagrid('loaded');
+                $('#userRole_table').datagrid('getPanel').focus(); //重置焦点
+            });
+            return;
+        }
         let sendString = JSON.stringify(sendObject);
         sendObject = {
             value: sendString
         };
-
-        let ajaxPromise = $.post('/roles/save', sendObject);
-        $.when(ajaxPromise)
-            .done(function(ajaxBack) {
-                $('#roles_table').datagrid('reload');
-                $('#roles_table').datagrid('loaded');
+        //console.log(JSON.stringify(sendObject));
+        $.post('/userRole/save', sendObject)
+            .done(function(data) {
+                $.messager.alert('提示', data.message, 'info', function() {
+                    $('#userRole_table').datagrid('getPanel').focus(); //重置焦点
+                });
+                $('#userRole_table').datagrid('reload');
+                $('#userRole_table').datagrid('loaded');
             })
             .fail(function(err) {
-                $.messager.alert('保存失败', '请检查数据是否符合要求', 'warning');
-                $('#roles_table').datagrid('reload');
-                $('#roles_table').datagrid('loaded');
-
+                $.messager.alert('失败', '请检查网络连接', 'warning', function() {
+                    $('#userRole_table').datagrid('getPanel').focus(); //重置焦点
+                });
             });
-
     };
 
-    roles.add = function() {
-        $('#roles_table').datagrid('appendRow', {
+    userRole.add = function() {
+        $('#userRole_table').datagrid('appendRow', {
             id: 'N ' + Math.round(Math.random() * 1000),
-            name: '新角色' + Math.round(Math.random() * 1000),
-            menus: '[1]',
-            tabs: '[1]',
-            privileges: '[1]'
+            name: '新权限' + Math.round(Math.random() * 1000),
+            type: 'menu',
         });
     };
-    roles.delete = function() {
+    userRole.delete = function() {
 
-        let allChecked = $('#roles_table').datagrid('getChecked');
+        let allChecked = $('#userRole_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
         let allDeleteId = [];
-        allChecked.map(function(c) {
-            allDeleteId.push(c.id);
+        if (Array.isArray(allChecked) && allChecked.length != 0) {
+            allChecked.forEach(function(item) {
+                allDeleteId.push(item.id);
+            })
+        };
+        allDeleteId.forEach(function(id) {
+            $('#userRole_table').datagrid('deleteRow', $('#userRole_table').datagrid('getRowIndex', id));
         });
-        for (let id of allDeleteId) {
-            $('#roles_table').datagrid('deleteRow', $('#roles_table').datagrid('getRowIndex', id));
-        }
 
     };
-    roles.redo = function() {
-        $('#roles_table').datagrid('rejectChanges');
+    userRole.redo = function() {
+        $('#userRole_table').datagrid('rejectChanges');
     };
-    roles.export = function() {
-        window.location.href = "roles/exportExcel";
+    userRole.export = function() {
+        window.location.href = "userRole/exportExcel";
     };
-    roles.import = function() {
+    userRole.import = function() {
+
+        //let mainImport = $('#mainImport');
+        //console.log(mainImport);
+        //mainImport.panel('destroy');
         $('#mainImport').window({
-            title: '角色信息导入',
+            title: '权限信息导入',
             width: 800,
             height: 600,
             collapsible: false,
             minimizable: false,
             maximizable: false,
             modal: true,
-            href: 'roles/importExcel',
+            href: 'userRole/importExcel',
             onClose: function() {
-                $('#roles_table').datagrid('reload');
+                $('#userRole_table').datagrid('reload');
+                //console.log('window close!');
             }
         });
 
