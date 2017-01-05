@@ -117,7 +117,18 @@
                         title: '权限类型',
                         width: 100
                     }]
-                ]
+                ],
+                onChange: function(newValue, oldValue) {
+                    if (Array.isArray(oldValue) && oldValue.length !== 0) {
+                        let cell = $('#userRole_table').datagrid('cell');
+                        let ed = $('#userRole_table').datagrid('getEditor', cell);
+                        let px = newValue.sort(function(a, b) {
+                            return Number.parseInt(a) - Number.parseInt(b);
+                        });
+                        ed.target.combogrid('setValues', px);
+                    }
+
+                },
             }
         }
     });
@@ -189,15 +200,17 @@
                 field: field
             });
             switch (field) {
-                // case 'privileges':
-                // case 'menus':
-                // case 'tabs':
-                //     $(ed.target).combobox('textbox').select();
-                //     $(ed.target).combobox('showPanel');
-                //     break;
-                default: $(ed.target).textbox('textbox').select();
-                break;
+                case 'privileges':
+                case 'menus':
+                case 'tabs':
+                    $(ed.target).combogrid('textbox').select();
+                    $(ed.target).combogrid('showPanel');
+                    break;
+                default:
+                    $(ed.target).textbox('textbox').select();
+                    break;
             }
+
         },
         // onBeginEdit: function(index, row) {
         //     console.log([1, 2, 6].indexOf(row.id));

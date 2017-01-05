@@ -86,7 +86,7 @@ router.post('/', function(req, res, next) {
                 // } else if (user.privileges.indexOf(allPrivileges[i].id) !== -1) {
                 //     privileges.push(allPrivileges[i].url);
                 // }
-                if (user.privileges.indexOf(allPrivileges[i].id) !== -1) {
+                if (user.privileges.indexOf(allPrivileges[i].id.toString()) !== -1) {
                     privileges.push(allPrivileges[i].url);
                 }
 
@@ -97,12 +97,12 @@ router.post('/', function(req, res, next) {
                 // } else if (user.menus.indexOf(allPrivileges[i].id) !== -1) {
                 //     menus.push(allPrivileges[i]);
                 // }
-                if (user.menus.indexOf(allPrivileges[i].id) !== -1) {
+                if (user.menus.indexOf(allPrivileges[i].id.toString()) !== -1) {
                     menus.push(allPrivileges[i]);
                 }
 
 
-                if (user.tabs.indexOf(allPrivileges[i].id) !== -1) {
+                if (user.tabs.indexOf(allPrivileges[i].id.toString()) !== -1) {
                     tabs.push(allPrivileges[i]);
                 }
 

@@ -105,49 +105,56 @@
         }
 
         main._builtMenuList = function(menus) {
-            function _setTree(tree, item) {
-                tree.id = item.id;
-                tree.text = item.name;
-                tree.attributes = {
-                    url: item.url
+
+            function _builtRoot(item) {
+                return {
+                    id: item.id,
+                    text: item.name,
+                    children: []
                 };
-                tree.children = [];
             }
 
-            function _mountTree(tree, item) {
-                let node = {};
-                node.id = item.id;
-                node.text = item.name;
-                node.attributes = {
-                    url: item.url
+            function _builtLeaf(item) {
+                return {
+                    id: item.id,
+                    text: item.name,
+                    attributes: {
+                        url: item.url
+                    }
                 };
-                if (Array.isArray(tree.children)) {
-                    tree.children.push(node);
-                } else {
-
-                    $.messager.alert('初始化错误', '菜单载入错误', 'warning');
-                }
             }
+
             let list = [];
             let tree = {};
+            if (typeof menus[0].url !== 'string' || menus[0].url.trim() !== '') {
+                tree = {
+                    id: 0,
+                    text: '菜单',
+                    children: []
+                }
+            };
+
             for (item of menus) {
-                if (!item.url) {
+                if (typeof item.url === 'string' && item.url.trim() === '') {
                     if (Object.keys(tree).length === 0) {
-                        _setTree(tree, item);
+                        tree = _builtRoot(item);
                     } else {
                         list.push(tree);
-                        tree = {};
-                        _setTree(tree, item);
+                        tree = _builtRoot(item);
                     }
                 } else {
-                    _mountTree(tree, item)
+                    tree.children.push(_builtLeaf(item));
                 }
             }
+            if (Array.isArray(tree.children) && tree.children.length !== 0) {
+                list.push(tree);
+            }
+            //console.log(list);
             return list;
+
         }
 
         main.setMenu = function(menus) {
-
             //初始化菜单
             $('#mainMenu').tree({
                 data: main._builtMenuList(menus),
