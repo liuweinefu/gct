@@ -72,7 +72,7 @@
     userRole.fields[0].push({
         field: 'deduction_wage',
         title: '提成薪金',
-        width: 100,
+        width: 170,
         sortable: false,
         editor: {
             type: 'textbox',
@@ -82,7 +82,7 @@
     userRole.fields[0].push({
         field: 'privileges',
         title: '权限',
-        width: 100,
+        width: 170,
         sortable: false,
         editor: {
             type: 'combogrid',
@@ -96,6 +96,7 @@
                 idField: 'id',
                 textField: 'id',
                 url: 'userRole/privileges',
+                //data: ,
                 columns: [
                     [{
                         field: 'ck',
@@ -135,11 +136,55 @@
     userRole.fields[0].push({
         field: 'menus',
         title: '菜单栏',
-        width: 100,
+        width: 170,
         sortable: false,
         editor: {
-            type: 'textbox',
-            options: {}
+            type: 'combogrid',
+            options: {
+                panelWidth: 420,
+                //value: [1, 2],
+                editable: false,
+                multiple: true,
+                striped: true,
+                fitColumns: true,
+                idField: 'id',
+                textField: 'id',
+                url: 'userRole/privileges',
+                //data: ,
+                columns: [
+                    [{
+                        field: 'ck',
+                        checkbox: true
+                    }, {
+                        field: 'id',
+                        title: '权限id',
+                        width: 60
+                    }, {
+                        field: 'name',
+                        title: '权限名称',
+                        width: 100
+                    }, {
+                        field: 'url',
+                        title: 'URL地址',
+                        width: 140
+                    }, {
+                        field: 'type',
+                        title: '权限类型',
+                        width: 100
+                    }]
+                ],
+                onChange: function(newValue, oldValue) {
+                    if (Array.isArray(oldValue) && oldValue.length !== 0) {
+                        let cell = $('#userRole_table').datagrid('cell');
+                        let ed = $('#userRole_table').datagrid('getEditor', cell);
+                        let px = newValue.sort(function(a, b) {
+                            return Number.parseInt(a) - Number.parseInt(b);
+                        });
+                        ed.target.combogrid('setValues', px);
+                    }
+
+                },
+            }
         }
     });
     userRole.fields[0].push({
@@ -148,8 +193,52 @@
         width: 100,
         sortable: false,
         editor: {
-            type: 'textbox',
-            options: {}
+            type: 'combogrid',
+            options: {
+                panelWidth: 420,
+                //value: [1, 2],
+                editable: false,
+                multiple: true,
+                striped: true,
+                fitColumns: true,
+                idField: 'id',
+                textField: 'id',
+                url: 'userRole/privileges',
+                //data: ,
+                columns: [
+                    [{
+                        field: 'ck',
+                        checkbox: true
+                    }, {
+                        field: 'id',
+                        title: '权限id',
+                        width: 60
+                    }, {
+                        field: 'name',
+                        title: '权限名称',
+                        width: 100
+                    }, {
+                        field: 'url',
+                        title: 'URL地址',
+                        width: 140
+                    }, {
+                        field: 'type',
+                        title: '权限类型',
+                        width: 100
+                    }]
+                ],
+                onChange: function(newValue, oldValue) {
+                    if (Array.isArray(oldValue) && oldValue.length !== 0) {
+                        let cell = $('#userRole_table').datagrid('cell');
+                        let ed = $('#userRole_table').datagrid('getEditor', cell);
+                        let px = newValue.sort(function(a, b) {
+                            return Number.parseInt(a) - Number.parseInt(b);
+                        });
+                        ed.target.combogrid('setValues', px);
+                    }
+
+                },
+            }
         }
     });
     // userRole.fields[0].push({

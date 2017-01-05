@@ -2,7 +2,7 @@
 
     <div id="importExcel_tabs" style="padding:5px">
 
-        <div title="第一步 选择文件并解析 ->" style="padding:5px">
+        <div title="第一步 选择文件并解析" style="padding:5px">
 
             <table id="importExcel_listTable">
             </table>
@@ -11,7 +11,7 @@
             <B>默认显示前100条数据</B>
             <a href="#" class="easyui-linkbutton" data-options="size:'large'" onclick="importExcel.selectStep(1) ">下一步</a>
         </div>
-        <div title="第二步 选择导入字段 ->" style="padding:5px">
+        <div title="第二步 选择导入字段 " style="padding:5px">
 
             <table id="importExcel_fieldsTable">
             </table>
@@ -19,7 +19,7 @@
             <a href="#" class="easyui-linkbutton" data-options="size:'large'" onclick="importExcel.selectStep(0)">上一步</a>&nbsp; &nbsp;
             <a href="#" class="easyui-linkbutton" data-options="size:'large'" onclick="importExcel.selectStep(2)">下一步</a>
         </div>
-        <div title="第三步 选择导入模式 ->" style="padding:5px">
+        <div title="第三步 选择导入模式 " style="padding:5px">
             <input type="radio" name="importType" id="importExcel_radio_add" value="add" checked><label for="importExcel_radio_add">添加：只添加记录到目标表,不更新目标和源记录相符的记录</label>
             <br><br>
             <input type="radio" name="importType" id="importExcel_radio_update" value="update"><label for="importExcel_radio_update">更新：只更新目标和源记录相符的记录，不添加其它记录到目标表</label>
@@ -33,7 +33,7 @@
             <a href="#" class="easyui-linkbutton" data-options="size:'large'" onclick="importExcel.selectStep(1)">上一步</a>&nbsp; &nbsp;
             <a href="#" class="easyui-linkbutton" data-options="size:'large'" onclick="importExcel.beginImport()">开始导入</a>
         </div>
-        <div title="第四步 导入结果 ->" style="padding:5px">
+        <div title="第四步 导入结果 " style="padding:5px">
             <div id="importExcel_importMessage">
             </div>
             <a href="#" class="easyui-linkbutton" data-options="size:'large',disabled:true" onclick="importExcel.selectStep(2) ">上一步</a>&nbsp; &nbsp;
@@ -51,7 +51,7 @@
 
 
     //**************************模板定义块*************************************************start
-    importExcel.postURL = '/privilege/importExcel';
+    importExcel.postURL = '/userRole/importExcel';
     importExcel._initFieldsTable = function() {
         $('#importExcel_fieldsTable').datagrid({
             height: 460,
@@ -145,15 +145,27 @@
             ],
             data: [{
                 keys: 'name',
-                importKeys: importExcel._setKeys(['name', '权限名']),
-                majorKeys: importExcel._setKeys(['name', '权限名'], true)
+                importKeys: importExcel._setKeys(['name', '员工类型']),
+                majorKeys: importExcel._setKeys(['name', '员工类型'], true)
             }, {
-                keys: 'url',
-                importKeys: importExcel._setKeys(['url', 'url地址']),
+                keys: 'base_wage',
+                importKeys: importExcel._setKeys(['base_wage', '底薪']),
                 majorKeys: ''
             }, {
-                keys: 'type',
-                importKeys: importExcel._setKeys(['type', '类型']),
+                keys: 'deduction_wage',
+                importKeys: importExcel._setKeys(['deduction_wage', '提成底薪']),
+                majorKeys: ''
+            }, {
+                keys: 'privileges',
+                importKeys: importExcel._setKeys(['privileges', '权限']),
+                majorKeys: ''
+            }, {
+                keys: 'menus',
+                importKeys: importExcel._setKeys(['menus', '菜单栏']),
+                majorKeys: ''
+            }, {
+                keys: 'tabs',
+                importKeys: importExcel._setKeys(['tabs', '强制显示标签页']),
                 majorKeys: ''
             }],
         });
@@ -301,8 +313,10 @@
         $('#importExcel_tabs').tabs({
             //height: 560,
             plain: true,
-            justified: true,
+            //justified: true,
+            tabWidth: 190,
             narrow: true,
+            //border: false,
 
         }); //importExcel_tabs
 

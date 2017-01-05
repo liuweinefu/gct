@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var md5 = require('md5');
+//var crypto = require('crypto');
 var xlsx = require('node-xlsx').default;
 
 
@@ -27,7 +27,7 @@ router.get('/exportExcel', function(req, res, next) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('select name,user_role_id,phone,other_contacts,remark from user');
+            return currentCon.queryAsync('select * from user_role');
         })
         .then(function(result) {
             currentCon.release();
@@ -46,9 +46,9 @@ router.get('/exportExcel', function(req, res, next) {
             return data;
         })
         .then(function(data) {
-            let wirteBuffer = xlsx.build([{ name: "user", data: data }])
+            let wirteBuffer = xlsx.build([{ name: "userRole", data: data }])
             res.setHeader('Content-Type', 'application/vnd.openxmlformats');
-            res.setHeader("Content-Disposition", "attachment; filename=" + "user.xlsx");
+            res.setHeader("Content-Disposition", "attachment; filename=" + "userRole.xlsx");
             res.end(wirteBuffer, 'binary');
         });
 
@@ -58,7 +58,7 @@ router.get('/exportExcel', function(req, res, next) {
 router.post('/', function(req, res, next) {
 
     let selectQueries = [];
-    selectQueries.push('select count(*) as count from view_user');
+    selectQueries.push('select count(*) as count from user_role');
 
     let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
     let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
@@ -66,9 +66,9 @@ router.post('/', function(req, res, next) {
     let query = '';
 
     if (!req.body.name || !req.body.value) {
-        query = 'SELECT id,name,user_role_name,phone,other_contacts,last_login_time,remark,base_wage FROM view_user limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+        query = 'SELECT id,name,base_wage,deduction_wage,privileges,menus,tabs FROM user_role limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
     } else {
-        query = 'SELECT id,name,user_role_name,phone,other_contacts,last_login_time,remark,base_wage FROM view_user where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+        query = 'SELECT id,name,base_wage,deduction_wage,privileges,menus,tabs FROM user_role where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
     };
     selectQueries.push(query);
 
@@ -129,15 +129,6 @@ var buildInsertQueries = function(arrayData) {
         for (let key in item) {
             switch (key) {
                 case 'id':
-                case 'user_role_name':
-                case 'last_login_time':
-                case 'base_wage':
-                    break;
-                case 'pass':
-                    if (typeof item[key] === 'string' && item[key].trim() !== '') {
-                        item[key] = md5(item[key]);
-                        query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(item[key]) + ',';
-                    }
                     break;
                 default:
                     item[key] = typeof item[key] === 'string' ? item[key].trim() : item[key];
@@ -146,7 +137,7 @@ var buildInsertQueries = function(arrayData) {
             }
         }
 
-        queries.push('insert into user set ' + query.slice(0, -1));
+        queries.push('insert into user_role set ' + query.slice(0, -1));
     }
     return queries;
 };
@@ -165,15 +156,6 @@ var buildUpdateQueries = function(arrayData, keys) {
         for (let key in item) {
             switch (key) {
                 case 'id':
-                case 'user_role_name':
-                case 'last_login_time':
-                case 'base_wage':
-                    break;
-                case 'pass':
-                    if (typeof item[key] === 'string' && item[key].trim() !== '') {
-                        item[key] = md5(item[key]);
-                        query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(item[key]) + ',';
-                    }
                     break;
                 case 'name':
                     if (keys.indexOf('name') !== -1) {
@@ -195,7 +177,7 @@ var buildUpdateQueries = function(arrayData, keys) {
         }, '');
         //console.log('where:' + where);
         // queries.push('update user_role set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([user_role.id]));
-        queries.push('update user set ' + query.slice(0, -1) + ' where ' + where.slice(4));
+        queries.push('update user_role set ' + query.slice(0, -1) + ' where ' + where.slice(4));
     }
     return queries;
 };
@@ -214,7 +196,7 @@ var buildDeleteQueries = function(arrayData, keys) {
             query = query + mysqlPool.escape([item.id]) + ',';
         }
         query = query.slice(0, -1) + ')';
-        queries.push('delete from user where id in ' + query);
+        queries.push('delete from user_role where id in ' + query);
         return queries;
     } else {
         let query = ''
@@ -224,7 +206,7 @@ var buildDeleteQueries = function(arrayData, keys) {
             }, '');
             //console.log('where:' + where);
             // queries.push('update user_role set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([user_role.id]));
-            queries.push('delete from user where ' + where.slice(4));
+            queries.push('delete from user_role where ' + where.slice(4));
         }
         return queries;
     }
@@ -266,7 +248,7 @@ var filterImportPostData = function(arrayData) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('select name from user');
+            return currentCon.queryAsync('select name from user_role');
         })
         .then(function(rows) {
             currentCon.release();
@@ -438,7 +420,7 @@ router.post('/importExcel', function(req, res, next) {
                     if (copyData.length === 0) {
                         return Promise.resolve([]);
                     } else {
-                        return executeQueries(['delete from user'].concat(buildInsertQueries(copyData)), true);
+                        return executeQueries(['delete from user_role'].concat(buildInsertQueries(copyData)), true);
                     }
                 })
                 .then(function(value) {
@@ -452,10 +434,10 @@ router.post('/importExcel', function(req, res, next) {
     }
 });
 
-router.post('/roles', function(req, res, next) {
+router.post('/privileges', function(req, res, next) {
 
     let selectQueries = [];
-    selectQueries.push('select id,name from user_role');
+    selectQueries.push('select id,name,url,type from privilege');
 
     // let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
     // let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
