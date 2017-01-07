@@ -136,7 +136,7 @@ app.use(function(req, res, next) {
 app.use(function(err, req, res, next) {
     if (req.xhr || res.locals.xhr) {
         return res.json({
-            success: false,
+            err: true,
             message: err.message,
             error: req.app.get('env') === 'development' ? err : {}
         });

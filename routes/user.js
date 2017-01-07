@@ -66,9 +66,9 @@ router.post('/', function(req, res, next) {
     let query = '';
 
     if (!req.body.name || !req.body.value) {
-        query = 'SELECT id,name,user_role_name,phone,other_contacts,last_login_time,remark,base_wage FROM view_user limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+        query = 'SELECT id,name,user_role_id,phone,other_contacts,last_login_time,remark,base_wage FROM view_user limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
     } else {
-        query = 'SELECT id,name,user_role_name,phone,other_contacts,last_login_time,remark,base_wage FROM view_user where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+        query = 'SELECT id,name,user_role_id,phone,other_contacts,last_login_time,remark,base_wage FROM view_user where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
     };
     selectQueries.push(query);
 
@@ -452,7 +452,7 @@ router.post('/importExcel', function(req, res, next) {
     }
 });
 
-router.post('/roles', function(req, res, next) {
+router.post('/initData', function(req, res, next) {
 
     let selectQueries = [];
     selectQueries.push('select id,name from user_role');
@@ -475,7 +475,11 @@ router.post('/roles', function(req, res, next) {
     executeQueries(selectQueries, true)
         .then(function(rows) {
             //console.log(rows);
-            res.json(rows)
+            res.json({
+                err: false,
+                message: '初始化成功',
+                roles: rows
+            })
         });
 
 });

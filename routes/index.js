@@ -13,7 +13,7 @@ router.post('/', function(req, res, next) {
     //已登录则返回user
     if (req.session.hasLogged === true) {
         res.json({
-            success: true,
+            err: false,
             message: '登录成功',
             user: req.session.user,
             menus: req.session.menus,
@@ -25,7 +25,7 @@ router.post('/', function(req, res, next) {
     //登录数据项不能有空项
     if (!req.body.userName) {
         res.json({
-            success: false,
+            err: true,
             message: '用户名不能为空',
             captcha: F.captcha(req),
         });
@@ -34,7 +34,7 @@ router.post('/', function(req, res, next) {
     };
     if (!req.body.userPass) {
         res.json({
-            success: false,
+            err: true,
             message: '密码不能为空',
             captcha: F.captcha(req),
         });
@@ -42,7 +42,7 @@ router.post('/', function(req, res, next) {
     };
     if (!req.body.captcha) {
         res.json({
-            success: false,
+            err: true,
             message: '验证码不能为空',
             captcha: F.captcha(req),
         });
@@ -52,7 +52,7 @@ router.post('/', function(req, res, next) {
     //验证码错误
     if (!req.session.captcha || req.body.captcha.toUpperCase() !== req.session.captcha.toUpperCase()) {
         res.json({
-            success: false,
+            err: true,
             message: '验证码错误',
             captcha: F.captcha(req),
         });
@@ -122,7 +122,7 @@ router.post('/', function(req, res, next) {
             currentCon.release();
             if (row.changedRows !== 1) { return Promise.reject(new Error('登陆时间更新错误')); }
             res.json({
-                success: true,
+                err: false,
                 message: '登录成功',
                 user: req.session.user,
                 menus: req.session.menus,

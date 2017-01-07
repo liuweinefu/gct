@@ -225,7 +225,7 @@
                 url: '/',
                 success: function(data) {
                     data = $.parseJSON(data);
-                    if (data.success) {
+                    if (!data.err) {
                         main.init(data);
                         $('#loginDialog').dialog('close');
                     } else {
@@ -261,7 +261,7 @@
             });
 
             $.post('/', {}, function(data) {
-                if (data.success) {
+                if (!data.err) {
                     main.init(data);
                     $('#loginDialog').dialog('close');
                 } else {

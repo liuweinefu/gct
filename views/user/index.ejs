@@ -31,160 +31,127 @@
 </div>
 <script>
     user = {};
+    user.roles = []; //需初始化数据    
     //表格字段设置*************************************************************************
-    user.fields = [];
-    user.fields[0] = [];
-    user.fields[0].push({
-        field: 'ck',
-        checkbox: true
-    });
-    user.fields[0].push({
-        field: 'id',
-        title: '员工ID',
-        width: 50,
-        sortable: true
-    });
-    user.fields[0].push({
-        field: 'name',
-        title: '员工姓名',
-        width: 100,
-        sortable: true,
-        editor: {
-            type: 'textbox',
-            options: {}
-        }
-    });
-    user.fields[0].push({
-        field: 'pass',
-        title: '密码',
-        width: 100,
-        sortable: false,
-        formatter: function(value, row, index) {
-            return '******';
-        },
-        editor: {
-            type: 'passwordbox',
-            options: {
-                prompt: '重置密码',
-                showEye: true
+    user.setFields = function() {
+        let fields = [];
+        fields[0] = [];
+        fields[0].push({
+            field: 'ck',
+            checkbox: true
+        });
+        fields[0].push({
+            field: 'id',
+            title: '员工ID',
+            width: 50,
+            sortable: true
+        });
+        fields[0].push({
+            field: 'name',
+            title: '员工姓名',
+            width: 100,
+            sortable: true,
+            editor: {
+                type: 'textbox',
+                options: {}
             }
-        }
-    });
-    user.fields[0].push({
-        field: 'phone',
-        title: '手机',
-        width: 100,
-        sortable: false,
-        editor: {
-            type: 'validatebox',
-            options: {
-                required: true,
-                validType: 'length[11,11]',
-                invalidMessage: '请输入11位手机号'
+        });
+        fields[0].push({
+            field: 'pass',
+            title: '密码',
+            width: 100,
+            sortable: false,
+            formatter: function(value, row, index) {
+                return '******';
+            },
+            editor: {
+                type: 'passwordbox',
+                options: {
+                    prompt: '重置密码',
+                    showEye: true
+                }
             }
-        }
-    });
-    user.fields[0].push({
-        field: 'other_contacts',
-        title: '其他联系方式',
-        width: 200,
-        sortable: false,
-        editor: {
-            type: 'textbox',
-            options: {}
-        }
-    });
-    user.fields[0].push({
-        field: 'remark',
-        title: '备注',
-        width: 100,
-        sortable: true,
-        editor: {
-            type: 'textbox',
-            options: {}
-        }
-    });
-    user.fields[0].push({
-        field: 'user_role_id',
-        title: '员工类型',
-        width: 120,
-        limitToList: true,
-        formatter: function(value, row, index) {
-            return row.user_role_name;
-        },
-        editor: {
-            type: 'combobox',
-            options: {
-                panelWidth: 160,
-                editable: false,
-                valueField: 'id',
-                textField: 'name',
-                url: 'user/roles',
+        });
+        fields[0].push({
+            field: 'phone',
+            title: '手机',
+            width: 100,
+            sortable: false,
+            editor: {
+                type: 'validatebox',
+                options: {
+                    required: true,
+                    validType: 'length[11,11]',
+                    invalidMessage: '请输入11位手机号'
+                }
             }
-        }
-    });
-    user.fields[0].push({
-        field: 'base_wage',
-        title: '底薪',
-        width: 80,
-        formatter: function(value, row, index) {
-            return '￥' + Number.parseFloat(value).toFixed(2);
-        },
-
-    });
-    user.fields[0].push({
-        field: 'last_login_time',
-        title: '最后登录时间',
-        width: 160,
-
-    });
-
-    //表格初始化*************************************************************************
-    $('#user_table').datagrid({
-        idField: 'id',
-        //loadMsg: '数据加载中,请稍后',
-        fit: true,
-        singleSelect: false,
-        url: '/user',
-        method: 'post',
-        toolbar: '#user_table_toolbar',
-        striped: true,
-        pagination: true,
-        rownumbers: true,
-        pageNumber: 1,
-        pageSize: '30',
-        pageList: [30, 50, 100],
-        sortName: 'id',
-        remoteSort: false,
-        multiSort: true,
-        columns: user.fields,
-        //根据字段类型设置编辑器初始状态
-        onCellEdit: function(index, field, value) {
-            var ed = $(this).datagrid('getEditor', {
-                index: index,
-                field: field
-            });
-            switch (field) {
-                case 'phone':
-                    break;
-                case 'user_role_id':
-                    $(ed.target).combogrid('textbox').select();
-                    $(ed.target).combogrid('showPanel');
-                    break;
-                default:
-                    $(ed.target).textbox('textbox').select();
-                    break;
+        });
+        fields[0].push({
+            field: 'other_contacts',
+            title: '其他联系方式',
+            width: 200,
+            sortable: false,
+            editor: {
+                type: 'textbox',
+                options: {}
             }
+        });
+        fields[0].push({
+            field: 'remark',
+            title: '备注',
+            width: 100,
+            sortable: false,
+            editor: {
+                type: 'textbox',
+                options: {}
+            }
+        });
+        fields[0].push({
+            field: 'user_role_id',
+            title: '员工类型',
+            width: 120,
+            limitToList: true,
+            formatter: function(value, row, index) {
+                return user.roles.find(function(element) {
+                    return element.id == value;
+                }).name;
+                //console.log(value);
+                //return row.user_role_name;
+            },
+            editor: {
+                type: 'combobox',
+                options: {
+                    panelWidth: 160,
+                    editable: false,
+                    valueField: 'id',
+                    textField: 'name',
+                    data: user.roles,
+                    //url: 'user/roles',
+                    // onLoadSuccess: function() {
+                    //     user.roles = $(this).combobox('getData');
+                    // },
+                }
+            }
+        });
+        fields[0].push({
+            field: 'base_wage',
+            title: '底薪',
+            sortable: true,
+            width: 80,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
 
-        },
-        // onBeginEdit: function(index, row) {
-        //     console.log([1, 2, 6].indexOf(row.id));
-        //     if ([1, 2, 6].indexOf(row.id) !== -1) {
-        //         console.log(index);
-        //         $('#user_table').datagrid('endEdit', index);
-        //     }
-        // }
-    }).datagrid('enableCellEditing');
+        });
+        fields[0].push({
+            field: 'last_login_time',
+            title: '最后登录时间',
+            width: 160,
+
+        });
+        return fields;
+    }
+
 
     //绑定菜单按钮的键盘设置*************************************************************************
     user.keydown = function(e) {
@@ -214,7 +181,6 @@
 
         }
     };
-    $('#user_table').datagrid('getPanel').keydown(user.keydown);
 
 
     //button设置*************************************************************************
@@ -272,8 +238,7 @@
     user.add = function() {
         $('#user_table').datagrid('appendRow', {
             id: 'N ' + Math.round(Math.random() * 1000),
-            name: '新类型' + Math.round(Math.random() * 1000),
-            base_wage: 0,
+            name: '新员工' + Math.round(Math.random() * 1000),
         });
     };
     user.delete = function() {
@@ -317,4 +282,67 @@
         });
 
     };
+    user.init = function() {
+
+        $('#user_table').datagrid({
+            idField: 'id',
+            //loadMsg: '数据加载中,请稍后',
+            fit: true,
+            singleSelect: false,
+            url: '/user',
+            method: 'post',
+            toolbar: '#user_table_toolbar',
+            striped: true,
+            pagination: true,
+            rownumbers: true,
+            pageNumber: 1,
+            pageSize: '30',
+            pageList: [30, 50, 100],
+            sortName: 'id',
+            remoteSort: false,
+            multiSort: true,
+            columns: user.setFields(),
+            //根据字段类型设置编辑器初始状态
+            onCellEdit: function(index, field, value) {
+                var ed = $(this).datagrid('getEditor', {
+                    index: index,
+                    field: field
+                });
+                switch (field) {
+                    case 'phone':
+                        break;
+                    case 'user_role_id':
+                        $(ed.target).combogrid('textbox').select();
+                        $(ed.target).combogrid('showPanel');
+                        break;
+                    default:
+                        $(ed.target).textbox('textbox').select();
+                        break;
+                }
+
+            },
+            // onBeginEdit: function(index, row) {
+            //     console.log([1, 2, 6].indexOf(row.id));
+            //     if ([1, 2, 6].indexOf(row.id) !== -1) {
+            //         console.log(index);
+            //         $('#user_table').datagrid('endEdit', index);
+            //     }
+            // }
+        }).datagrid('enableCellEditing');
+
+        $('#user_table').datagrid('getPanel').keydown(user.keydown);
+    }
+
+
+    //表格初始化*************************************************************************
+    $.post('user/initData', {}, function(data) {
+        if (!data.err) {
+            user.roles = data.roles;
+            user.init();
+        } else {
+            $.messager.alert('失败', data.message, 'warning', function() {
+                $('#user_table').datagrid('getPanel').focus(); //重置焦点
+            });
+        }
+    })
 </script>
