@@ -114,6 +114,9 @@ var user = require('./routes/user');
 var userRole = require('./routes/userRole');
 var member = require('./routes/member');
 var memberRole = require('./routes/memberRole');
+//var commodity = require('./routes/commodity');
+var commodityType = require('./routes/commodityType');
+
 
 
 
@@ -123,6 +126,9 @@ app.use('/user', user);
 app.use('/userRole', userRole);
 app.use('/member', member);
 app.use('/memberRole', memberRole);
+//app.use('/commodity', commodity);
+app.use('/commodityType', commodityType);
+
 
 
 

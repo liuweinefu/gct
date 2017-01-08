@@ -27,7 +27,7 @@ router.get('/exportExcel', function(req, res, next) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('select id,name,discount from member_role');
+            return currentCon.queryAsync('select id,name,discount from commodity_type');
         })
         .then(function(result) {
             currentCon.release();
@@ -46,9 +46,9 @@ router.get('/exportExcel', function(req, res, next) {
             return data;
         })
         .then(function(data) {
-            let wirteBuffer = xlsx.build([{ name: "memberRole", data: data }])
+            let wirteBuffer = xlsx.build([{ name: "commodityType", data: data }])
             res.setHeader('Content-Type', 'application/vnd.openxmlformats');
-            res.setHeader("Content-Disposition", "attachment; filename=" + "memberRole.xlsx");
+            res.setHeader("Content-Disposition", "attachment; filename=" + "commodityType.xlsx");
             res.end(wirteBuffer, 'binary');
         });
 
@@ -63,11 +63,11 @@ router.post('/', function(req, res, next) {
     let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
     let offset = (page - 1) * rows;
     if (!req.body.name || !req.body.value) {
-        selectQueries.push('select count(*) as count from member_role');
-        selectQueries.push('SELECT id,name,discount FROM member_role limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+        selectQueries.push('select count(*) as count from commodity_type');
+        selectQueries.push('SELECT id,name FROM commodity_type limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
     } else {
-        selectQueries.push('select count(*) as count from member_role where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
-        selectQueries.push('SELECT id,name,discount FROM member_role where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+        selectQueries.push('select count(*) as count from commodity_type where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
+        selectQueries.push('SELECT id,name FROM commodity_type where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
     };
 
 
@@ -137,7 +137,7 @@ var buildInsertQueries = function(arrayData) {
             }
         }
 
-        queries.push('insert into member_role set ' + query.slice(0, -1));
+        queries.push('insert into commodity_type set ' + query.slice(0, -1));
     }
     return queries;
 };
@@ -177,7 +177,7 @@ var buildUpdateQueries = function(arrayData, keys) {
         }, '');
         //console.log('where:' + where);
         // queries.push('update user_role set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([user_role.id]));
-        queries.push('update member_role set ' + query.slice(0, -1) + ' where ' + where.slice(4));
+        queries.push('update commodity_type set ' + query.slice(0, -1) + ' where ' + where.slice(4));
     }
     return queries;
 };
@@ -196,7 +196,7 @@ var buildDeleteQueries = function(arrayData, keys) {
             query = query + mysqlPool.escape([item.id]) + ',';
         }
         query = query.slice(0, -1) + ')';
-        queries.push('delete from member_role where id in ' + query);
+        queries.push('delete from commodity_type where id in ' + query);
         return queries;
     } else {
         let query = ''
@@ -206,7 +206,7 @@ var buildDeleteQueries = function(arrayData, keys) {
             }, '');
             //console.log('where:' + where);
             // queries.push('update user_role set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([user_role.id]));
-            queries.push('delete from member_role where ' + where.slice(4));
+            queries.push('delete from commodity_type where ' + where.slice(4));
         }
         return queries;
     }
@@ -248,7 +248,7 @@ var filterImportPostData = function(arrayData) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('select name from member_role');
+            return currentCon.queryAsync('select name from commodity_type');
         })
         .then(function(rows) {
             currentCon.release();
@@ -420,7 +420,7 @@ router.post('/importExcel', function(req, res, next) {
                     if (copyData.length === 0) {
                         return Promise.resolve([]);
                     } else {
-                        return executeQueries(['delete from member_role'].concat(buildInsertQueries(copyData)), true);
+                        return executeQueries(['delete from commodity_type'].concat(buildInsertQueries(copyData)), true);
                     }
                 })
                 .then(function(value) {

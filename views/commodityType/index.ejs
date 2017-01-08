@@ -1,0 +1,229 @@
+<!--用户管理页面 -->
+<table id="commodityType_table">
+</table>
+<div id="commodityType_table_toolbar">
+    <table style="width:100%">
+        <tr>
+            <td style="width:40%">
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:commodityType.tbSearchName,menu:'#commodityType_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="commodityType_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'name'">商品类型</div>
+                    <!--<div data-options="name:'base_wage'">底薪</div>-->
+                </div>
+            </td>
+            <td>
+                <div>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="commodityType.import()">导入(<ins>W</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="commodityType.export()">导出(<ins>Q</ins>)</a>
+                    <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="commodityType.add()">增加(<ins>A</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="commodityType.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="commodityType.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="commodityType.redo()">撤销(<ins>R</ins>)</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    commodityType = {};
+    //表格字段设置*************************************************************************
+    commodityType.fields = [];
+    commodityType.fields[0] = [];
+    commodityType.fields[0].push({
+        field: 'ck',
+        checkbox: true
+    });
+    commodityType.fields[0].push({
+        field: 'id',
+        title: '商品类型ID',
+        width: 80,
+        sortable: true
+    });
+    commodityType.fields[0].push({
+        field: 'name',
+        title: '商品类型',
+        width: 100,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+
+
+    //表格初始化*************************************************************************
+    $('#commodityType_table').datagrid({
+        idField: 'id',
+        //loadMsg: '数据加载中,请稍后',
+        fit: true,
+        singleSelect: false,
+        url: '/commodityType',
+        method: 'post',
+        toolbar: '#commodityType_table_toolbar',
+        striped: true,
+        pagination: true,
+        rownumbers: true,
+        pageNumber: 1,
+        pageSize: '30',
+        pageList: [30, 50, 100],
+        sortName: 'id',
+        remoteSort: false,
+        multiSort: true,
+        columns: commodityType.fields,
+        //根据字段类型设置编辑器初始状态
+        onCellEdit: function(index, field, value) {
+            var ed = $(this).datagrid('getEditor', {
+                index: index,
+                field: field
+            });
+            switch (field) {
+                // case 'discount':
+                //     $(ed.target).combogrid('textbox').select();
+                //     $(ed.target).combogrid('showPanel');
+                //     break;
+                default: $(ed.target).textbox('textbox').select();
+                break;
+            }
+
+        },
+        // onBeginEdit: function(index, row) {
+        //     console.log([1, 2, 6].indexOf(row.id));
+        //     if ([1, 2, 6].indexOf(row.id) !== -1) {
+        //         console.log(index);
+        //         $('#commodityType_table').datagrid('endEdit', index);
+        //     }
+        // }
+    }).datagrid('enableCellEditing');
+
+    //绑定菜单按钮的键盘设置*************************************************************************
+    commodityType.keydown = function(e) {
+        //console.log(e);
+        if (e.altKey === false) {
+            return;
+        }
+        switch (e.key) {
+            case "w":
+                commodityType.import();
+                break;
+            case "q":
+                commodityType.export();
+                break;
+            case "s":
+                commodityType.save();
+                break;
+            case "a":
+                commodityType.add();
+                break;
+            case "d":
+                commodityType.delete();
+                break;
+            case "r":
+                commodityType.redo();
+                break;
+
+        }
+    };
+    $('#commodityType_table').datagrid('getPanel').keydown(commodityType.keydown);
+
+
+    //button设置*************************************************************************
+    commodityType.tbSearchName = function(value, name) {
+        //$('#commodityType_table').datagrid('unselectAll');
+        //s$('#commodityType_table').datagrid('uncheckAll');
+        $('#commodityType_table').datagrid('load', {
+            name: name,
+            value: value
+        });
+
+
+    };
+
+    commodityType.save = function() {
+        //console.log($('#commodityType_table').datagrid('cell'));
+        //接受当前编辑内容，并结束编辑
+        if ($('#commodityType_table').datagrid('cell')) {
+            $('#commodityType_table').datagrid('endEdit', $('#commodityType_table').datagrid('cell').index);
+        };
+
+
+        $('#commodityType_table').datagrid('loading');
+        let sendObject = {}
+        sendObject.insert = $('#commodityType_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#commodityType_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#commodityType_table').datagrid('getChanges', 'updated');
+        if (sendObject.insert.length === 0 && sendObject.delete.length === 0 && sendObject.update.length === 0) {
+            $.messager.alert('提示', '没有更改', 'info', function() {
+                $('#commodityType_table').datagrid('loaded');
+                $('#commodityType_table').datagrid('getPanel').focus(); //重置焦点
+            });
+            return;
+        }
+        let sendString = JSON.stringify(sendObject);
+        sendObject = {
+            value: sendString
+        };
+        //console.log(JSON.stringify(sendObject));
+        $.post('/commodityType/save', sendObject)
+            .done(function(data) {
+                $.messager.alert('提示', data.message, 'info', function() {
+                    $('#commodityType_table').datagrid('getPanel').focus(); //重置焦点
+                });
+                $('#commodityType_table').datagrid('reload');
+                $('#commodityType_table').datagrid('loaded');
+            })
+            .fail(function(err) {
+                $.messager.alert('失败', '请检查网络连接', 'warning', function() {
+                    $('#commodityType_table').datagrid('getPanel').focus(); //重置焦点
+                });
+            });
+    };
+
+    commodityType.add = function() {
+        $('#commodityType_table').datagrid('appendRow', {
+            id: 'N ' + Math.round(Math.random() * 1000),
+            name: '新商品类型' + Math.round(Math.random() * 1000),
+        });
+    };
+    commodityType.delete = function() {
+
+        let allChecked = $('#commodityType_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
+        let allDeleteId = [];
+        if (Array.isArray(allChecked) && allChecked.length != 0) {
+            allChecked.forEach(function(item) {
+                allDeleteId.push(item.id);
+            })
+        };
+        allDeleteId.forEach(function(id) {
+            $('#commodityType_table').datagrid('deleteRow', $('#commodityType_table').datagrid('getRowIndex', id));
+        });
+
+    };
+    commodityType.redo = function() {
+        $('#commodityType_table').datagrid('rejectChanges');
+    };
+    commodityType.export = function() {
+        window.location.href = "commodityType/exportExcel";
+    };
+    commodityType.import = function() {
+
+        //let mainImport = $('#mainImport');
+        //console.log(mainImport);
+        //mainImport.panel('destroy');
+        $('#mainImport').window({
+            title: '商品类型导入',
+            width: 800,
+            height: 600,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            modal: true,
+            href: 'commodityType/importExcel',
+            onClose: function() {
+                $('#commodityType_table').datagrid('reload');
+                //console.log('window close!');
+            }
+        });
+
+    };
+</script>
