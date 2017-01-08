@@ -27,7 +27,7 @@ router.get('/exportExcel', function(req, res, next) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('select * from user_role');
+            return currentCon.queryAsync('select * FROM user_role');
         })
         .then(function(result) {
             currentCon.release();
@@ -58,19 +58,22 @@ router.get('/exportExcel', function(req, res, next) {
 router.post('/', function(req, res, next) {
 
     let selectQueries = [];
-    selectQueries.push('select count(*) as count from user_role');
+
 
     let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
     let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
     let offset = (page - 1) * rows;
-    let query = '';
+
 
     if (!req.body.name || !req.body.value) {
-        query = 'SELECT id,name,base_wage,deduction_wage,privileges,menus,tabs FROM user_role limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+        selectQueries.push('SELECT count(*) as count FROM user_role');
+        selectQueries.push('SELECT id,name,base_wage,deduction_wage,privileges,menus,tabs FROM user_role limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
     } else {
-        query = 'SELECT id,name,base_wage,deduction_wage,privileges,menus,tabs FROM user_role where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+        selectQueries.push('SELECT count(*) as count FROM user_role where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
+        selectQueries.push('SELECT id,name,base_wage,deduction_wage,privileges,menus,tabs FROM user_role where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
     };
-    selectQueries.push(query);
+
+
 
 
     //let executePromise = executeQueries(selectQueries, 'selectQueries', true);
@@ -196,7 +199,7 @@ var buildDeleteQueries = function(arrayData, keys) {
             query = query + mysqlPool.escape([item.id]) + ',';
         }
         query = query.slice(0, -1) + ')';
-        queries.push('delete from user_role where id in ' + query);
+        queries.push('delete FROM user_role where id in ' + query);
         return queries;
     } else {
         let query = ''
@@ -206,7 +209,7 @@ var buildDeleteQueries = function(arrayData, keys) {
             }, '');
             //console.log('where:' + where);
             // queries.push('update user_role set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([user_role.id]));
-            queries.push('delete from user_role where ' + where.slice(4));
+            queries.push('delete FROM user_role where ' + where.slice(4));
         }
         return queries;
     }
@@ -248,7 +251,7 @@ var filterImportPostData = function(arrayData) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('select name from user_role');
+            return currentCon.queryAsync('select name FROM user_role');
         })
         .then(function(rows) {
             currentCon.release();
@@ -420,7 +423,7 @@ router.post('/importExcel', function(req, res, next) {
                     if (copyData.length === 0) {
                         return Promise.resolve([]);
                     } else {
-                        return executeQueries(['delete from user_role'].concat(buildInsertQueries(copyData)), true);
+                        return executeQueries(['delete FROM user_role'].concat(buildInsertQueries(copyData)), true);
                     }
                 })
                 .then(function(value) {
@@ -437,7 +440,7 @@ router.post('/importExcel', function(req, res, next) {
 router.post('/privileges', function(req, res, next) {
 
     let selectQueries = [];
-    selectQueries.push('select id,name,url,type from privilege');
+    selectQueries.push('select id,name,url,type FROM privilege');
 
     // let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
     // let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);

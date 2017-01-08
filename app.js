@@ -112,6 +112,8 @@ var index = require('./routes/index');
 var privilege = require('./routes/privilege');
 var user = require('./routes/user');
 var userRole = require('./routes/userRole');
+var member = require('./routes/member');
+var memberRole = require('./routes/memberRole');
 
 
 
@@ -119,6 +121,8 @@ app.use('/', index);
 app.use('/privilege', privilege);
 app.use('/user', user);
 app.use('/userRole', userRole);
+app.use('/member', member);
+app.use('/memberRole', memberRole);
 
 
 

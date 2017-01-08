@@ -132,8 +132,8 @@ router.post('/', function(req, res, next) {
         })
         .catch(function(err) {
             req.session.destroy(function(destoy_err) {
-                // next(new Error('destroy err'));
-                console.err(destoy_err);
+                next(new Error('destroy err'));
+                //console.err(destoy_err);
             });
             next(err);
         });

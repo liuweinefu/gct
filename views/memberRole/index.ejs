@@ -1,0 +1,293 @@
+<!--用户管理页面 -->
+<table id="memberRole_table">
+</table>
+<div id="memberRole_table_toolbar">
+    <table style="width:100%">
+        <tr>
+            <td style="width:40%">
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:memberRole.tbSearchName,menu:'#memberRole_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="memberRole_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'name'">会员类型</div>
+                    <!--<div data-options="name:'base_wage'">底薪</div>-->
+                </div>
+            </td>
+            <td>
+                <div>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="memberRole.import()">导入(<ins>W</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="memberRole.export()">导出(<ins>Q</ins>)</a>
+                    <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="memberRole.add()">增加(<ins>A</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="memberRole.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="memberRole.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="memberRole.redo()">撤销(<ins>R</ins>)</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    memberRole = {};
+    //表格字段设置*************************************************************************
+    memberRole.fields = [];
+    memberRole.fields[0] = [];
+    memberRole.fields[0].push({
+        field: 'ck',
+        checkbox: true
+    });
+    memberRole.fields[0].push({
+        field: 'id',
+        title: '会员类型ID',
+        width: 80,
+        sortable: true
+    });
+    memberRole.fields[0].push({
+        field: 'name',
+        title: '会员类型',
+        width: 100,
+        sortable: true,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    memberRole.fields[0].push({
+        field: 'discount',
+        title: '打折列表',
+        width: 170,
+        sortable: false,
+        editor: {
+            type: 'textbox',
+            options: {}
+        }
+    });
+    // memberRole.fields[0].push({
+    //     field: 'privileges',
+    //     title: '权限',
+    //     width: 170,
+    //     sortable: false,
+    //     editor: {
+    //         type: 'combogrid',
+    //         options: {
+    //             panelWidth: 420,
+    //             //value: [1, 2],
+    //             editable: false,
+    //             multiple: true,
+    //             striped: true,
+    //             fitColumns: true,
+    //             idField: 'id',
+    //             textField: 'id',
+    //             url: 'memberRole/privileges',
+    //             //data: ,
+    //             columns: [
+    //                 [{
+    //                     field: 'ck',
+    //                     checkbox: true
+    //                 }, {
+    //                     field: 'id',
+    //                     title: '权限id',
+    //                     width: 60
+    //                 }, {
+    //                     field: 'name',
+    //                     title: '权限名称',
+    //                     width: 100
+    //                 }, {
+    //                     field: 'url',
+    //                     title: 'URL地址',
+    //                     width: 140
+    //                 }, {
+    //                     field: 'type',
+    //                     title: '权限类型',
+    //                     width: 100
+    //                 }]
+    //             ],
+    //             onChange: function(newValue, oldValue) {
+    //                 if (Array.isArray(oldValue) && oldValue.length !== 0) {
+    //                     let cell = $('#memberRole_table').datagrid('cell');
+    //                     let ed = $('#memberRole_table').datagrid('getEditor', cell);
+    //                     let px = newValue.sort(function(a, b) {
+    //                         return Number.parseInt(a) - Number.parseInt(b);
+    //                     });
+    //                     ed.target.combogrid('setValues', px);
+    //                 }
+
+    //             },
+    //         }
+    //     }
+    // });
+
+
+    //表格初始化*************************************************************************
+    $('#memberRole_table').datagrid({
+        idField: 'id',
+        //loadMsg: '数据加载中,请稍后',
+        fit: true,
+        singleSelect: false,
+        url: '/memberRole',
+        method: 'post',
+        toolbar: '#memberRole_table_toolbar',
+        striped: true,
+        pagination: true,
+        rownumbers: true,
+        pageNumber: 1,
+        pageSize: '30',
+        pageList: [30, 50, 100],
+        sortName: 'id',
+        remoteSort: false,
+        multiSort: true,
+        columns: memberRole.fields,
+        //根据字段类型设置编辑器初始状态
+        onCellEdit: function(index, field, value) {
+            var ed = $(this).datagrid('getEditor', {
+                index: index,
+                field: field
+            });
+            switch (field) {
+                // case 'discount':
+                //     $(ed.target).combogrid('textbox').select();
+                //     $(ed.target).combogrid('showPanel');
+                //     break;
+                default: $(ed.target).textbox('textbox').select();
+                break;
+            }
+
+        },
+        // onBeginEdit: function(index, row) {
+        //     console.log([1, 2, 6].indexOf(row.id));
+        //     if ([1, 2, 6].indexOf(row.id) !== -1) {
+        //         console.log(index);
+        //         $('#memberRole_table').datagrid('endEdit', index);
+        //     }
+        // }
+    }).datagrid('enableCellEditing');
+
+    //绑定菜单按钮的键盘设置*************************************************************************
+    memberRole.keydown = function(e) {
+        //console.log(e);
+        if (e.altKey === false) {
+            return;
+        }
+        switch (e.key) {
+            case "w":
+                memberRole.import();
+                break;
+            case "q":
+                memberRole.export();
+                break;
+            case "s":
+                memberRole.save();
+                break;
+            case "a":
+                memberRole.add();
+                break;
+            case "d":
+                memberRole.delete();
+                break;
+            case "r":
+                memberRole.redo();
+                break;
+
+        }
+    };
+    $('#memberRole_table').datagrid('getPanel').keydown(memberRole.keydown);
+
+
+    //button设置*************************************************************************
+    memberRole.tbSearchName = function(value, name) {
+        //$('#memberRole_table').datagrid('unselectAll');
+        //s$('#memberRole_table').datagrid('uncheckAll');
+        $('#memberRole_table').datagrid('load', {
+            name: name,
+            value: value
+        });
+
+
+    };
+
+    memberRole.save = function() {
+        //console.log($('#memberRole_table').datagrid('cell'));
+        //接受当前编辑内容，并结束编辑
+        if ($('#memberRole_table').datagrid('cell')) {
+            $('#memberRole_table').datagrid('endEdit', $('#memberRole_table').datagrid('cell').index);
+        };
+
+
+        $('#memberRole_table').datagrid('loading');
+        let sendObject = {}
+        sendObject.insert = $('#memberRole_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#memberRole_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#memberRole_table').datagrid('getChanges', 'updated');
+        if (sendObject.insert.length === 0 && sendObject.delete.length === 0 && sendObject.update.length === 0) {
+            $.messager.alert('提示', '没有更改', 'info', function() {
+                $('#memberRole_table').datagrid('loaded');
+                $('#memberRole_table').datagrid('getPanel').focus(); //重置焦点
+            });
+            return;
+        }
+        let sendString = JSON.stringify(sendObject);
+        sendObject = {
+            value: sendString
+        };
+        //console.log(JSON.stringify(sendObject));
+        $.post('/memberRole/save', sendObject)
+            .done(function(data) {
+                $.messager.alert('提示', data.message, 'info', function() {
+                    $('#memberRole_table').datagrid('getPanel').focus(); //重置焦点
+                });
+                $('#memberRole_table').datagrid('reload');
+                $('#memberRole_table').datagrid('loaded');
+            })
+            .fail(function(err) {
+                $.messager.alert('失败', '请检查网络连接', 'warning', function() {
+                    $('#memberRole_table').datagrid('getPanel').focus(); //重置焦点
+                });
+            });
+    };
+
+    memberRole.add = function() {
+        $('#memberRole_table').datagrid('appendRow', {
+            id: 'N ' + Math.round(Math.random() * 1000),
+            name: '新会员类型' + Math.round(Math.random() * 1000),
+        });
+    };
+    memberRole.delete = function() {
+
+        let allChecked = $('#memberRole_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
+        let allDeleteId = [];
+        if (Array.isArray(allChecked) && allChecked.length != 0) {
+            allChecked.forEach(function(item) {
+                allDeleteId.push(item.id);
+            })
+        };
+        allDeleteId.forEach(function(id) {
+            $('#memberRole_table').datagrid('deleteRow', $('#memberRole_table').datagrid('getRowIndex', id));
+        });
+
+    };
+    memberRole.redo = function() {
+        $('#memberRole_table').datagrid('rejectChanges');
+    };
+    memberRole.export = function() {
+        window.location.href = "memberRole/exportExcel";
+    };
+    memberRole.import = function() {
+
+        //let mainImport = $('#mainImport');
+        //console.log(mainImport);
+        //mainImport.panel('destroy');
+        $('#mainImport').window({
+            title: '会员类型导入',
+            width: 800,
+            height: 600,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            modal: true,
+            href: 'memberRole/importExcel',
+            onClose: function() {
+                $('#memberRole_table').datagrid('reload');
+                //console.log('window close!');
+            }
+        });
+
+    };
+</script>

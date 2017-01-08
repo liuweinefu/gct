@@ -1,14 +1,14 @@
 <!--用户管理页面 -->
-<table id="user_table">
+<table id="member_table">
 </table>
-<div id="user_table_toolbar">
+<div id="member_table_toolbar">
     <table style="width:100%">
         <tr>
             <td style="width:40%">
-                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:user.tbSearchName,menu:'#user_table_toolbar_serchbox_mm'" style="width:80%">
-                <div id="user_table_toolbar_serchbox_mm" style="width:120px">
-                    <div data-options="name:'name'">员工姓名</div>
-                    <div data-options="name:'user_role_name'">员工类型</div>
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:member.tbSearchName,menu:'#member_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="member_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'name'">会员姓名</div>
+                    <div data-options="name:'member_role_name'">会员类型</div>
                     <div data-options="name:'phone'">手机</div>
                     <div data-options="name:'other_contacts'">其他联系方式</div>
                     <div data-options="name:'remark'">备注</div>
@@ -17,23 +17,23 @@
             </td>
             <td>
                 <div>
-                    <!--<a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="user.import()">导入(<ins>W</ins>)</a>-->
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="user.export()">导出(<ins>Q</ins>)</a>
-                    <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="user.add()">增加(<ins>A</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="user.delete()">删除(<ins>D</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="user.save()">保存(<ins>S</ins>)</a>
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="user.redo()">撤销(<ins>R</ins>)</a>
+                    <!--<a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="member.import()">导入(<ins>W</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="member.export()">导出(<ins>Q</ins>)</a>
+                    <!--<a href="/excel/member" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="member.add()">增加(<ins>A</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="member.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="member.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="member.redo()">撤销(<ins>R</ins>)</a>
                 </div>
             </td>
         </tr>
     </table>
 </div>
 <script>
-    user = {};
-    user.roles = []; //需初始化数据    
+    member = {};
+    member.roles = []; //需初始化数据    
     //表格字段设置*************************************************************************
-    user.setFields = function() {
+    member.setFields = function() {
         let fields = [];
         fields[0] = [];
         fields[0].push({
@@ -42,13 +42,13 @@
         });
         fields[0].push({
             field: 'id',
-            title: '员工ID',
+            title: '会员ID',
             width: 50,
             sortable: true
         });
         fields[0].push({
             field: 'name',
-            title: '员工姓名',
+            title: '会员姓名',
             width: 100,
             sortable: true,
             editor: {
@@ -72,6 +72,36 @@
                 }
             }
         });
+        fields[0].push({
+            field: 'balance',
+            title: '余额',
+            width: 100,
+            sortable: true,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
+            editor: {
+                type: 'numberbox',
+                options: {
+                    min: 0,
+                    precision: 2,
+                    prefix: '￥',
+                }
+            }
+        });
+        fields[0].push({
+            field: 'create_time',
+            title: '入会时间',
+            width: 160,
+            formatter: function(value, row, index) {
+                if (!Number.isNaN(Date.parse(value))) {
+                    return new Date(Date.parse(value)).toLocaleString();
+                } else {
+                    return '';
+                }
+            },
+        });
+
         fields[0].push({
             field: 'phone',
             title: '手机',
@@ -107,16 +137,16 @@
             }
         });
         fields[0].push({
-            field: 'user_role_id',
-            title: '员工类型',
+            field: 'member_role_id',
+            title: '会员类型',
             width: 120,
             limitToList: true,
             formatter: function(value, row, index) {
-                return user.roles.find(function(element) {
+                return member.roles.find(function(element) {
                     return element.id == value;
                 }).name;
                 //console.log(value);
-                //return row.user_role_name;
+                //return row.member_role_name;
             },
             editor: {
                 type: 'combobox',
@@ -125,65 +155,43 @@
                     editable: false,
                     valueField: 'id',
                     textField: 'name',
-                    data: user.roles,
-                    //url: 'user/roles',
+                    data: member.roles,
+                    //url: 'member/roles',
                     // onLoadSuccess: function() {
-                    //     user.roles = $(this).combobox('getData');
+                    //     member.roles = $(this).combobox('getData');
                     // },
                 }
             }
         });
-        fields[0].push({
-            field: 'base_wage',
-            title: '底薪',
-            sortable: true,
-            width: 80,
-            formatter: function(value, row, index) {
-                return '￥' + Number.parseFloat(value).toFixed(2);
-            },
 
-        });
-        fields[0].push({
-            field: 'last_login_time',
-            title: '最后登录时间',
-            width: 160,
-            formatter: function(value, row, index) {
-                if (!Number.isNaN(Date.parse(value))) {
-                    return new Date(Date.parse(value)).toLocaleString();
-                } else {
-                    return '';
-                }
-            },
-
-        });
         return fields;
     }
 
 
     //绑定菜单按钮的键盘设置*************************************************************************
-    user.keydown = function(e) {
+    member.keydown = function(e) {
         //console.log(e);
         if (e.altKey === false) {
             return;
         }
         switch (e.key) {
             case "w":
-                user.import();
+                member.import();
                 break;
             case "q":
-                user.export();
+                member.export();
                 break;
             case "s":
-                user.save();
+                member.save();
                 break;
             case "a":
-                user.add();
+                member.add();
                 break;
             case "d":
-                user.delete();
+                member.delete();
                 break;
             case "r":
-                user.redo();
+                member.redo();
                 break;
 
         }
@@ -191,10 +199,10 @@
 
 
     //button设置*************************************************************************
-    user.tbSearchName = function(value, name) {
-        //$('#user_table').datagrid('unselectAll');
-        //s$('#user_table').datagrid('uncheckAll');
-        $('#user_table').datagrid('load', {
+    member.tbSearchName = function(value, name) {
+        //$('#member_table').datagrid('unselectAll');
+        //s$('#member_table').datagrid('uncheckAll');
+        $('#member_table').datagrid('load', {
             name: name,
             value: value
         });
@@ -202,23 +210,23 @@
 
     };
 
-    user.save = function() {
-        //console.log($('#user_table').datagrid('cell'));
+    member.save = function() {
+        //console.log($('#member_table').datagrid('cell'));
         //接受当前编辑内容，并结束编辑
-        if ($('#user_table').datagrid('cell')) {
-            $('#user_table').datagrid('endEdit', $('#user_table').datagrid('cell').index);
+        if ($('#member_table').datagrid('cell')) {
+            $('#member_table').datagrid('endEdit', $('#member_table').datagrid('cell').index);
         };
 
 
-        $('#user_table').datagrid('loading');
+        $('#member_table').datagrid('loading');
         let sendObject = {}
-        sendObject.insert = $('#user_table').datagrid('getChanges', 'inserted');
-        sendObject.delete = $('#user_table').datagrid('getChanges', 'deleted');
-        sendObject.update = $('#user_table').datagrid('getChanges', 'updated');
+        sendObject.insert = $('#member_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#member_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#member_table').datagrid('getChanges', 'updated');
         if (sendObject.insert.length === 0 && sendObject.delete.length === 0 && sendObject.update.length === 0) {
             $.messager.alert('提示', '没有更改', 'info', function() {
-                $('#user_table').datagrid('loaded');
-                $('#user_table').datagrid('getPanel').focus(); //重置焦点
+                $('#member_table').datagrid('loaded');
+                $('#member_table').datagrid('getPanel').focus(); //重置焦点
             });
             return;
         }
@@ -227,32 +235,31 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/user/save', sendObject)
+        $.post('/member/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
-                    $('#user_table').datagrid('getPanel').focus(); //重置焦点
+                    $('#member_table').datagrid('getPanel').focus(); //重置焦点
                 });
-                $('#user_table').datagrid('reload');
-                $('#user_table').datagrid('loaded');
+                $('#member_table').datagrid('reload');
+                $('#member_table').datagrid('loaded');
             })
             .fail(function(err) {
                 $.messager.alert('失败', '请检查网络连接', 'warning', function() {
-                    $('#user_table').datagrid('getPanel').focus(); //重置焦点
+                    $('#member_table').datagrid('getPanel').focus(); //重置焦点
                 });
             });
     };
 
-    user.add = function() {
-        $('#user_table').datagrid('appendRow', {
+    member.add = function() {
+        $('#member_table').datagrid('appendRow', {
             id: 'N ' + Math.round(Math.random() * 1000),
-            name: '新员工 ' + Math.round(Math.random() * 1000),
-            user_role_id: 1,
-
+            name: '新会员 ' + Math.round(Math.random() * 1000),
+            member_role_id: 1,
         });
     };
-    user.delete = function() {
+    member.delete = function() {
 
-        let allChecked = $('#user_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
+        let allChecked = $('#member_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
         let allDeleteId = [];
         if (Array.isArray(allChecked) && allChecked.length != 0) {
             allChecked.forEach(function(item) {
@@ -260,17 +267,17 @@
             })
         };
         allDeleteId.forEach(function(id) {
-            $('#user_table').datagrid('deleteRow', $('#user_table').datagrid('getRowIndex', id));
+            $('#member_table').datagrid('deleteRow', $('#member_table').datagrid('getRowIndex', id));
         });
 
     };
-    user.redo = function() {
-        $('#user_table').datagrid('rejectChanges');
+    member.redo = function() {
+        $('#member_table').datagrid('rejectChanges');
     };
-    user.export = function() {
-        window.location.href = "user/exportExcel";
+    member.export = function() {
+        window.location.href = "member/exportExcel";
     };
-    user.import = function() {
+    member.import = function() {
 
         //let mainImport = $('#mainImport');
         //console.log(mainImport);
@@ -283,24 +290,24 @@
             minimizable: false,
             maximizable: false,
             modal: true,
-            href: 'user/importExcel',
+            href: 'member/importExcel',
             onClose: function() {
-                $('#user_table').datagrid('reload');
+                $('#member_table').datagrid('reload');
                 //console.log('window close!');
             }
         });
 
     };
-    user.init = function() {
+    member.init = function() {
 
-        $('#user_table').datagrid({
+        $('#member_table').datagrid({
             idField: 'id',
             //loadMsg: '数据加载中,请稍后',
             fit: true,
             singleSelect: false,
-            url: '/user',
+            url: '/member',
             method: 'post',
-            toolbar: '#user_table_toolbar',
+            toolbar: '#member_table_toolbar',
             striped: true,
             pagination: true,
             rownumbers: true,
@@ -310,7 +317,7 @@
             sortName: 'id',
             remoteSort: false,
             multiSort: true,
-            columns: user.setFields(),
+            columns: member.setFields(),
             //根据字段类型设置编辑器初始状态
             onCellEdit: function(index, field, value) {
                 var ed = $(this).datagrid('getEditor', {
@@ -320,7 +327,7 @@
                 switch (field) {
                     case 'phone':
                         break;
-                    case 'user_role_id':
+                    case 'member_role_id':
                         $(ed.target).combogrid('textbox').select();
                         $(ed.target).combogrid('showPanel');
                         break;
@@ -334,23 +341,23 @@
             //     console.log([1, 2, 6].indexOf(row.id));
             //     if ([1, 2, 6].indexOf(row.id) !== -1) {
             //         console.log(index);
-            //         $('#user_table').datagrid('endEdit', index);
+            //         $('#member_table').datagrid('endEdit', index);
             //     }
             // }
         }).datagrid('enableCellEditing');
 
-        $('#user_table').datagrid('getPanel').keydown(user.keydown);
+        $('#member_table').datagrid('getPanel').keydown(member.keydown);
     }
 
 
     //表格初始化*************************************************************************
-    $.post('user/initData', {}, function(data) {
+    $.post('member/initData', {}, function(data) {
         if (!data.err) {
-            user.roles = data.roles;
-            user.init();
+            member.roles = data.roles;
+            member.init();
         } else {
             $.messager.alert('失败', data.message, 'warning', function() {
-                $('#user_table').datagrid('getPanel').focus(); //重置焦点
+                $('#member_table').datagrid('getPanel').focus(); //重置焦点
             });
         }
     })

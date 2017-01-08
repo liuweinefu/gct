@@ -51,7 +51,7 @@
 
 
     //**************************模板定义块*************************************************start
-    importExcel.postURL = '/userRole/importExcel';
+    importExcel.postURL = '/memberRole/importExcel';
     importExcel._initFieldsTable = function() {
         $('#importExcel_fieldsTable').datagrid({
             height: 460,
@@ -148,24 +148,8 @@
                 importKeys: importExcel._setKeys(['name', '员工类型']),
                 majorKeys: importExcel._setKeys(['name', '员工类型'], true)
             }, {
-                keys: 'base_wage',
-                importKeys: importExcel._setKeys(['base_wage', '底薪']),
-                majorKeys: ''
-            }, {
-                keys: 'deduction_wage',
-                importKeys: importExcel._setKeys(['deduction_wage', '提成底薪']),
-                majorKeys: ''
-            }, {
-                keys: 'privileges',
-                importKeys: importExcel._setKeys(['privileges', '权限']),
-                majorKeys: ''
-            }, {
-                keys: 'menus',
-                importKeys: importExcel._setKeys(['menus', '菜单栏']),
-                majorKeys: ''
-            }, {
-                keys: 'tabs',
-                importKeys: importExcel._setKeys(['tabs', '强制显示标签页']),
+                keys: 'discount',
+                importKeys: importExcel._setKeys(['discount', '打折列表']),
                 majorKeys: ''
             }],
         });

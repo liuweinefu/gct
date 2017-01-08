@@ -26,7 +26,7 @@ router.get('/exportExcel', function(req, res, next) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('select * from privilege');
+            return currentCon.queryAsync('select * FROM privilege');
         })
         .then(function(result) {
             currentCon.release();
@@ -57,19 +57,19 @@ router.get('/exportExcel', function(req, res, next) {
 router.post('/', function(req, res, next) {
 
     let selectQueries = [];
-    selectQueries.push('select count(*) as count from privilege');
 
     let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
     let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
     let offset = (page - 1) * rows;
-    let query = '';
 
     if (!req.body.name || !req.body.value) {
-        query = 'SELECT id,name,url,type FROM privilege limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+        selectQueries.push('SELECT count(*) as count FROM privilege');
+        selectQueries.push('SELECT id,name,url,type FROM privilege limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
     } else {
-        query = 'SELECT id,name,url,type FROM privilege where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+        selectQueries.push('SELECT count(*) as count FROM privilege where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
+        selectQueries.push('SELECT id,name,url,type FROM privilege where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
     };
-    selectQueries.push(query);
+
 
 
     //let executePromise = executeQueries(selectQueries, 'selectQueries', true);
@@ -195,7 +195,7 @@ var buildDeleteQueries = function(arrayData, keys) {
             query = query + mysqlPool.escape([item.id]) + ',';
         }
         query = query.slice(0, -1) + ')';
-        queries.push('delete from privilege where id in ' + query);
+        queries.push('delete FROM privilege where id in ' + query);
         return queries;
     } else {
         let query = ''
@@ -205,7 +205,7 @@ var buildDeleteQueries = function(arrayData, keys) {
             }, '');
             //console.log('where:' + where);
             // queries.push('update privilege set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([privilege.id]));
-            queries.push('delete from privilege where ' + where.slice(4));
+            queries.push('delete FROM privilege where ' + where.slice(4));
         }
         return queries;
     }
@@ -247,7 +247,7 @@ var filterImportPostData = function(arrayData) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('select name from privilege');
+            return currentCon.queryAsync('select name FROM privilege');
         })
         .then(function(rows) {
             currentCon.release();
@@ -419,7 +419,7 @@ router.post('/importExcel', function(req, res, next) {
                     if (copyData.length === 0) {
                         return Promise.resolve([]);
                     } else {
-                        return executeQueries(['delete from privilege'].concat(buildInsertQueries(copyData)), true);
+                        return executeQueries(['delete FROM privilege'].concat(buildInsertQueries(copyData)), true);
                     }
                 })
                 .then(function(value) {
