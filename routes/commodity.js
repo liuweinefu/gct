@@ -17,9 +17,11 @@ router.get('/', function(req, res, next) {
     res.render(getPathName() + 'index');
 });
 
+
 router.get('/importExcel', function(req, res, next) {
     res.render(getPathName() + 'importExcel');
 });
+
 
 router.get('/exportExcel', function(req, res, next) {
     let currentCon = null;
@@ -63,10 +65,10 @@ router.post('/', function(req, res, next) {
     let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
     let offset = (page - 1) * rows;
     if (!req.body.name || !req.body.value) {
-        selectQueries.push('select count(*) as count from commodity');
+        selectQueries.push('select count(*) as count from view_commodity');
         selectQueries.push('SELECT id,name,price,count,remark,commodity_type_id FROM view_commodity limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
     } else {
-        selectQueries.push('select count(*) as count from commodity where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
+        selectQueries.push('select count(*) as count from view_commodity where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
         selectQueries.push('SELECT id,name,price,count,remark,commodity_type_id FROM view_commodity where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
     };
 
@@ -114,6 +116,10 @@ router.post('/save', function(req, res, next) {
                 message: message.slice(0, -1),
             });
             //res.status(200).end();
+        })
+        .catch(function(err) {
+            //console.log(err);
+            next(new Error('数据库错误:{code:' + err.code + ',no:' + err.errno + '}'));
         });
 });
 
@@ -171,7 +177,7 @@ var buildUpdateQueries = function(arrayData, keys) {
                     query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(item[key]) + ',';
                     break;
             }
-        }
+        };
         let where = keys.reduce(function(previousKey, currentKey, index, array) {
             return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([item[currentKey]]);
         }, '');
