@@ -9,7 +9,8 @@ var config = {};
 config.routerName = ''; //__filename
 config.exportExcelFields = []; //' name,user_role_id,phone,other_contacts,remark FROM user'
 config.mainTable = ''; //'user'
-config.mainView = ''; //'view_user'
+config.assistantTableArray = []; //[user_role]
+
 
 
 
