@@ -40,6 +40,8 @@ app.use(session({
 app.use(express.static(path.join(__dirname, 'public')));
 
 
+
+
 //初始化allPrivileges 及 xhr检测***************************************************************
 app.use(function(req, res, next) {
     if (allPrivileges.length === 0) {
@@ -110,24 +112,24 @@ app.use(function(req, res, next) {
 
 var index = require('./routes/index');
 var privilege = require('./routes/privilege');
-var user = require('./routes/user');
+//var user = require('./routes/user');
 var userRole = require('./routes/userRole');
 var member = require('./routes/member');
 var memberRole = require('./routes/memberRole');
 var commodity = require('./routes/commodity');
-var commodityType = require('./routes/commodityType');
+//var commodityType = require('./routes/commodityType');
 
 
 
 
 app.use('/', index);
 app.use('/privilege', privilege);
-app.use('/user', user);
+//app.use('/user', user);
 app.use('/userRole', userRole);
 app.use('/member', member);
 app.use('/memberRole', memberRole);
 app.use('/commodity', commodity);
-app.use('/commodityType', commodityType);
+//app.use('/commodityType', commodityType);
 
 
 

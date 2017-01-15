@@ -164,6 +164,9 @@ var executeQueries = function(queries, backResults) {
                 return Promise.resolve('complete!');
             }
         })
+        .catch(function(err) {
+            throw err;
+        })
 }
 
 
