@@ -180,7 +180,7 @@ router.get('/importExcel', function(req, res, next) {
 router.get('/exportExcel', getCon, function(req, res, next) {
     console.log(typeof config.exportExcelQuery);
     if (!req.dbCon) { next(new Error('数据库初始化错误')) };
-    queryString = 'SELECT ' + config.exportExcelFields.join(',') + ' FROM ' + config.mainView;
+    queryString = 'SELECT ' + config.exportExcelFields.join(',') + ' FROM ' + config.dbTable;
     req.dbCon.queryAsync(queryString)
         .then(function(result) {
             req.dbCon.release();

@@ -8,9 +8,11 @@ var router = setRouter({
 });
 router.fieldsMap.set('id', {
     updateAble: false,
+    formatter: 'number'
 });
 router.fieldsMap.set('name', {
     updateAble: true,
+    formatter: 'string'
 });
 // var express = require('express');
 // var router = express.Router();
