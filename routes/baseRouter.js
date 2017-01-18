@@ -8,8 +8,8 @@ var xlsx = require('node-xlsx').default;
 var config = {};
 config.routerName = ''; //__filename
 config.exportExcelFields = []; //' name,user_role_id,phone,other_contacts,remark FROM user'
-config.mainTable = ''; //'user'
-config.assistantTableArray = []; //[user_role]
+config.dbTable = ''; //'user'
+config.fieldsMap = new Map(); //[user_role]
 
 
 
@@ -46,27 +46,74 @@ var getCon = function(req, res, next) {
     });
 }
 
+
+//fieldsMap's Key Format Function
+var _formatString = function(value) {
+    if (typeof value !== 'string') { value = value.toString() };
+    return value.trim();
+}
+
+var _formatInt = function(value) {
+    if (!Number.isInteger(value)) { value = Number.parseInt(value) };
+    value = Number.isNaN(value) ? 0 : value;
+    return value;
+}
+var _formatFloat = function(value) {
+    if (typeof value !== 'number') { value = Number.parseFloat(value) };
+    value = Number.isNaN(value) ? 0 : value;
+    return value;
+}
+
+var _formatPass = function(value, defaultValue) {
+    if (typeof value !== 'string') { value = value.toString().trim() };
+    if (value.length < 6) { value = defaultValue === undefined || typeof defaultValue !== 'string' ? '654321' : defaultValue.trim() }
+    if (value.length === 0) { return '' };
+    return md5(value);
+}
+
 var buildInsertQueries = function(arrayData) {
     let queries = [];
     if (!Array.isArray(arrayData) || arrayData.length === 0) {
         return queries;
     }
-    for (item of arrayData) {
-        if ((typeof item.name) !== 'string' || item.name.trim() === '') { continue; }
-        let query = ''
-        for (let key in item) {
-            switch (key) {
-                case 'id':
+
+    arrayData.forEach(function(record) {
+        let query = '';
+
+        for (let key in record) {
+            if (!config.fieldsMap.has(key)) { continue; }
+            if (config.fieldsMap.get(key).updateAble === false) { continue; }
+            switch (config.fieldsMap.get(key).formatter) {
+                case 'string':
+                    record[key] = _formatString(record[key]);
+                    break;
+                case 'int':
+                    record[key] = _formatInt(record[key]);
+                    break;
+                case 'float':
+                    record[key] = _formatFloat(record[key]);
+                    break;
+                case 'pass':
+                    record[key] = _formatPass(record[key], 'admin888');
                     break;
                 default:
-                    item[key] = typeof item[key] === 'string' ? item[key].trim() : item[key];
-                    query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(item[key]) + ',';
-                    break;
+                    record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(record[key]) : record[key];
             }
-        }
+            switch (key) {
+                case 'id':
+                    continue;
+                case 'name':
+                    if (typeof record[key] !== 'string' || record[key].length === 0) {
+                        continue;
+                    }
+            }
 
-        queries.push('insert into member_role set ' + query.slice(0, -1));
-    }
+            query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
+
+        }
+        queries.push('insert into ' + config.dbTable + ' ' + query.slice(0, -1));
+    })
+
     return queries;
 };
 
@@ -77,36 +124,51 @@ var buildUpdateQueries = function(arrayData, keys) {
     }
     keys = Array.isArray(keys) && keys.length !== 0 ? keys : ['id'];
 
-    for (item of arrayData) {
-        if ((typeof item.name) !== 'string' || item.name.trim() === '') { continue; }
 
-        let query = ''
-        for (let key in item) {
+    arrayData.forEach(function(record) {
+        let query = '';
+
+        for (let key in record) {
+            if (!config.fieldsMap.has(key)) { continue; }
+            if (config.fieldsMap.get(key).updateAble === false) { continue; }
+            switch (config.fieldsMap.get(key).formatter) {
+                case 'string':
+                    record[key] = _formatString(record[key]);
+                    break;
+                case 'int':
+                    record[key] = _formatInt(record[key]);
+                    break;
+                case 'float':
+                    record[key] = _formatFloat(record[key]);
+                    break;
+                case 'pass':
+                    record[key] = _formatPass(record[key], '');
+                    break;
+                default:
+                    record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(record[key]) : record[key];
+            }
             switch (key) {
                 case 'id':
-                    break;
+                    continue;
                 case 'name':
-                    if (keys.indexOf('name') !== -1) {
-                        break;
+                case 'pass':
+                    if (typeof record[key] !== 'string' || record[key].length === 0) {
+                        continue;
                     }
-                    // if (keys.indexOf('name') === -1) {
-                    //     item[key] = item[key].toString().trim();
-                    //     query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(item[key]) + ',';
-                    // }
-                    // break;
-                default:
-                    item[key] = typeof item[key] === 'string' ? item[key].trim() : item[key];
-                    query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(item[key]) + ',';
-                    break;
             }
+
+            query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
+
         }
+
         let where = keys.reduce(function(previousKey, currentKey, index, array) {
-            return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([item[currentKey]]);
+            return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([record[currentKey]]);
         }, '');
-        //console.log('where:' + where);
-        // queries.push('update user_role set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([user_role.id]));
-        queries.push('update member_role set ' + query.slice(0, -1) + ' where ' + where.slice(4));
-    }
+
+        queries.push('update ' + config.dbTable + ' set ' + query.slice(0, -1) + ' where ' + where.slice(4));
+
+    })
+
     return queries;
 };
 
@@ -124,18 +186,42 @@ var buildDeleteQueries = function(arrayData, keys) {
             query = query + mysqlPool.escape([item.id]) + ',';
         }
         query = query.slice(0, -1) + ')';
-        queries.push('delete from member_role where id in ' + query);
+        queries.push('delete from ' + config.dbTable + ' where id in ' + query);
         return queries;
     } else {
         let query = ''
-        for (item of arrayData) {
+
+        arrayData.forEach(function(record) {
+
+            for (let key in record) {
+                if (!config.fieldsMap.has(key)) { continue; }
+
+                switch (config.fieldsMap.get(key).formatter) {
+                    case 'string':
+                        record[key] = _formatString(record[key]);
+                        break;
+                    case 'int':
+                        record[key] = _formatInt(record[key]);
+                        break;
+                    case 'float':
+                        record[key] = _formatFloat(record[key]);
+                        break;
+                    case 'pass':
+                        record[key] = _formatPass(record[key], '');
+                        break;
+                    default:
+                        record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(record[key]) : record[key];
+                }
+
+            }
+
             let where = keys.reduce(function(previousKey, currentKey, index, array) {
-                return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([item[currentKey]]);
+                return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([record[currentKey]]);
             }, '');
             //console.log('where:' + where);
             // queries.push('update user_role set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([user_role.id]));
-            queries.push('delete from member_role where ' + where.slice(4));
-        }
+            queries.push('delete from ' + config.dbTable + ' where ' + where.slice(4));
+        });
         return queries;
     }
 

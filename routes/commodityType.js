@@ -3,14 +3,16 @@ var router = setRouter({
     routerName: __filename,
     exportExcelFields: ['id', 'name'],
     dbTable: 'view_useruser', //'user'
-    fieldsMap: new Map(),
+    fieldsMap: _fieldsMap,
     //dbView: 'view_user', //'view_user'
 });
-router.fieldsMap.set('id', {
+var _fieldsMap = new Map();
+_fieldsMap.set('id', {
     updateAble: false,
     formatter: 'number'
 });
-router.fieldsMap.set('name', {
+
+_fieldsMap.set('name', {
     updateAble: true,
     formatter: 'string'
 });
