@@ -22,56 +22,63 @@ config.fieldsMap = new Map(); //Map()
 
 
 
-var __formatString = function(value) {
-    if (typeof value !== 'string') { value = value.toString().trim() };
-    return value;
+var __formatString = function(key, value) {
+    return value.toString().trim();
 };
-var __formatInt = function(value) {
+var __formatInt = function(key, value) {
     if (!Number.isInteger(value)) { value = Number.parseInt(value) };
     if (Number.isNaN(value)) {
-        throw new Error("数据类型错误:" + value);
+        throw new Error(key + '的值' + value + ':不是整数');
     } else {
         return value;
     }
 
 };
-var __formatFloat = function(value) {
+var __formatFloat = function(key, value) {
     if (typeof value !== 'number') { value = Number.parseFloat(value) };
     if (Number.isNaN(value)) {
-        throw new Error("数据类型错误:" + value);
+        throw new Error(key + '的值' + value + ':不是浮点数');
     } else {
         return value;
     }
 };
-var __formatPass = function(value) {
+var __formatPass = function(key, value) {
     if (typeof value !== 'string') { value = value.toString().trim() };
-    if (value.length < 6) { return '' };
+    if (value.length > 0 && value.length < 6) {
+        throw new Error(key + "的值:应不少于6位:");
+    };
+    if (value.length = 0 && typeof config.fieldsMap.get(key).defaultValue === 'string' && config.fieldsMap.get(key).defaultValue.length >= 6) {
+        value = config.fieldsMap.get(key).defaultValue;
+    } else {
+        throw new Error(key + "的值:应不少于6位:");
+    };
     return md5(value);
 };
 var __formatRecord = function(record) {
     for (let key in record) {
         if (!config.fieldsMap.has(key)) { continue; }
-        if (typeof config.fieldsMap.get(key).formatter !== 'string' ||
+        if (typeof config.fieldsMap.get(key).formatter !== 'string' &&
             typeof config.fieldsMap.get(key).formatter !== 'function') { continue; }
+
         switch (config.fieldsMap.get(key).formatter) {
             case 'string':
-                record[key] = __formatString(record[key]);
+                record[key] = __formatString(key, record[key]);
                 break;
             case 'int':
-                record[key] = __formatInt(record[key]);
+                record[key] = __formatInt(key, record[key]);
                 break;
             case 'float':
-                record[key] = __formatFloat(record[key]);
+                record[key] = __formatFloat(key, record[key]);
                 break;
             case 'pass':
-                record[key] = __formatPass(record[key]);
+                record[key] = __formatPass(key, record[key]);
                 break;
             default:
-                record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(record[key]) : record[key];
+                record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(key, record[key]) : record[key];
         }
     }
 
-}
+};
 
 var getFileName = function(fileName, needPath) {
     needPath = typeof needPath === 'boolean' ? needPath : false;
@@ -104,7 +111,7 @@ var getCon = function(req, res, next) {
         req.dbCon.queryAsync = Promise.promisify(req.dbCon.query);
         next();
     });
-}
+};
 
 
 var buildInsertQuery = function(record) {
@@ -113,7 +120,10 @@ var buildInsertQuery = function(record) {
     let query = '';
     for (let key in record) {
         if (!config.fieldsMap.has(key)) { continue; }
-        if (config.fieldsMap.get(key).updateAble === false) { continue; }
+        if (!config.fieldsMap.get(key).updateAble) { continue; }
+        // if (typeof config.fieldsMap.get(key).noEmpty==='function' && config.fieldsMap.get(key).noEmpty()) {
+
+        // }
         switch (key) {
             case 'id':
                 continue;
@@ -135,6 +145,7 @@ var buildInsertQuery = function(record) {
     query = 'INSERT INTO ' + config.dbTable + ' SET ' + query.slice(0, -1);
     return query;
 };
+
 var buildInsertQueries = function(arrayData) {
     let queries = [];
     if (!Array.isArray(arrayData) || arrayData.length === 0) {
@@ -309,7 +320,7 @@ var filterImportPostData = function(arrayData) {
 };
 
 router.get('/', function(req, res, next) {
-    console.log(config);
+    //console.log(config);
     res.render(getFileName(config.routerName, true) + 'index');
 });
 

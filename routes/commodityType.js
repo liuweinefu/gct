@@ -15,6 +15,7 @@ var router = getRouter({
         })
         .set('name', {
             updateAble: true,
+            noEmpty: true,
             formatter: 'string',
             //defaultValue: '新' + new Date(),
             //noEmpty:true,
