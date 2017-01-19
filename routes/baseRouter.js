@@ -47,28 +47,63 @@ var getCon = function(req, res, next) {
 }
 
 
-//fieldsMap's Key Format Function
-var _formatString = function(value) {
-    if (typeof value !== 'string') { value = value.toString() };
-    return value.trim();
-}
 
-var _formatInt = function(value) {
-    if (!Number.isInteger(value)) { value = Number.parseInt(value) };
-    value = Number.isNaN(value) ? 0 : value;
-    return value;
-}
-var _formatFloat = function(value) {
-    if (typeof value !== 'number') { value = Number.parseFloat(value) };
-    value = Number.isNaN(value) ? 0 : value;
-    return value;
-}
 
-var _formatPass = function(value, defaultValue) {
-    if (typeof value !== 'string') { value = value.toString().trim() };
-    if (value.length < 6) { value = defaultValue === undefined || typeof defaultValue !== 'string' ? '654321' : defaultValue.trim() }
-    if (value.length === 0) { return '' };
-    return md5(value);
+
+var formatRecord = function(record) {
+    //fieldsMap's Key Format Function
+    var _formatString = function(value) {
+        if (typeof value !== 'string') { value = value.toString().trim() };
+        return value;
+    }
+
+    var _formatInt = function(value) {
+        if (!Number.isInteger(value)) { value = Number.parseInt(value) };
+        if (Number.isNaN(value)) {
+            throw new Error("数据类型错误:" + value);
+        } else {
+            return value;
+        }
+
+    }
+    var _formatFloat = function(value) {
+        if (typeof value !== 'number') { value = Number.parseFloat(value) };
+        if (Number.isNaN(value)) {
+            throw new Error("数据类型错误:" + value);
+        } else {
+            return value;
+        }
+    }
+
+    var _formatPass = function(value) {
+        if (typeof value !== 'string') { value = value.toString().trim() };
+        if (value.length < 6) { return '' };
+        return md5(value);
+    }
+
+
+    for (let key in record) {
+        if (!config.fieldsMap.has(key)) { continue; }
+        if (typeof config.fieldsMap.get(key).formatter !== 'string' ||
+            typeof config.fieldsMap.get(key).formatter !== 'function') { continue; }
+        switch (config.fieldsMap.get(key).formatter) {
+            case 'string':
+                record[key] = _formatString(record[key]);
+                break;
+            case 'int':
+                record[key] = _formatInt(record[key]);
+                break;
+            case 'float':
+                record[key] = _formatFloat(record[key]);
+                break;
+            case 'pass':
+                record[key] = _formatPass(record[key]);
+                break;
+            default:
+                record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(record[key]) : record[key];
+        }
+    }
+
 }
 
 var buildInsertQueries = function(arrayData) {
@@ -78,40 +113,30 @@ var buildInsertQueries = function(arrayData) {
     }
 
     arrayData.forEach(function(record) {
+        formatRecord(record);
         let query = '';
-
         for (let key in record) {
             if (!config.fieldsMap.has(key)) { continue; }
             if (config.fieldsMap.get(key).updateAble === false) { continue; }
-            switch (config.fieldsMap.get(key).formatter) {
-                case 'string':
-                    record[key] = _formatString(record[key]);
-                    break;
-                case 'int':
-                    record[key] = _formatInt(record[key]);
-                    break;
-                case 'float':
-                    record[key] = _formatFloat(record[key]);
-                    break;
-                case 'pass':
-                    record[key] = _formatPass(record[key], 'admin888');
-                    break;
-                default:
-                    record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(record[key]) : record[key];
-            }
             switch (key) {
                 case 'id':
                     continue;
-                case 'name':
+                case 'pass':
                     if (typeof record[key] !== 'string' || record[key].length === 0) {
+                        if (!config.fieldsMap.get(key).defaultValue) { return; }
+                        record[key] = md5(config.fieldsMap.get(key).defaultValue);
                         continue;
                     }
+                case 'name':
+                    if (typeof record[key] !== 'string' || record[key].length === 0) {
+                        return;
+                    }
+
             }
-
             query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
-
         }
         queries.push('insert into ' + config.dbTable + ' ' + query.slice(0, -1));
+        return;
     })
 
     return queries;
@@ -126,27 +151,11 @@ var buildUpdateQueries = function(arrayData, keys) {
 
 
     arrayData.forEach(function(record) {
+        formatRecord(record);
         let query = '';
-
         for (let key in record) {
             if (!config.fieldsMap.has(key)) { continue; }
             if (config.fieldsMap.get(key).updateAble === false) { continue; }
-            switch (config.fieldsMap.get(key).formatter) {
-                case 'string':
-                    record[key] = _formatString(record[key]);
-                    break;
-                case 'int':
-                    record[key] = _formatInt(record[key]);
-                    break;
-                case 'float':
-                    record[key] = _formatFloat(record[key]);
-                    break;
-                case 'pass':
-                    record[key] = _formatPass(record[key], '');
-                    break;
-                default:
-                    record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(record[key]) : record[key];
-            }
             switch (key) {
                 case 'id':
                     continue;
@@ -162,12 +171,17 @@ var buildUpdateQueries = function(arrayData, keys) {
         }
 
         let where = keys.reduce(function(previousKey, currentKey, index, array) {
-            return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([record[currentKey]]);
+            if (config.fieldsMap.has(currentKey)) {
+                return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([record[currentKey]]);
+            } else {
+                return previousKey;
+
+            }
         }, '');
 
         queries.push('update ' + config.dbTable + ' set ' + query.slice(0, -1) + ' where ' + where.slice(4));
 
-    })
+    });
 
     return queries;
 };
@@ -189,34 +203,19 @@ var buildDeleteQueries = function(arrayData, keys) {
         queries.push('delete from ' + config.dbTable + ' where id in ' + query);
         return queries;
     } else {
+
         let query = ''
 
         arrayData.forEach(function(record) {
-
-            for (let key in record) {
-                if (!config.fieldsMap.has(key)) { continue; }
-
-                switch (config.fieldsMap.get(key).formatter) {
-                    case 'string':
-                        record[key] = _formatString(record[key]);
-                        break;
-                    case 'int':
-                        record[key] = _formatInt(record[key]);
-                        break;
-                    case 'float':
-                        record[key] = _formatFloat(record[key]);
-                        break;
-                    case 'pass':
-                        record[key] = _formatPass(record[key], '');
-                        break;
-                    default:
-                        record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(record[key]) : record[key];
-                }
-
-            }
+            formatRecord(record);
 
             let where = keys.reduce(function(previousKey, currentKey, index, array) {
-                return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([record[currentKey]]);
+                if (config.fieldsMap.has(currentKey)) {
+                    return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([record[currentKey]]);
+                } else {
+                    return previousKey;
+
+                }
             }, '');
             //console.log('where:' + where);
             // queries.push('update user_role set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([user_role.id]));
