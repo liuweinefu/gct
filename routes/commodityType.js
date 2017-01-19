@@ -1,21 +1,25 @@
-var setRouter = require('./baseRouter');
-var router = setRouter({
+var getRouter = require('./baseRouter');
+
+
+
+var router = getRouter({
     routerName: __filename,
-    exportExcelFields: ['id', 'name'],
-    dbTable: 'view_useruser', //'user'
-    fieldsMap: _fieldsMap,
-    //dbView: 'view_user', //'view_user'
-});
-var _fieldsMap = new Map();
-_fieldsMap.set('id', {
-    updateAble: false,
-    formatter: 'number'
+    //importAble: true,
+    //exportAble: true,
+    exportExcelFields: ['id', 'name'], //array
+    dbTable: 'commodity_type', //db or view
+    fieldsMap: new Map()
+        .set('id', {
+            updateAble: false,
+            formatter: 'int', // string,int,float,pass or function(value);
+        })
+        .set('name', {
+            updateAble: true,
+            formatter: 'string',
+            //defaultValue: '新' + new Date(),
+            //noEmpty:true,
+        }),
 });
 
-_fieldsMap.set('name', {
-    updateAble: true,
-    formatter: 'string'
-});
-// var express = require('express');
-// var router = express.Router();
+
 module.exports = router;
