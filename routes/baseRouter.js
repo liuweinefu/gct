@@ -267,7 +267,7 @@ config.countBackNumber = function(value, isCopy) {
     return backNumber;
 }
 
-var filterImportPostData = function(arrayData) {
+var filterImportPostData = function(arrayData, keys) {
     if (!Array.isArray(arrayData) || arrayData.length === 0) {
         return Promise.resolve({});
     };
@@ -277,16 +277,15 @@ var filterImportPostData = function(arrayData) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('select name FROM user_role');
+            return currentCon.queryAsync('SELECT ' + keys[0] + ' FROM ' + config.dbTable);
         })
         .then(function(rows) {
             currentCon.release();
-            itemNames = rows.map(item => item.name)
+            itemNames = rows.map(item => item[keys[0]])
             let oldData = [];
             let newData = [];
             for (item of arrayData) {
-                if ((typeof item.name) !== 'string' || item.name.trim() === '') { continue; }
-                if (itemNames.indexOf(item.name) === -1) {
+                if (itemNames.indexOf(item[keys[0]]) === -1) {
                     newData.push(item);
                 } else {
                     oldData.push(item);
@@ -461,9 +460,8 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
 
 
 
-    //针对user_role
-    //console.log(req.body.postKeys);
-    if (Array.isArray(req.body.postKeys) && (req.body.postKeys.length > 1 || req.body.postKeys[0] !== 'name')) {
+    //目前仅支持单一key
+    if (req.body.postKeys.length > 1) {
         res.json({
             err: true,
             message: 'postKeys 错误'
@@ -475,12 +473,12 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
     //console.log(req.body);
     switch (req.body.postType) {
         case 'add':
-            filterImportPostData(req.body.postData)
+            filterImportPostData(req.body.postData, req.body.postKeys)
                 .then(function(Data) {
                     if (Data.newData === undefined || Data.newData.length === 0) {
                         return Promise.resolve([]);
                     }
-                    return executeQueries(config.buildInsertQueries(Data.newData));
+                    return req.dbCon.queryAsync(config.buildInsertQueries(Data.newData).join(';'));
                 })
                 .then(function(value) {
                     res.json({
@@ -491,12 +489,12 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                 });
             break;
         case 'update':
-            filterImportPostData(req.body.postData)
+            filterImportPostData(req.body.postData, req.body.postKeys)
                 .then(function(Data) {
                     if (Data.oldData === undefined || Data.oldData.length === 0) {
                         return Promise.resolve([]);
                     }
-                    return executeQueries(config.buildUpdateQueries(Data.oldData, ['name']));
+                    return req.dbCon.queryAsync(config.buildUpdateQueries(Data.oldData, req.body.postKeys).join(';'));
                 })
                 .then(function(value) {
                     res.json({
@@ -507,7 +505,7 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                 });
             break;
         case 'addAndUpdate':
-            filterImportPostData(req.body.postData)
+            filterImportPostData(req.body.postData, req.body.postKeys)
                 .then(function(Data) {
                     let insertQueries = [];
                     if (Data.newData !== undefined && Data.newData.length !== 0) {
@@ -515,13 +513,13 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                     }
                     let updateQueries = [];
                     if (Data.oldData !== undefined && Data.oldData.length !== 0) {
-                        updateQueries = config.buildUpdateQueries(Data.oldData, ['name']);
+                        updateQueries = config.buildUpdateQueries(Data.oldData, req.body.postKeys);
                     }
                     let insertAndUpdateQueries = insertQueries.concat(updateQueries);
                     if (insertAndUpdateQueries.length === 0) {
                         return Promise.resolve([]);
                     } else {
-                        return executeQueries(insertAndUpdateQueries);
+                        return req.dbCon.queryAsync(insertAndUpdateQueries.join(';'));
                     }
                 })
                 .then(function(value) {
@@ -533,12 +531,12 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                 });
             break;
         case 'delete':
-            filterImportPostData(req.body.postData)
+            filterImportPostData(req.body.postData, req.body.postKeys)
                 .then(function(Data) {
                     if (Data.oldData === undefined || Data.oldData.length === 0) {
                         return Promise.resolve([]);
                     }
-                    return executeQueries(config.buildDeleteQueries(Data.oldData, ['name']));
+                    return req.dbCon.queryAsync(config.buildDeleteQueries(Data.oldData, req.body.postKeys).join(';'));
                 })
                 .then(function(value) {
                     res.json({
@@ -549,7 +547,7 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                 });
             break;
         case 'copy':
-            filterImportPostData(req.body.postData)
+            filterImportPostData(req.body.postData, req.body.postKeys)
                 .then(function(Data) {
                     let copyData = [];
                     if (Data.newData !== undefined && Data.oldData !== undefined) {
@@ -558,7 +556,7 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                     if (copyData.length === 0) {
                         return Promise.resolve([]);
                     } else {
-                        return executeQueries(['delete FROM user_role'].concat(config.buildInsertQueries(copyData)));
+                        return req.dbCon.queryAsync((['DELETE FROM ' + config.dbTable].concat(config.buildInsertQueries(copyData))).join(';'));
                     }
                 })
                 .then(function(value) {
