@@ -21,7 +21,7 @@ config.fieldsMap = new Map(); //Map()
 
 
 
-var getFileName = function(fileName, needPath) {
+config.getFileName = function(fileName, needPath) {
     needPath = typeof needPath === 'boolean' ? needPath : false;
 
     let backFileName = '';
@@ -44,7 +44,7 @@ var getFileName = function(fileName, needPath) {
     }
 };
 
-var getCon = function(req, res, next) {
+config.getCon = function(req, res, next) {
     mysqlPool.getConnection(function(err, con) {
         if (err) { next(err) };
         req.dbCon = con;
@@ -53,114 +53,82 @@ var getCon = function(req, res, next) {
     });
 };
 
-
-
-
-var formatter = {
-    __string: function(value) {
-        return value.toString().trim();
+config.formatter = {
+    __string: function(key, value) {
+        value = value.toString().trim();
+        let err = false;
+        if (config.fieldsMap.get(key).nullable === false && value === '') { err = true; };
+        return [err, value];
     },
-    __int: function(value) {
+    __int: function(key, value) {
         if (!Number.isInteger(value)) { value = Number.parseInt(value) };
-        if (Number.isNaN(value)) {
-            throw new Error(value + ':不是整数');
-        } else {
-            return value;
-        }
+        let err = false;
+        if (config.fieldsMap.get(key).nullable === false && Number.isNaN(value)) { err = true; };
+        return [err, value];
     },
-    __float: function(value) {
+    __float: function(key, value) {
         if (typeof value !== 'number') { value = Number.parseFloat(value) };
-        if (Number.isNaN(value)) {
-            throw new Error(value + ':不是浮点数');
-        } else {
-            return value;
-        }
+        let err = false;
+        if (config.fieldsMap.get(key).nullable === false && Number.isNaN(value)) { err = true; };
+        return [err, value];
     },
-    __pass: function(value) {
+    __pass: function(key, value) {
         if (typeof value !== 'string') { value = value.toString().trim() };
-        if (value.length > 0 && value.length < 6) {
-            throw new Error('密码型值:应不少于6位:');
-        };
-        if (value.length = 0) {
-            return '';
-        };
-        return md5(value);
+        let err = false;
+        if (value.length < 6) {
+            err = true;
+            value = '';
+        } else { value = md5(value) };
+        return [err, value];
     },
-};
-var filterEmpty = {
-    __string: function(value) {
-        return value.toString().trim() === '';
-    },
-    __int: function(value) {
-        return Number.isNaN(Number.parseInt(value));
-    },
-    __float: function(value) {
-        return Number.isNaN(Number.parseFloat(value));
-    },
-    __pass: function(value) {
-        return value.toString().trim() === '' || value.toString().trim() === 'd41d8cd98f00b204e9800998ecf8427e';
-    },
-    __array: function(value) {
-        return Array.isArray(value) && value.length === 0;
-    }
 };
 
-var formatRecord = function(record) {
+
+config.formatRecord = function(record, errorHanding) {
     for (let key in record) {
         if (!config.fieldsMap.has(key)) {
             delete record[key];
             continue;
         };
-        if (config.fieldsMap.get(key).changeAble === false) { continue; }
 
+        if (config.fieldsMap.get(key).readonly === false) { continue; };
+
+        let err = false;
         if (typeof config.fieldsMap.get(key).formatter === 'string' &&
-            typeof formatter['__' + config.fieldsMap.get(key).formatter] === 'function') {
-            record[key] = formatter['__' + config.fieldsMap.get(key).formatter](record[key]);
-            continue;
+            typeof config.formatter['__' + config.fieldsMap.get(key).formatter] === 'function') {
+            [err, record[key]] = config.formatter['__' + config.fieldsMap.get(key).formatter](key, record[key]);
+        } else if (typeof config.fieldsMap.get(key).formatter === 'function') {
+            [err, record[key]] = config.fieldsMap.get(key).formatter(key, record[key]);
         };
 
-        if (typeof config.fieldsMap.get(key).formatter === 'function') {
-            record[key] = config.fieldsMap.get(key).formatter(record[key]);
-            continue;
+        if (err && typeof errorHanding === 'function') {
+            errorHanding(key, record);
         };
     };
-
 };
 
-
-var buildInsertQuery = function(record) {
+config.buildInsertQuery = function(record) {
     if (typeof record !== 'object' || Object.keys(record).length === 0) { return '' };
-    formatRecord(record);
+    config.formatRecord(record, function(key, record) {
+        throw new Error(key + '值错误:' + record[key]);
+    });
     let query = '';
     for (let key in record) {
-        if (config.fieldsMap.get(key).changeAble === false) { continue; }
-
-        if (config.fieldsMap.get(key).emptyAble === false) {
-            if (typeof filterEmpty['__' + config.fieldsMap.get(key).formatter] === 'function') {
-                if (filterEmpty['__' + config.fieldsMap.get(key).formatter](record[key])) {
-                    throw new Error(key + ':不能为空');
-                };
-            } else if (typeof config.fieldsMap.get(key).checkEmpty === 'function') {
-                if (config.fieldsMap.get(key).checkEmpty(record[key])) {
-                    throw new Error(key + ':不能为空');
-                };
-            };
-        };
-
+        if (config.fieldsMap.get(key).readonly === false) { continue; }
         query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
     }
+    if (query.trim() === '') { throw new Error('无有效插入数据,请检查字段设置'); };
     query = 'INSERT INTO ' + config.dbTable + ' SET ' + query.slice(0, -1);
     return query;
 };
 
-var buildInsertQueries = function(arrayData) {
+config.buildInsertQueries = function(arrayData) {
     let queries = [];
     if (!Array.isArray(arrayData) || arrayData.length === 0) {
         return queries;
     };
-
     arrayData.forEach(function(record) {
-        let query = buildInsertQuery(record);
+        let query = config.buildInsertQuery(record);
         if (query !== '') {
             queries.push(query);
         };
@@ -168,41 +136,31 @@ var buildInsertQueries = function(arrayData) {
     return queries;
 };
 
-var buildUpdateQuery = function(record, keys) {
+config.buildUpdateQuery = function(record, keys) {
     if (typeof record !== 'object' || Object.keys(record).length === 0) { return '' };
     keys = Array.isArray(keys) && keys.length !== 0 ? keys : ['id'];
-    formatRecord(record);
+    config.formatRecord(record, function(key, record) {
+        delete record[key];
+    });
     let query = '';
     for (let key in record) {
-        if (config.fieldsMap.get(key).changeAble === false) { continue; }
-
-        if (config.fieldsMap.get(key).emptyAble === false) {
-            if (typeof filterEmpty['__' + config.fieldsMap.get(key).formatter] === 'function') {
-                if (filterEmpty['__' + config.fieldsMap.get(key).formatter](record[key])) {
-                    delete record[key];
-                    continue;
-                };
-            } else if (typeof config.fieldsMap.get(key).checkEmpty === 'function') {
-                if (config.fieldsMap.get(key).checkEmpty(record[key])) {
-                    delete record[key];
-                    continue;
-                };
-            };
-        };
+        if (config.fieldsMap.get(key).readonly === false) { continue; }
         query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
     };
+    if (query.trim() === '') { throw new Error('无有效更新字段,请检查字段设置'); };
     let where = keys.reduce(function(previousKey, currentKey, index, array) {
         if (record[currentKey] !== undefined) {
             return previousKey + ' and ' + mysqlPool.escapeId(currentKey) + '=' + mysqlPool.escape(record[currentKey]);
         } else {
-            return previousKey;
+            throw new Error(currentKey + ':未定义');
         };
     }, '');
+    if (where.trim() === '') { throw new Error('无有效更新条件,请检查字段设置'); };
     query = 'update ' + config.dbTable + ' set ' + query.slice(0, -1) + ' where ' + where.slice(4);
     return query;
 };
 
-var buildUpdateQueries = function(arrayData, keys) {
+config.buildUpdateQueries = function(arrayData, keys) {
     let queries = [];
     if (!Array.isArray(arrayData) || arrayData.length === 0) {
         return queries;
@@ -210,7 +168,7 @@ var buildUpdateQueries = function(arrayData, keys) {
     keys = Array.isArray(keys) && keys.length !== 0 ? keys : ['id'];
 
     arrayData.forEach(function(record) {
-        let query = buildUpdateQuery(record, keys);
+        let query = config.buildUpdateQuery(record, keys);
         if (query !== '') {
             queries.push(query);
         }
@@ -219,27 +177,28 @@ var buildUpdateQueries = function(arrayData, keys) {
     return queries;
 };
 
-var buildDeleteQuery = function(record, keys) {
+config.buildDeleteQuery = function(record, keys) {
     if (typeof record !== 'object' || Object.keys(record).length === 0) { return '' };
     keys = Array.isArray(keys) && keys.length !== 0 ? keys : ['id'];
 
     let query = ''
-
-    formatRecord(record);
+    config.formatRecord(record, function(key, record) {
+        delete record[key];
+    });
 
     let where = keys.reduce(function(previousKey, currentKey, index, array) {
         if (record[currentKey] !== undefined) {
             return previousKey + ' and ' + mysqlPool.escapeId(currentKey) + '=' + mysqlPool.escape(record[currentKey]);
         } else {
-            return previousKey;
+            throw new Error(currentKey + ':未定义');
         };
     }, '');
-
+    if (where.trim() === '') { throw new Error('无有效删除条件,请检查字段设置'); };
     query = 'DELETE FROM ' + config.dbTable + ' WHERE ' + where.slice(4);
     return query;
 };
 
-var buildDeleteQueries = function(arrayData, keys) {
+config.buildDeleteQueries = function(arrayData, keys) {
     let queries = [];
     if (!Array.isArray(arrayData) || arrayData.length === 0) {
         return queries;
@@ -253,19 +212,17 @@ var buildDeleteQueries = function(arrayData, keys) {
             query = query + mysqlPool.escape(item.id) + ',';
         }
         query = query.slice(0, -1) + ')';
-        queries.push('delete from ' + config.dbTable + ' where id in ' + query);
+        queries.push('DELETE FROM ' + config.dbTable + ' WHERE id IN ' + query);
         return queries;
     } else {
         arrayData.forEach(function(record) {
-            let query = buildDeleteQuery(record, keys);
+            let query = config.buildDeleteQuery(record, keys);
             if (query !== '') {
                 queries.push(query);
             };
         });
         return queries;
-    }
-
-
+    };
 };
 
 
@@ -294,7 +251,7 @@ var buildDeleteQueries = function(arrayData, keys) {
 //         })
 // }
 
-var countBackNumber = function(value, isCopy) {
+config.countBackNumber = function(value, isCopy) {
     let backNumber = 0;
     if (!value) { return backNumber; }
     if (Array.isArray(value) && value.length !== 0) {
@@ -343,12 +300,13 @@ var filterImportPostData = function(arrayData) {
         })
 };
 
+
 router.get('/', function(req, res, next) {
     //console.log(config);
-    res.render(getFileName(config.routerName, true) + 'index');
+    res.render(config.getFileName(config.routerName, true) + 'index');
 });
 
-router.post('/', getCon, function(req, res, next) {
+router.post('/', config.getCon, function(req, res, next) {
 
     let selectQueries = [];
 
@@ -385,34 +343,34 @@ router.post('/', getCon, function(req, res, next) {
         });
 });
 
-router.post('/save', getCon, function(req, res, next) {
+router.post('/save', config.getCon, function(req, res, next) {
     req.body = JSON.parse(req.body.value);
 
     let executePromise = [null, null, null];
     if (Array.isArray(req.body.insert) && req.body.insert.length !== 0) {
-        executePromise[0] = req.dbCon.queryAsync(buildInsertQueries(req.body.insert).join(';'));
+        executePromise[0] = req.dbCon.queryAsync(config.buildInsertQueries(req.body.insert).join(';'));
     }
 
     if (Array.isArray(req.body.update) && req.body.update.length !== 0) {
-        executePromise[1] = req.dbCon.queryAsync(buildUpdateQueries(req.body.update).join(';'));
+        executePromise[1] = req.dbCon.queryAsync(config.buildUpdateQueries(req.body.update).join(';'));
     }
     if (Array.isArray(req.body.delete) && req.body.delete.length !== 0) {
-        executePromise[2] = req.dbCon.queryAsync(buildDeleteQueries(req.body.delete).join(';'));
+        executePromise[2] = req.dbCon.queryAsync(config.buildDeleteQueries(req.body.delete).join(';'));
     }
 
     Promise.all(executePromise)
         .then(function(values) {
             let message = '';
             let count = 0;
-            count = countBackNumber(values[0]);
+            count = config.countBackNumber(values[0]);
             if (count !== 0) {
                 message = message + '添加:' + count + '条数据,<br>'
             }
-            count = countBackNumber(values[1]);
+            count = config.countBackNumber(values[1]);
             if (count !== 0) {
                 message = message + '更新:' + count + '条数据,<br>'
             }
-            count = countBackNumber(values[2]);
+            count = config.countBackNumber(values[2]);
             if (count !== 0) {
                 message = message + '删除:' + count + '条数据'
             }
@@ -430,7 +388,7 @@ router.post('/save', getCon, function(req, res, next) {
 });
 
 
-router.get('/exportExcel', getCon, function(req, res, next) {
+router.get('/exportExcel', config.getCon, function(req, res, next) {
     if (!config.exportAble) { next(); return; };
 
     req.dbCon.queryAsync('SELECT ' + config.exportExcelFields.join(',') + ' FROM ' + config.dbTable)
@@ -447,9 +405,9 @@ router.get('/exportExcel', getCon, function(req, res, next) {
             });
 
             //发送excel数据
-            let wirteBuffer = xlsx.build([{ name: getFileName(config.routerName), data: data }])
+            let wirteBuffer = xlsx.build([{ name: config.getFileName(config.routerName), data: data }])
             res.setHeader('Content-Type', 'application/vnd.openxmlformats');
-            res.setHeader("Content-Disposition", "attachment; filename=" + getFileName(config.routerName) + ".xlsx");
+            res.setHeader("Content-Disposition", "attachment; filename=" + config.getFileName(config.routerName) + ".xlsx");
             res.end(wirteBuffer, 'binary');
         })
         .catch(function(err) {
@@ -462,10 +420,10 @@ router.get('/exportExcel', getCon, function(req, res, next) {
 
 router.get('/importExcel', function(req, res, next) {
     if (!config.importAble) { next(); return; };
-    res.render(getFileName(config.routerName, true) + 'importExcel');
+    res.render(config.getFileName(config.routerName, true) + 'importExcel');
 });
 
-router.post('/importExcel', getCon, function(req, res, next) {
+router.post('/importExcel', config.getCon, function(req, res, next) {
     if (!config.importAble) { next(); return; };
     req.body = JSON.parse(req.body.value);
     //数据格式检查
@@ -522,12 +480,12 @@ router.post('/importExcel', getCon, function(req, res, next) {
                     if (Data.newData === undefined || Data.newData.length === 0) {
                         return Promise.resolve([]);
                     }
-                    return executeQueries(buildInsertQueries(Data.newData));
+                    return executeQueries(config.buildInsertQueries(Data.newData));
                 })
                 .then(function(value) {
                     res.json({
                         err: false,
-                        message: '成功添加:' + countBackNumber(value) + '条数据',
+                        message: '成功添加:' + config.countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
                 });
@@ -538,12 +496,12 @@ router.post('/importExcel', getCon, function(req, res, next) {
                     if (Data.oldData === undefined || Data.oldData.length === 0) {
                         return Promise.resolve([]);
                     }
-                    return executeQueries(buildUpdateQueries(Data.oldData, ['name']));
+                    return executeQueries(config.buildUpdateQueries(Data.oldData, ['name']));
                 })
                 .then(function(value) {
                     res.json({
                         err: false,
-                        message: '成功更新:' + countBackNumber(value) + '条数据',
+                        message: '成功更新:' + config.countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
                 });
@@ -553,11 +511,11 @@ router.post('/importExcel', getCon, function(req, res, next) {
                 .then(function(Data) {
                     let insertQueries = [];
                     if (Data.newData !== undefined && Data.newData.length !== 0) {
-                        insertQueries = buildInsertQueries(Data.newData);
+                        insertQueries = config.buildInsertQueries(Data.newData);
                     }
                     let updateQueries = [];
                     if (Data.oldData !== undefined && Data.oldData.length !== 0) {
-                        updateQueries = buildUpdateQueries(Data.oldData, ['name']);
+                        updateQueries = config.buildUpdateQueries(Data.oldData, ['name']);
                     }
                     let insertAndUpdateQueries = insertQueries.concat(updateQueries);
                     if (insertAndUpdateQueries.length === 0) {
@@ -569,7 +527,7 @@ router.post('/importExcel', getCon, function(req, res, next) {
                 .then(function(value) {
                     res.json({
                         err: false,
-                        message: '成功添加及更新:' + countBackNumber(value) + '条数据',
+                        message: '成功添加及更新:' + config.countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
                 });
@@ -580,12 +538,12 @@ router.post('/importExcel', getCon, function(req, res, next) {
                     if (Data.oldData === undefined || Data.oldData.length === 0) {
                         return Promise.resolve([]);
                     }
-                    return executeQueries(buildDeleteQueries(Data.oldData, ['name']));
+                    return executeQueries(config.buildDeleteQueries(Data.oldData, ['name']));
                 })
                 .then(function(value) {
                     res.json({
                         err: false,
-                        message: '成功删除:' + countBackNumber(value) + '条数据',
+                        message: '成功删除:' + config.countBackNumber(value) + '条数据',
                     });
                     //res.status(200).end();
                 });
@@ -600,13 +558,13 @@ router.post('/importExcel', getCon, function(req, res, next) {
                     if (copyData.length === 0) {
                         return Promise.resolve([]);
                     } else {
-                        return executeQueries(['delete FROM user_role'].concat(buildInsertQueries(copyData)));
+                        return executeQueries(['delete FROM user_role'].concat(config.buildInsertQueries(copyData)));
                     }
                 })
                 .then(function(value) {
                     res.json({
                         err: false,
-                        message: '成功添加:' + countBackNumber(value, true) + '条数据',
+                        message: '成功添加:' + config.countBackNumber(value, true) + '条数据',
                     });
                     //res.status(200).end();
                 });
@@ -617,5 +575,5 @@ router.post('/importExcel', getCon, function(req, res, next) {
 
 module.exports = function(outConfig) {
     config = Object.assign(config, outConfig); //采用默认值
-    return router;
+    return [config, router];
 }

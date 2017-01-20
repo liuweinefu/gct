@@ -1,29 +1,31 @@
 var getRouter = require('./baseRouter');
 
-
-
-var router = getRouter({
+var config = {};
+var router = {};
+[config, router] = getRouter({
     routerName: __filename,
     //importAble: true,
     //exportAble: true,
     exportExcelFields: ['id', 'name'], //array
     dbTable: 'commodity_type', //db or view
-    //changeAble 为 true，才会检测emptyAble 为false ,才会调用checkEmpty
+    //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
     fieldsMap: new Map()
         .set('id', {
-            changeAble: false, //默认true
-            emptyAble: false, //默认ture
-            //checkEmpty: function() {},  //根据formatter定义，如不在string,int,float,pass 范围呢 则定义function(value);
-            formatter: 'int', // string,int,float,pass or function(value);
+            readonly: false, //默认true
+            nullable: false, //默认ture
+            formatter: 'int', // string,int,float,pass or function(key,value) return[err,value];
         })
         .set('name', {
-            //changeAble: true,  //默认true
-            emptyAble: false,
-            //checkEmpty: function() {},
+            //readonly: true,  //默认true
+            nullable: false,
             formatter: 'string',
-
         }),
 });
+
+// router.get('/abc', function(req, res, next) {
+//     console.log(config.fieldsMap);
+//     next();
+// });
 
 
 module.exports = router;
