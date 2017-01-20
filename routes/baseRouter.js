@@ -21,65 +21,6 @@ config.fieldsMap = new Map(); //Map()
 
 
 
-
-var __formatString = function(key, value) {
-    return value.toString().trim();
-};
-var __formatInt = function(key, value) {
-    if (!Number.isInteger(value)) { value = Number.parseInt(value) };
-    if (Number.isNaN(value)) {
-        throw new Error(key + '的值' + value + ':不是整数');
-    } else {
-        return value;
-    }
-
-};
-var __formatFloat = function(key, value) {
-    if (typeof value !== 'number') { value = Number.parseFloat(value) };
-    if (Number.isNaN(value)) {
-        throw new Error(key + '的值' + value + ':不是浮点数');
-    } else {
-        return value;
-    }
-};
-var __formatPass = function(key, value) {
-    if (typeof value !== 'string') { value = value.toString().trim() };
-    if (value.length > 0 && value.length < 6) {
-        throw new Error(key + "的值:应不少于6位:");
-    };
-    if (value.length = 0 && typeof config.fieldsMap.get(key).defaultValue === 'string' && config.fieldsMap.get(key).defaultValue.length >= 6) {
-        value = config.fieldsMap.get(key).defaultValue;
-    } else {
-        throw new Error(key + "的值:应不少于6位:");
-    };
-    return md5(value);
-};
-var __formatRecord = function(record) {
-    for (let key in record) {
-        if (!config.fieldsMap.has(key)) { continue; }
-        if (typeof config.fieldsMap.get(key).formatter !== 'string' &&
-            typeof config.fieldsMap.get(key).formatter !== 'function') { continue; }
-
-        switch (config.fieldsMap.get(key).formatter) {
-            case 'string':
-                record[key] = __formatString(key, record[key]);
-                break;
-            case 'int':
-                record[key] = __formatInt(key, record[key]);
-                break;
-            case 'float':
-                record[key] = __formatFloat(key, record[key]);
-                break;
-            case 'pass':
-                record[key] = __formatPass(key, record[key]);
-                break;
-            default:
-                record[key] = typeof config.fieldsMap.get(key).formatter === 'function' ? config.fieldsMap.get(key).formatter(key, record[key]) : record[key];
-        }
-    }
-
-};
-
 var getFileName = function(fileName, needPath) {
     needPath = typeof needPath === 'boolean' ? needPath : false;
 
@@ -103,7 +44,6 @@ var getFileName = function(fileName, needPath) {
     }
 };
 
-
 var getCon = function(req, res, next) {
     mysqlPool.getConnection(function(err, con) {
         if (err) { next(err) };
@@ -114,34 +54,101 @@ var getCon = function(req, res, next) {
 };
 
 
+
+
+var formatter = {
+    __string: function(value) {
+        return value.toString().trim();
+    },
+    __int: function(value) {
+        if (!Number.isInteger(value)) { value = Number.parseInt(value) };
+        if (Number.isNaN(value)) {
+            throw new Error(value + ':不是整数');
+        } else {
+            return value;
+        }
+    },
+    __float: function(value) {
+        if (typeof value !== 'number') { value = Number.parseFloat(value) };
+        if (Number.isNaN(value)) {
+            throw new Error(value + ':不是浮点数');
+        } else {
+            return value;
+        }
+    },
+    __pass: function(value) {
+        if (typeof value !== 'string') { value = value.toString().trim() };
+        if (value.length > 0 && value.length < 6) {
+            throw new Error('密码型值:应不少于6位:');
+        };
+        if (value.length = 0) {
+            return '';
+        };
+        return md5(value);
+    },
+};
+var filterEmpty = {
+    __string: function(value) {
+        return value.toString().trim() === '';
+    },
+    __int: function(value) {
+        return Number.isNaN(Number.parseInt(value));
+    },
+    __float: function(value) {
+        return Number.isNaN(Number.parseFloat(value));
+    },
+    __pass: function(value) {
+        return value.toString().trim() === '' || value.toString().trim() === 'd41d8cd98f00b204e9800998ecf8427e';
+    },
+    __array: function(value) {
+        return Array.isArray(value) && value.length === 0;
+    }
+};
+
+var formatRecord = function(record) {
+    for (let key in record) {
+        if (!config.fieldsMap.has(key)) {
+            delete record[key];
+            continue;
+        };
+        if (config.fieldsMap.get(key).changeAble === false) { continue; }
+
+        if (typeof config.fieldsMap.get(key).formatter === 'string' &&
+            typeof formatter['__' + config.fieldsMap.get(key).formatter] === 'function') {
+            record[key] = formatter['__' + config.fieldsMap.get(key).formatter](record[key]);
+            continue;
+        };
+
+        if (typeof config.fieldsMap.get(key).formatter === 'function') {
+            record[key] = config.fieldsMap.get(key).formatter(record[key]);
+            continue;
+        };
+    };
+
+};
+
+
 var buildInsertQuery = function(record) {
-    if (typeof record !== 'object') { return '' };
-    __formatRecord(record);
+    if (typeof record !== 'object' || Object.keys(record).length === 0) { return '' };
+    formatRecord(record);
     let query = '';
     for (let key in record) {
-        if (!config.fieldsMap.has(key)) { continue; }
-        if (!config.fieldsMap.get(key).updateAble) { continue; }
-        // if (typeof config.fieldsMap.get(key).noEmpty==='function' && config.fieldsMap.get(key).noEmpty()) {
+        if (config.fieldsMap.get(key).changeAble === false) { continue; }
 
-        // }
-        switch (key) {
-            case 'id':
-                continue;
-            case 'pass':
-                if (typeof record[key] !== 'string' || record[key].length === 0) {
-                    if (!config.fieldsMap.get(key).defaultValue) {
-                        return '';
-                    }
-                    record[key] = md5(config.fieldsMap.get(key).defaultValue);
-                    continue;
-                }
-            case 'name':
-                if (typeof record[key] !== 'string' || record[key].length === 0) {
-                    return '';
-                }
+        if (config.fieldsMap.get(key).emptyAble === false) {
+            if (typeof filterEmpty['__' + config.fieldsMap.get(key).formatter] === 'function') {
+                if (filterEmpty['__' + config.fieldsMap.get(key).formatter](record[key])) {
+                    throw new Error(key + ':不能为空');
+                };
+            } else if (typeof config.fieldsMap.get(key).checkEmpty === 'function') {
+                if (config.fieldsMap.get(key).checkEmpty(record[key])) {
+                    throw new Error(key + ':不能为空');
+                };
+            };
         };
+
         query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
-    } //for
+    }
     query = 'INSERT INTO ' + config.dbTable + ' SET ' + query.slice(0, -1);
     return query;
 };
@@ -156,9 +163,43 @@ var buildInsertQueries = function(arrayData) {
         let query = buildInsertQuery(record);
         if (query !== '') {
             queries.push(query);
-        }
+        };
     });
     return queries;
+};
+
+var buildUpdateQuery = function(record, keys) {
+    if (typeof record !== 'object' || Object.keys(record).length === 0) { return '' };
+    keys = Array.isArray(keys) && keys.length !== 0 ? keys : ['id'];
+    formatRecord(record);
+    let query = '';
+    for (let key in record) {
+        if (config.fieldsMap.get(key).changeAble === false) { continue; }
+
+        if (config.fieldsMap.get(key).emptyAble === false) {
+            if (typeof filterEmpty['__' + config.fieldsMap.get(key).formatter] === 'function') {
+                if (filterEmpty['__' + config.fieldsMap.get(key).formatter](record[key])) {
+                    delete record[key];
+                    continue;
+                };
+            } else if (typeof config.fieldsMap.get(key).checkEmpty === 'function') {
+                if (config.fieldsMap.get(key).checkEmpty(record[key])) {
+                    delete record[key];
+                    continue;
+                };
+            };
+        };
+        query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
+    };
+    let where = keys.reduce(function(previousKey, currentKey, index, array) {
+        if (record[currentKey] !== undefined) {
+            return previousKey + ' and ' + mysqlPool.escapeId(currentKey) + '=' + mysqlPool.escape(record[currentKey]);
+        } else {
+            return previousKey;
+        };
+    }, '');
+    query = 'update ' + config.dbTable + ' set ' + query.slice(0, -1) + ' where ' + where.slice(4);
+    return query;
 };
 
 var buildUpdateQueries = function(arrayData, keys) {
@@ -168,77 +209,58 @@ var buildUpdateQueries = function(arrayData, keys) {
     }
     keys = Array.isArray(keys) && keys.length !== 0 ? keys : ['id'];
 
-
     arrayData.forEach(function(record) {
-        __formatRecord(record);
-        let query = '';
-        for (let key in record) {
-            if (!config.fieldsMap.has(key)) { continue; }
-            if (config.fieldsMap.get(key).updateAble === false) { continue; }
-            switch (key) {
-                case 'id':
-                    continue;
-                case 'name':
-                case 'pass':
-                    if (typeof record[key] !== 'string' || record[key].length === 0) {
-                        continue;
-                    }
-            }
-
-            query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
-
+        let query = buildUpdateQuery(record, keys);
+        if (query !== '') {
+            queries.push(query);
         }
-
-        let where = keys.reduce(function(previousKey, currentKey, index, array) {
-            if (config.fieldsMap.has(currentKey)) {
-                return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([record[currentKey]]);
-            } else {
-                return previousKey;
-
-            }
-        }, '');
-
-        queries.push('update ' + config.dbTable + ' set ' + query.slice(0, -1) + ' where ' + where.slice(4));
-
     });
 
     return queries;
 };
 
+var buildDeleteQuery = function(record, keys) {
+    if (typeof record !== 'object' || Object.keys(record).length === 0) { return '' };
+    keys = Array.isArray(keys) && keys.length !== 0 ? keys : ['id'];
+
+    let query = ''
+
+    formatRecord(record);
+
+    let where = keys.reduce(function(previousKey, currentKey, index, array) {
+        if (record[currentKey] !== undefined) {
+            return previousKey + ' and ' + mysqlPool.escapeId(currentKey) + '=' + mysqlPool.escape(record[currentKey]);
+        } else {
+            return previousKey;
+        };
+    }, '');
+
+    query = 'DELETE FROM ' + config.dbTable + ' WHERE ' + where.slice(4);
+    return query;
+};
+
 var buildDeleteQueries = function(arrayData, keys) {
     let queries = [];
-
     if (!Array.isArray(arrayData) || arrayData.length === 0) {
         return queries;
     }
     keys = Array.isArray(keys) && keys.length !== 0 ? keys : ['id'];
 
+
     if (keys.indexOf('id') !== -1) {
         let query = '(';
         for (item of arrayData) {
-            query = query + mysqlPool.escape([item.id]) + ',';
+            query = query + mysqlPool.escape(item.id) + ',';
         }
         query = query.slice(0, -1) + ')';
         queries.push('delete from ' + config.dbTable + ' where id in ' + query);
         return queries;
     } else {
-
-        let query = ''
-
         arrayData.forEach(function(record) {
-            __formatRecord(record);
-
-            let where = keys.reduce(function(previousKey, currentKey, index, array) {
-                if (config.fieldsMap.has(currentKey)) {
-                    return previousKey + ' and ' + currentKey + '=' + mysqlPool.escape([record[currentKey]]);
-                } else {
-                    return previousKey;
-
-                }
-            }, '');
-            //console.log('where:' + where);
-            // queries.push('update user_role set ' + query.slice(0, -1) + ' where id=' + mysqlPool.escape([user_role.id]));
-            queries.push('delete from ' + config.dbTable + ' where ' + where.slice(4));
+            let query = buildDeleteQuery(record, keys);
+            if (query !== '') {
+                queries.push(query);
+            };
         });
         return queries;
     }
@@ -246,29 +268,31 @@ var buildDeleteQueries = function(arrayData, keys) {
 
 };
 
-var executeQueries = function(queries) {
-    let results = [];
-    if (!Array.isArray(queries) || queries.length === 0) {
-        //throw new Error("无操作数据库数据");
-        return Promise.resolve(results);
-    };
-    let currentCon = null;
-    return mysqlPool.getConnectionAsync()
-        .then(function(con) {
-            currentCon = con;
-            currentCon.queryAsync = Promise.promisify(currentCon.query);
-            currentCon.queryAsync(queries.join(';'));
-        })
-        .then(function(rows) {
-            currentCon.release();
-            return Promise.resolve(rows);
-        })
-        .catch(function(err) {
-            //console.log(err);
-            //Promise.reject(err);
-            //throw new Error(err);
-        })
-}
+
+
+// var executeQueries = function(queries) {
+//     let results = [];
+//     if (!Array.isArray(queries) || queries.length === 0) {
+//         //throw new Error("无操作数据库数据");
+//         return Promise.resolve(results);
+//     };
+//     let currentCon = null;
+//     return mysqlPool.getConnectionAsync()
+//         .then(function(con) {
+//             currentCon = con;
+//             currentCon.queryAsync = Promise.promisify(currentCon.query);
+//             currentCon.queryAsync(queries.join(';'));
+//         })
+//         .then(function(rows) {
+//             currentCon.release();
+//             return Promise.resolve(rows);
+//         })
+//         .catch(function(err) {
+//             //console.log(err);
+//             //Promise.reject(err);
+//             //throw new Error(err);
+//         })
+// }
 
 var countBackNumber = function(value, isCopy) {
     let backNumber = 0;
