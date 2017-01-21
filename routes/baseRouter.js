@@ -13,11 +13,6 @@ config.importAble = true; //boolean
 config.dbTable = ''; //db or view
 config.fieldsMap = new Map(); //Map()
 
-// config.fieldsMap.set('pass', {
-//     updateAble: true,
-//     formatter: 'string', // string,int,float,pass or function(value);
-//     defaultValue: '654321',
-// });
 
 
 
@@ -44,14 +39,6 @@ config.getFileName = function(fileName, needPath) {
     }
 };
 
-config.getCon = function(req, res, next) {
-    mysqlPool.getConnection(function(err, con) {
-        if (err) { next(err) };
-        req.dbCon = con;
-        req.dbCon.queryAsync = Promise.promisify(req.dbCon.query);
-        next();
-    });
-};
 
 config.formatter = {
     __string: function(key, value) {
@@ -299,13 +286,22 @@ var filterImportPostData = function(arrayData, keys) {
         })
 };
 
+router.getCon = function(req, res, next) {
+    mysqlPool.getConnection(function(err, con) {
+        if (err) { next(err) };
+        req.dbCon = con;
+        req.dbCon.queryAsync = Promise.promisify(req.dbCon.query);
+        next();
+    });
+};
+
 
 router.get('/', function(req, res, next) {
     //console.log(config);
     res.render(config.getFileName(config.routerName, true) + 'index');
 });
 
-router.post('/', config.getCon, function(req, res, next) {
+router.post('/', router.getCon, function(req, res, next) {
 
     let selectQueries = [];
 
@@ -342,7 +338,7 @@ router.post('/', config.getCon, function(req, res, next) {
         });
 });
 
-router.post('/save', config.getCon, function(req, res, next) {
+router.post('/save', router.getCon, function(req, res, next) {
     req.body = JSON.parse(req.body.value);
 
     let executePromise = [null, null, null];
@@ -387,7 +383,7 @@ router.post('/save', config.getCon, function(req, res, next) {
 });
 
 
-router.get('/exportExcel', config.getCon, function(req, res, next) {
+router.get('/exportExcel', router.getCon, function(req, res, next) {
     if (!config.exportAble) { next(); return; };
 
     req.dbCon.queryAsync('SELECT ' + config.exportExcelFields.join(',') + ' FROM ' + config.dbTable)
@@ -422,7 +418,7 @@ router.get('/importExcel', function(req, res, next) {
     res.render(config.getFileName(config.routerName, true) + 'importExcel');
 });
 
-router.post('/importExcel', config.getCon, function(req, res, next) {
+router.post('/importExcel', router.getCon, function(req, res, next) {
     if (!config.importAble) { next(); return; };
     req.body = JSON.parse(req.body.value);
     //数据格式检查
@@ -470,10 +466,16 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
     }
 
 
-    //console.log(req.body);
+
+    req.dbCon.beginTransactionAsync = Promise.promisify(req.dbCon.beginTransaction);
+    req.dbCon.commitAsync = Promise.promisify(req.dbCon.commit);
+    req.dbCon.rollbackAsync = Promise.promisify(req.dbCon.rollback);
     switch (req.body.postType) {
         case 'add':
-            filterImportPostData(req.body.postData, req.body.postKeys)
+            req.dbCon.beginTransactionAsync()
+                .then(function() {
+                    return filterImportPostData(req.body.postData, req.body.postKeys)
+                })
                 .then(function(Data) {
                     if (Data.newData === undefined || Data.newData.length === 0) {
                         return Promise.resolve([]);
@@ -485,11 +487,48 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                         err: false,
                         message: '成功添加:' + config.countBackNumber(value) + '条数据',
                     });
-                    //res.status(200).end();
+                    req.dbCon.commitAsync();
+                })
+                .catch(function(err) {
+                    req.dbCon.rollbackAsync();
+                    next(err);
+                })
+                .finally(function() {
+                    req.dbCon.release();
                 });
+
+
+            // filterImportPostData(req.body.postData, req.body.postKeys)
+            //     .then(function(Data) {
+            //         if (Data.newData === undefined || Data.newData.length === 0) {
+            //             return Promise.resolve([]);
+            //         }
+            //         return req.dbCon.queryAsync(config.buildInsertQueries(Data.newData).join(';'));
+            //     })
+            //     .then(function(value) {
+            //         res.json({
+            //             err: false,
+            //             message: '成功添加:' + config.countBackNumber(value) + '条数据',
+            //         });
+            //         //res.status(200).end();
+            //     })
+            //     .catch(function(err) {
+            //         next(err);
+            //     })
+            //     .finally(function() {
+            //         req.dbCon.release();
+            //     });
+
+
+
+
+
             break;
         case 'update':
-            filterImportPostData(req.body.postData, req.body.postKeys)
+            req.dbCon.beginTransactionAsync()
+                .then(function() {
+                    return filterImportPostData(req.body.postData, req.body.postKeys)
+                })
                 .then(function(Data) {
                     if (Data.oldData === undefined || Data.oldData.length === 0) {
                         return Promise.resolve([]);
@@ -501,11 +540,21 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                         err: false,
                         message: '成功更新:' + config.countBackNumber(value) + '条数据',
                     });
-                    //res.status(200).end();
+                    req.dbCon.commitAsync();
+                })
+                .catch(function(err) {
+                    req.dbCon.rollbackAsync();
+                    next(err);
+                })
+                .finally(function() {
+                    req.dbCon.release();
                 });
             break;
         case 'addAndUpdate':
-            filterImportPostData(req.body.postData, req.body.postKeys)
+            req.dbCon.beginTransactionAsync()
+                .then(function() {
+                    return filterImportPostData(req.body.postData, req.body.postKeys)
+                })
                 .then(function(Data) {
                     let insertQueries = [];
                     if (Data.newData !== undefined && Data.newData.length !== 0) {
@@ -527,11 +576,21 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                         err: false,
                         message: '成功添加及更新:' + config.countBackNumber(value) + '条数据',
                     });
-                    //res.status(200).end();
+                    req.dbCon.commitAsync();
+                })
+                .catch(function(err) {
+                    req.dbCon.rollbackAsync();
+                    next(err);
+                })
+                .finally(function() {
+                    req.dbCon.release();
                 });
             break;
         case 'delete':
-            filterImportPostData(req.body.postData, req.body.postKeys)
+            req.dbCon.beginTransactionAsync()
+                .then(function() {
+                    return filterImportPostData(req.body.postData, req.body.postKeys)
+                })
                 .then(function(Data) {
                     if (Data.oldData === undefined || Data.oldData.length === 0) {
                         return Promise.resolve([]);
@@ -543,11 +602,21 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                         err: false,
                         message: '成功删除:' + config.countBackNumber(value) + '条数据',
                     });
-                    //res.status(200).end();
+                    req.dbCon.commitAsync();
+                })
+                .catch(function(err) {
+                    req.dbCon.rollbackAsync();
+                    next(err);
+                })
+                .finally(function() {
+                    req.dbCon.release();
                 });
             break;
         case 'copy':
-            filterImportPostData(req.body.postData, req.body.postKeys)
+            req.dbCon.beginTransactionAsync()
+                .then(function() {
+                    return filterImportPostData(req.body.postData, req.body.postKeys)
+                })
                 .then(function(Data) {
                     let copyData = [];
                     if (Data.newData !== undefined && Data.oldData !== undefined) {
@@ -564,7 +633,14 @@ router.post('/importExcel', config.getCon, function(req, res, next) {
                         err: false,
                         message: '成功添加:' + config.countBackNumber(value, true) + '条数据',
                     });
-                    //res.status(200).end();
+                    req.dbCon.commitAsync();
+                })
+                .catch(function(err) {
+                    req.dbCon.rollbackAsync();
+                    next(err);
+                })
+                .finally(function() {
+                    req.dbCon.release();
                 });
             break;
     }

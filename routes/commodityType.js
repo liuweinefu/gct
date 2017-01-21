@@ -1,8 +1,12 @@
+var express = require('express');
+var router = express.Router();
 var getRouter = require('./baseRouter');
 
+
+
 var config = {};
-var router = {};
-[config, router] = getRouter({
+var baseRouter = {};
+[config, baseRouter] = getRouter({
     routerName: __filename,
     //importAble: true,
     //exportAble: true,
@@ -21,7 +25,13 @@ var router = {};
             formatter: 'string',
         }),
 });
+router.get('/', function(req, res, next) {
+    console.log('Im C');
+    next();
+})
 
+
+router.use(baseRouter);
 // router.get('/abc', function(req, res, next) {
 //     console.log(config.fieldsMap);
 //     next();
