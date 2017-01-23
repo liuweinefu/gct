@@ -1,13 +1,13 @@
 var express = require('express');
-var router = express.Router();
 var getRouter = require('./baseRouter');
 
 
 
-var config = {};
-var baseRouter = {};
-[config, baseRouter] = getRouter({
+var config = {
     routerName: __filename,
+    //multiData: true,
+    //singleData: true,
+    mainIndex: 'multi', //multi or single
     //importAble: true,
     //exportAble: true,
     exportExcelFields: ['id', 'name'], //array
@@ -24,14 +24,16 @@ var baseRouter = {};
             nullable: false,
             formatter: 'string',
         }),
-});
-router.get('/', function(req, res, next) {
-    console.log('Im C');
-    next();
-})
+};
 
 
-router.use(baseRouter);
+var router;
+[config, router] = getRouter(config);
+
+
+//router的特例设置
+
+
 // router.get('/abc', function(req, res, next) {
 //     console.log(config.fieldsMap);
 //     next();

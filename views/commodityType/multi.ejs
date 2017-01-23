@@ -48,7 +48,10 @@
         editor: {
             type: 'textbox',
             options: {}
-        }
+        },
+        other: function() {
+            console.log('a');
+        },
     });
 
 
@@ -58,7 +61,7 @@
         //loadMsg: '数据加载中,请稍后',
         fit: true,
         singleSelect: false,
-        url: '/commodityType',
+        url: '/commodityType/multi',
         method: 'post',
         toolbar: '#commodityType_table_toolbar',
         striped: true,
