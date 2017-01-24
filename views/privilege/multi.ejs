@@ -89,7 +89,7 @@
         //loadMsg: '数据加载中,请稍后',
         fit: true,
         singleSelect: false,
-        url: '/privilege',
+        url: '/privilege/multi',
         method: 'post',
         toolbar: '#privilege_table_toolbar',
         striped: true,
@@ -195,7 +195,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/privilege/save', sendObject)
+        $.post('/privilege/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#privilege_table').datagrid('getPanel').focus(); //重置焦点

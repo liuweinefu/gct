@@ -235,7 +235,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/member/save', sendObject)
+        $.post('/member/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#member_table').datagrid('getPanel').focus(); //重置焦点
@@ -305,7 +305,7 @@
             //loadMsg: '数据加载中,请稍后',
             fit: true,
             singleSelect: false,
-            url: '/member',
+            url: '/member/multi',
             method: 'post',
             toolbar: '#member_table_toolbar',
             striped: true,
@@ -353,7 +353,7 @@
     //表格初始化*************************************************************************
     $.post('member/initData', {}, function(data) {
         if (!data.err) {
-            member.roles = data.roles;
+            member.roles = data.result;
             member.init();
         } else {
             $.messager.alert('失败', data.message, 'warning', function() {

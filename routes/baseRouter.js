@@ -1,27 +1,34 @@
-var express = require('express');
-var router = express.Router();
 var md5 = require('md5');
 var xlsx = require('node-xlsx').default;
 
+function createRouter(outConfig) {
+    //var Promise = require('bluebird');
 
-//var Promise = require('bluebird');
+    if (!outConfig) { throw new Error('路由器初始化错误'); }
+    var config = {};
+    config.routerName = ''; //__filename:实际router的文件名
+    config.exportAble = true; //boolean 
+    config.exportExcelFields = []; //array
+    config.importAble = true; //boolean
+    config.multiData = true; //boolean
+    config.singleData = true; //boolean
+    config.initArray = []; // [{ db: 'user_role', fields: ['id', 'name'] }]
+    config.dbTable = ''; //db or view
+    config.fieldsMap = new Map(); //Map()
+    //     .set('id', {
+    //     readonly: true, //默认false
+    //     nullable: false, //默认ture
+    //     formatter: 'int', // string,int,float,pass or function(key,value) return[err,value];
+    // })
 
 
-var config = {};
-config.routerName = ''; //__filename:实际router的文件名
-config.exportAble = true; //boolean 
-config.exportExcelFields = []; //array
-config.importAble = true; //boolean
-config.multiData = true; //boolean
-config.singleData = true; //boolean
+
+    //覆盖初始值
+    config = Object.assign(config, outConfig);
 
 
-config.dbTable = ''; //db or view
-config.fieldsMap = new Map(); //Map()
-
-
-{
-
+    var router = require('express').Router();
+    //基本函数设置
     router.getFileName = function(fileName, needPath) {
         needPath = typeof needPath === 'boolean' ? needPath : false;
 
@@ -45,9 +52,9 @@ config.fieldsMap = new Map(); //Map()
         }
     };
 
-
     router.formatter = {
         __string: function(key, value) {
+            if (!value) { value = '' };
             value = value.toString().trim();
             let err = false;
             if (config.fieldsMap.get(key).nullable === false && value === '') { err = true; };
@@ -66,6 +73,7 @@ config.fieldsMap = new Map(); //Map()
             return [err, value];
         },
         __pass: function(key, value) {
+            if (!value) { value = '' };
             if (typeof value !== 'string') { value = value.toString().trim() };
             let err = false;
             if (value.length < 6) {
@@ -84,7 +92,7 @@ config.fieldsMap = new Map(); //Map()
                 continue;
             };
 
-            if (config.fieldsMap.get(key).readonly === false) { continue; };
+            if (config.fieldsMap.get(key).readonly === true) { continue; };
 
             let err = false;
             if (typeof config.fieldsMap.get(key).formatter === 'string' &&
@@ -107,7 +115,7 @@ config.fieldsMap = new Map(); //Map()
         });
         let query = '';
         for (let key in record) {
-            if (config.fieldsMap.get(key).readonly === false) { continue; }
+            if (config.fieldsMap.get(key).readonly === true) { continue; }
             query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
         }
         if (query.trim() === '') { throw new Error('无有效插入数据,请检查字段设置'); };
@@ -137,7 +145,7 @@ config.fieldsMap = new Map(); //Map()
         });
         let query = '';
         for (let key in record) {
-            if (config.fieldsMap.get(key).readonly === false) { continue; }
+            if (config.fieldsMap.get(key).readonly === true) { continue; }
             query = query + mysqlPool.escapeId(key) + '=' + mysqlPool.escape(record[key]) + ',';
         };
         if (query.trim() === '') { throw new Error('无有效更新字段,请检查字段设置'); };
@@ -236,8 +244,6 @@ config.fieldsMap = new Map(); //Map()
     }
 
 
-
-
     router.getCon = function(req, res, next) {
         mysqlPool.getConnection(function(err, con) {
             if (err) { next(err) };
@@ -246,408 +252,433 @@ config.fieldsMap = new Map(); //Map()
             next();
         });
     };
-}
 
 
 
-router.get('/', function(req, res, next) {
-    res.redirect(router.getFileName(config.routerName) + '/' + config.mainIndex);
-    //console.log(config);
-    //res.render(router.getFileName(config.routerName, true) + 'index');
-});
+    //路由设置
+
+    router.get('/', function(req, res, next) {
+        res.redirect(router.getFileName(config.routerName) + '/' + config.mainIndex);
+        //console.log(config);
+        //res.render(router.getFileName(config.routerName, true) + 'index');
+    });
 
 
-router.get('/multi', function(req, res, next) {
-    if (!config.multiData) { next(); return; };
-    routerName = router.getFileName(config.routerName);
-    res.render(router.getFileName(config.routerName, true) + 'multi', { routerName: routerName });
-});
+    router.get('/multi', function(req, res, next) {
+        if (!config.multiData) { next(); return; };
+        routerName = router.getFileName(config.routerName);
+        res.render(router.getFileName(config.routerName, true) + 'multi', { routerName: routerName });
+    });
 
-router.post('/multi', router.getCon, function(req, res, next) {
-    if (!config.multiData) { next(); return; };
-    let selectQueries = [];
-
-
-    let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
-    let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
-    let offset = (page - 1) * rows;
-
-    let dbFields = [];
-    for (let key of config.fieldsMap.keys()) {
-        dbFields.push(key);
-    }
-
-    if (!req.body.name || !req.body.value) {
-        selectQueries.push('SELECT count(*) as count FROM ' + config.dbTable);
-        selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.dbTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
-    } else {
-        selectQueries.push('SELECT count(*) as count FROM ' + config.dbTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
-        selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.dbTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
-    };
-
-    req.dbCon.queryAsync(selectQueries.join(';'))
-        .then(function(rows) {
-            res.json({
-                total: rows[0][0].count,
-                rows: rows[1]
-            });
-        })
-        .catch(function(err) {
-            next(err);
-        })
-        .finally(function() {
-            req.dbCon.release();
-        });
-});
-
-router.post('/multi/save', router.getCon, function(req, res, next) {
-    req.body = JSON.parse(req.body.value);
-
-    let executePromise = [null, null, null];
-    if (Array.isArray(req.body.insert) && req.body.insert.length !== 0) {
-        executePromise[0] = req.dbCon.queryAsync(router.buildInsertQueries(req.body.insert).join(';'));
-    }
-
-    if (Array.isArray(req.body.update) && req.body.update.length !== 0) {
-        executePromise[1] = req.dbCon.queryAsync(router.buildUpdateQueries(req.body.update).join(';'));
-    }
-    if (Array.isArray(req.body.delete) && req.body.delete.length !== 0) {
-        executePromise[2] = req.dbCon.queryAsync(router.buildDeleteQueries(req.body.delete).join(';'));
-    }
-
-    Promise.all(executePromise)
-        .then(function(values) {
-            let message = '';
-            let count = 0;
-            count = router.countBackNumber(values[0]);
-            if (count !== 0) {
-                message = message + '添加:' + count + '条数据,<br>'
-            }
-            count = router.countBackNumber(values[1]);
-            if (count !== 0) {
-                message = message + '更新:' + count + '条数据,<br>'
-            }
-            count = router.countBackNumber(values[2]);
-            if (count !== 0) {
-                message = message + '删除:' + count + '条数据'
-            }
-            res.json({
-                err: false,
-                message: message.slice(0, -1),
-            });
-        })
-        .catch(function(err) {
-            next(err);
-        })
-        .finally(function() {
-            req.dbCon.release();
-        });
-});
+    router.post('/multi', router.getCon, function(req, res, next) {
+        if (!config.multiData) { next(); return; };
+        let selectQueries = [];
 
 
-router.get('/exportExcel', router.getCon, function(req, res, next) {
-    if (!config.exportAble) { next(); return; };
+        let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
+        let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
+        let offset = (page - 1) * rows;
 
-    req.dbCon.queryAsync('SELECT ' + config.exportExcelFields.join(',') + ' FROM ' + config.dbTable)
-        .then(function(result) {
-            let data = [];
-            let keys = Object.keys(result[0]);
-            data.push(keys);
-            result.forEach(function(row) {
-                let rowValue = [];
-                keys.forEach(function(key) {
-                    rowValue.push(row[key]);
-                });
-                data.push(rowValue);
-            });
-
-            //发送excel数据
-            let wirteBuffer = xlsx.build([{ name: router.getFileName(config.routerName), data: data }])
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats');
-            res.setHeader("Content-Disposition", "attachment; filename=" + router.getFileName(config.routerName) + ".xlsx");
-            res.end(wirteBuffer, 'binary');
-        })
-        .catch(function(err) {
-            next(err);
-        })
-        .finally(function() {
-            req.dbCon.release();
-        });
-});
-
-router.get('/importExcel', function(req, res, next) {
-    if (!config.importAble) { next(); return; };
-    res.render(router.getFileName(config.routerName, true) + 'importExcel');
-});
-
-
-
-
-
-//需要改良;构建SelectQuery进行查询
-router.filterImportPostData = function(arrayData, keys) {
-    if (!Array.isArray(arrayData) || arrayData.length === 0) {
-        return Promise.resolve({});
-    };
-
-    let currentCon = null;
-    return mysqlPool.getConnectionAsync()
-        .then(function(con) {
-            currentCon = con;
-            currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('SELECT ' + keys[0] + ' FROM ' + config.dbTable);
-        })
-        .then(function(rows) {
-            currentCon.release();
-            itemNames = rows.map(item => item[keys[0]])
-            let oldData = [];
-            let newData = [];
-            for (item of arrayData) {
-                if (itemNames.indexOf(item[keys[0]]) === -1) {
-                    newData.push(item);
-                } else {
-                    oldData.push(item);
-                }
-            }
-            let returnObject = {
-                newData: newData,
-                oldData: oldData
-            };
-            return Promise.resolve(returnObject);
-        })
-};
-router.post('/importExcel', router.getCon, function(req, res, next) {
-    if (!config.importAble) { next(); return; };
-    req.body = JSON.parse(req.body.value);
-    //数据格式检查
-    if (['add', 'update', 'addAndUpdate', 'delete', 'copy'].indexOf(req.body.postType) === -1) {
-        res.json({
-            err: true,
-            message: '导入方式不符合标准'
-        });
-        return;
-    };
-
-    if ((!Array.isArray(req.body.postKeys) || req.body.postKeys.length === 0) && ['update', 'addAndUpdate', 'delete'].indexOf(req.body.postType) !== -1) {
-        res.json({
-            err: true,
-            message: '需要指定导入健'
-        });
-        return;
-    };
-
-    let postFields = Object.keys(req.body.postData[0]);
-    let keyErr = false;
-    for (key of req.body.postKeys) {
-        if (postFields.indexOf(key) === -1) {
-            keyErr = true;
-            break;
+        let dbFields = [];
+        for (let key of config.fieldsMap.keys()) {
+            if (config.fieldsMap.get(key).formatter === 'pass') { continue; }
+            dbFields.push(key);
         }
-    }
-    if (keyErr) {
-        res.json({
-            err: true,
-            message: '导入健与数据不符'
-        });
-        return;
-    }
+
+        if (!req.body.name || !req.body.value) {
+            selectQueries.push('SELECT count(*) as count FROM ' + config.dbTable);
+            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.dbTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+        } else {
+            selectQueries.push('SELECT count(*) as count FROM ' + config.dbTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
+            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.dbTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+        };
+
+        req.dbCon.queryAsync(selectQueries.join(';'))
+            .then(function(rows) {
+                res.json({
+                    total: rows[0][0].count,
+                    rows: rows[1]
+                });
+            })
+            .catch(function(err) {
+                next(err);
+            })
+            .finally(function() {
+                req.dbCon.release();
+            });
+    });
+
+    router.post('/multi/save', router.getCon, function(req, res, next) {
+        req.body = JSON.parse(req.body.value);
+
+        let executePromise = [null, null, null];
+        if (Array.isArray(req.body.insert) && req.body.insert.length !== 0) {
+            executePromise[0] = req.dbCon.queryAsync(router.buildInsertQueries(req.body.insert).join(';'));
+        }
+
+        if (Array.isArray(req.body.update) && req.body.update.length !== 0) {
+            executePromise[1] = req.dbCon.queryAsync(router.buildUpdateQueries(req.body.update).join(';'));
+        }
+        if (Array.isArray(req.body.delete) && req.body.delete.length !== 0) {
+            executePromise[2] = req.dbCon.queryAsync(router.buildDeleteQueries(req.body.delete).join(';'));
+        }
+
+        Promise.all(executePromise)
+            .then(function(values) {
+                let message = '';
+                let count = 0;
+                count = router.countBackNumber(values[0]);
+                if (count !== 0) {
+                    message = message + '添加:' + count + '条数据,<br>'
+                }
+                count = router.countBackNumber(values[1]);
+                if (count !== 0) {
+                    message = message + '更新:' + count + '条数据,<br>'
+                }
+                count = router.countBackNumber(values[2]);
+                if (count !== 0) {
+                    message = message + '删除:' + count + '条数据'
+                }
+                res.json({
+                    err: false,
+                    message: message.slice(0, -1),
+                });
+            })
+            .catch(function(err) {
+                next(err);
+            })
+            .finally(function() {
+                req.dbCon.release();
+            });
+    });
 
 
+    router.get('/exportExcel', router.getCon, function(req, res, next) {
+        if (!config.exportAble) { next(); return; };
 
-    //目前仅支持单一key
-    if (req.body.postKeys.length > 1) {
-        res.json({
-            err: true,
-            message: 'postKeys 错误'
-        });
-        return;
-    }
-
-
-
-    req.dbCon.beginTransactionAsync = Promise.promisify(req.dbCon.beginTransaction);
-    req.dbCon.commitAsync = Promise.promisify(req.dbCon.commit);
-    req.dbCon.rollbackAsync = Promise.promisify(req.dbCon.rollback);
-    switch (req.body.postType) {
-        case 'add':
-            req.dbCon.beginTransactionAsync()
-                .then(function() {
-                    return router.filterImportPostData(req.body.postData, req.body.postKeys)
-                })
-                .then(function(Data) {
-                    if (Data.newData === undefined || Data.newData.length === 0) {
-                        return Promise.resolve([]);
-                    }
-                    return req.dbCon.queryAsync(router.buildInsertQueries(Data.newData).join(';'));
-                })
-                .then(function(value) {
-                    res.json({
-                        err: false,
-                        message: '成功添加:' + router.countBackNumber(value) + '条数据',
+        req.dbCon.queryAsync('SELECT ' + config.exportExcelFields.join(',') + ' FROM ' + config.dbTable)
+            .then(function(result) {
+                let data = [];
+                let keys = Object.keys(result[0]);
+                data.push(keys);
+                result.forEach(function(row) {
+                    let rowValue = [];
+                    keys.forEach(function(key) {
+                        rowValue.push(row[key]);
                     });
-                    req.dbCon.commitAsync();
-                })
-                .catch(function(err) {
-                    req.dbCon.rollbackAsync();
-                    next(err);
-                })
-                .finally(function() {
-                    req.dbCon.release();
+                    data.push(rowValue);
                 });
 
+                //发送excel数据
+                let wirteBuffer = xlsx.build([{ name: router.getFileName(config.routerName), data: data }])
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats');
+                res.setHeader("Content-Disposition", "attachment; filename=" + router.getFileName(config.routerName) + ".xlsx");
+                res.end(wirteBuffer, 'binary');
+            })
+            .catch(function(err) {
+                next(err);
+            })
+            .finally(function() {
+                req.dbCon.release();
+            });
+    });
 
-            // router.filterImportPostData(req.body.postData, req.body.postKeys)
-            //     .then(function(Data) {
-            //         if (Data.newData === undefined || Data.newData.length === 0) {
-            //             return Promise.resolve([]);
-            //         }
-            //         return req.dbCon.queryAsync(router.buildInsertQueries(Data.newData).join(';'));
-            //     })
-            //     .then(function(value) {
-            //         res.json({
-            //             err: false,
-            //             message: '成功添加:' + router.countBackNumber(value) + '条数据',
-            //         });
-            //         //res.status(200).end();
-            //     })
-            //     .catch(function(err) {
-            //         next(err);
-            //     })
-            //     .finally(function() {
-            //         req.dbCon.release();
-            //     });
+    router.get('/importExcel', function(req, res, next) {
+        if (!config.importAble) { next(); return; };
+        res.render(router.getFileName(config.routerName, true) + 'importExcel');
+    });
 
 
 
 
 
-            break;
-        case 'update':
-            req.dbCon.beginTransactionAsync()
-                .then(function() {
-                    return router.filterImportPostData(req.body.postData, req.body.postKeys)
-                })
-                .then(function(Data) {
-                    if (Data.oldData === undefined || Data.oldData.length === 0) {
-                        return Promise.resolve([]);
-                    }
-                    return req.dbCon.queryAsync(router.buildUpdateQueries(Data.oldData, req.body.postKeys).join(';'));
-                })
-                .then(function(value) {
-                    res.json({
-                        err: false,
-                        message: '成功更新:' + router.countBackNumber(value) + '条数据',
-                    });
-                    req.dbCon.commitAsync();
-                })
-                .catch(function(err) {
-                    req.dbCon.rollbackAsync();
-                    next(err);
-                })
-                .finally(function() {
-                    req.dbCon.release();
-                });
-            break;
-        case 'addAndUpdate':
-            req.dbCon.beginTransactionAsync()
-                .then(function() {
-                    return router.filterImportPostData(req.body.postData, req.body.postKeys)
-                })
-                .then(function(Data) {
-                    let insertQueries = [];
-                    if (Data.newData !== undefined && Data.newData.length !== 0) {
-                        insertQueries = router.buildInsertQueries(Data.newData);
-                    }
-                    let updateQueries = [];
-                    if (Data.oldData !== undefined && Data.oldData.length !== 0) {
-                        updateQueries = router.buildUpdateQueries(Data.oldData, req.body.postKeys);
-                    }
-                    let insertAndUpdateQueries = insertQueries.concat(updateQueries);
-                    if (insertAndUpdateQueries.length === 0) {
-                        return Promise.resolve([]);
+    //需要改良;构建SelectQuery进行查询
+    router.filterImportPostData = function(arrayData, keys) {
+        if (!Array.isArray(arrayData) || arrayData.length === 0) {
+            return Promise.resolve({});
+        };
+
+        let currentCon = null;
+        return mysqlPool.getConnectionAsync()
+            .then(function(con) {
+                currentCon = con;
+                currentCon.queryAsync = Promise.promisify(currentCon.query);
+                return currentCon.queryAsync('SELECT ' + keys[0] + ' FROM ' + config.dbTable);
+            })
+            .then(function(rows) {
+                currentCon.release();
+                itemNames = rows.map(item => item[keys[0]])
+                let oldData = [];
+                let newData = [];
+                for (item of arrayData) {
+                    if (itemNames.indexOf(item[keys[0]]) === -1) {
+                        newData.push(item);
                     } else {
-                        return req.dbCon.queryAsync(insertAndUpdateQueries.join(';'));
+                        oldData.push(item);
                     }
-                })
-                .then(function(value) {
-                    res.json({
-                        err: false,
-                        message: '成功添加及更新:' + router.countBackNumber(value) + '条数据',
+                }
+                let returnObject = {
+                    newData: newData,
+                    oldData: oldData
+                };
+                return Promise.resolve(returnObject);
+            })
+    };
+    router.post('/importExcel', router.getCon, function(req, res, next) {
+        if (!config.importAble) { next(); return; };
+        req.body = JSON.parse(req.body.value);
+        //数据格式检查
+        if (['add', 'update', 'addAndUpdate', 'delete', 'copy'].indexOf(req.body.postType) === -1) {
+            res.json({
+                err: true,
+                message: '导入方式不符合标准'
+            });
+            return;
+        };
+
+        if ((!Array.isArray(req.body.postKeys) || req.body.postKeys.length === 0) && ['update', 'addAndUpdate', 'delete'].indexOf(req.body.postType) !== -1) {
+            res.json({
+                err: true,
+                message: '需要指定导入健'
+            });
+            return;
+        };
+
+        let postFields = Object.keys(req.body.postData[0]);
+        let keyErr = false;
+        for (key of req.body.postKeys) {
+            if (postFields.indexOf(key) === -1) {
+                keyErr = true;
+                break;
+            }
+        }
+        if (keyErr) {
+            res.json({
+                err: true,
+                message: '导入健与数据不符'
+            });
+            return;
+        }
+
+
+
+        //目前仅支持单一key
+        if (req.body.postKeys.length > 1) {
+            res.json({
+                err: true,
+                message: 'postKeys 错误'
+            });
+            return;
+        }
+
+
+
+        req.dbCon.beginTransactionAsync = Promise.promisify(req.dbCon.beginTransaction);
+        req.dbCon.commitAsync = Promise.promisify(req.dbCon.commit);
+        req.dbCon.rollbackAsync = Promise.promisify(req.dbCon.rollback);
+        switch (req.body.postType) {
+            case 'add':
+                req.dbCon.beginTransactionAsync()
+                    .then(function() {
+                        return router.filterImportPostData(req.body.postData, req.body.postKeys)
+                    })
+                    .then(function(Data) {
+                        if (Data.newData === undefined || Data.newData.length === 0) {
+                            return Promise.resolve([]);
+                        }
+                        return req.dbCon.queryAsync(router.buildInsertQueries(Data.newData).join(';'));
+                    })
+                    .then(function(value) {
+                        res.json({
+                            err: false,
+                            message: '成功添加:' + router.countBackNumber(value) + '条数据',
+                        });
+                        req.dbCon.commitAsync();
+                    })
+                    .catch(function(err) {
+                        req.dbCon.rollbackAsync();
+                        next(err);
+                    })
+                    .finally(function() {
+                        req.dbCon.release();
                     });
-                    req.dbCon.commitAsync();
-                })
-                .catch(function(err) {
-                    req.dbCon.rollbackAsync();
-                    next(err);
-                })
-                .finally(function() {
-                    req.dbCon.release();
-                });
-            break;
-        case 'delete':
-            req.dbCon.beginTransactionAsync()
-                .then(function() {
-                    return router.filterImportPostData(req.body.postData, req.body.postKeys)
-                })
-                .then(function(Data) {
-                    if (Data.oldData === undefined || Data.oldData.length === 0) {
-                        return Promise.resolve([]);
-                    }
-                    return req.dbCon.queryAsync(router.buildDeleteQueries(Data.oldData, req.body.postKeys).join(';'));
-                })
-                .then(function(value) {
-                    res.json({
-                        err: false,
-                        message: '成功删除:' + router.countBackNumber(value) + '条数据',
+
+
+                // router.filterImportPostData(req.body.postData, req.body.postKeys)
+                //     .then(function(Data) {
+                //         if (Data.newData === undefined || Data.newData.length === 0) {
+                //             return Promise.resolve([]);
+                //         }
+                //         return req.dbCon.queryAsync(router.buildInsertQueries(Data.newData).join(';'));
+                //     })
+                //     .then(function(value) {
+                //         res.json({
+                //             err: false,
+                //             message: '成功添加:' + router.countBackNumber(value) + '条数据',
+                //         });
+                //         //res.status(200).end();
+                //     })
+                //     .catch(function(err) {
+                //         next(err);
+                //     })
+                //     .finally(function() {
+                //         req.dbCon.release();
+                //     });
+
+
+
+
+
+                break;
+            case 'update':
+                req.dbCon.beginTransactionAsync()
+                    .then(function() {
+                        return router.filterImportPostData(req.body.postData, req.body.postKeys)
+                    })
+                    .then(function(Data) {
+                        if (Data.oldData === undefined || Data.oldData.length === 0) {
+                            return Promise.resolve([]);
+                        }
+                        return req.dbCon.queryAsync(router.buildUpdateQueries(Data.oldData, req.body.postKeys).join(';'));
+                    })
+                    .then(function(value) {
+                        res.json({
+                            err: false,
+                            message: '成功更新:' + router.countBackNumber(value) + '条数据',
+                        });
+                        req.dbCon.commitAsync();
+                    })
+                    .catch(function(err) {
+                        req.dbCon.rollbackAsync();
+                        next(err);
+                    })
+                    .finally(function() {
+                        req.dbCon.release();
                     });
-                    req.dbCon.commitAsync();
-                })
-                .catch(function(err) {
-                    req.dbCon.rollbackAsync();
-                    next(err);
-                })
-                .finally(function() {
-                    req.dbCon.release();
-                });
-            break;
-        case 'copy':
-            req.dbCon.beginTransactionAsync()
-                .then(function() {
-                    return router.filterImportPostData(req.body.postData, req.body.postKeys)
-                })
-                .then(function(Data) {
-                    let copyData = [];
-                    if (Data.newData !== undefined && Data.oldData !== undefined) {
-                        copyData = Data.newData.concat(Data.oldData);
-                    }
-                    if (copyData.length === 0) {
-                        return Promise.resolve([]);
-                    } else {
-                        return req.dbCon.queryAsync((['DELETE FROM ' + config.dbTable].concat(router.buildInsertQueries(copyData))).join(';'));
-                    }
-                })
-                .then(function(value) {
-                    res.json({
-                        err: false,
-                        message: '成功添加:' + router.countBackNumber(value, true) + '条数据',
+                break;
+            case 'addAndUpdate':
+                req.dbCon.beginTransactionAsync()
+                    .then(function() {
+                        return router.filterImportPostData(req.body.postData, req.body.postKeys)
+                    })
+                    .then(function(Data) {
+                        let insertQueries = [];
+                        if (Data.newData !== undefined && Data.newData.length !== 0) {
+                            insertQueries = router.buildInsertQueries(Data.newData);
+                        }
+                        let updateQueries = [];
+                        if (Data.oldData !== undefined && Data.oldData.length !== 0) {
+                            updateQueries = router.buildUpdateQueries(Data.oldData, req.body.postKeys);
+                        }
+                        let insertAndUpdateQueries = insertQueries.concat(updateQueries);
+                        if (insertAndUpdateQueries.length === 0) {
+                            return Promise.resolve([]);
+                        } else {
+                            return req.dbCon.queryAsync(insertAndUpdateQueries.join(';'));
+                        }
+                    })
+                    .then(function(value) {
+                        res.json({
+                            err: false,
+                            message: '成功添加及更新:' + router.countBackNumber(value) + '条数据',
+                        });
+                        req.dbCon.commitAsync();
+                    })
+                    .catch(function(err) {
+                        req.dbCon.rollbackAsync();
+                        next(err);
+                    })
+                    .finally(function() {
+                        req.dbCon.release();
                     });
-                    req.dbCon.commitAsync();
+                break;
+            case 'delete':
+                req.dbCon.beginTransactionAsync()
+                    .then(function() {
+                        return router.filterImportPostData(req.body.postData, req.body.postKeys)
+                    })
+                    .then(function(Data) {
+                        if (Data.oldData === undefined || Data.oldData.length === 0) {
+                            return Promise.resolve([]);
+                        }
+                        return req.dbCon.queryAsync(router.buildDeleteQueries(Data.oldData, req.body.postKeys).join(';'));
+                    })
+                    .then(function(value) {
+                        res.json({
+                            err: false,
+                            message: '成功删除:' + router.countBackNumber(value) + '条数据',
+                        });
+                        req.dbCon.commitAsync();
+                    })
+                    .catch(function(err) {
+                        req.dbCon.rollbackAsync();
+                        next(err);
+                    })
+                    .finally(function() {
+                        req.dbCon.release();
+                    });
+                break;
+            case 'copy':
+                req.dbCon.beginTransactionAsync()
+                    .then(function() {
+                        return router.filterImportPostData(req.body.postData, req.body.postKeys)
+                    })
+                    .then(function(Data) {
+                        let copyData = [];
+                        if (Data.newData !== undefined && Data.oldData !== undefined) {
+                            copyData = Data.newData.concat(Data.oldData);
+                        }
+                        if (copyData.length === 0) {
+                            return Promise.resolve([]);
+                        } else {
+                            return req.dbCon.queryAsync((['DELETE FROM ' + config.dbTable].concat(router.buildInsertQueries(copyData))).join(';'));
+                        }
+                    })
+                    .then(function(value) {
+                        res.json({
+                            err: false,
+                            message: '成功添加:' + router.countBackNumber(value, true) + '条数据',
+                        });
+                        req.dbCon.commitAsync();
+                    })
+                    .catch(function(err) {
+                        req.dbCon.rollbackAsync();
+                        next(err);
+                    })
+                    .finally(function() {
+                        req.dbCon.release();
+                    });
+                break;
+        }
+    });
+
+
+    router.post('/initData', router.getCon, function(req, res, next) {
+        if (!Array.isArray(config.initArray) || config.initArray.length === 0) { next(); return; }
+        let selectQueries = [];
+        config.initArray.forEach(function(item) {
+            selectQueries.push('SELECT ' + item.fields.join(',') + ' FROM ' + item.db);
+        })
+        req.dbCon.queryAsync(selectQueries.join(';'))
+            .then(function(rows) {
+                //console.log(rows);
+                res.json({
+                    err: false,
+                    message: '初始化成功',
+                    result: rows
                 })
-                .catch(function(err) {
-                    req.dbCon.rollbackAsync();
-                    next(err);
-                })
-                .finally(function() {
-                    req.dbCon.release();
-                });
-            break;
-    }
-});
+            })
+            .catch(function(err) {
+                next(err);
+            })
+            .finally(function() {
+                req.dbCon.release();
+            });
+
+    });
 
 
-
-
-module.exports = function(outConfig) {
-    config = Object.assign(config, outConfig); //采用默认值
     return [config, router];
 }
+
+module.exports = createRouter;

@@ -1,5 +1,6 @@
-var express = require('express');
-var getRouter = require('./baseRouter');
+// var express = require('express');
+// var router = express.Router();
+var createRouter = require('./baseRouter');
 
 
 
@@ -15,20 +16,20 @@ var config = {
     //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
     fieldsMap: new Map()
         .set('id', {
-            readonly: false, //默认true
+            readonly: true, //默认false
             nullable: false, //默认ture
             formatter: 'int', // string,int,float,pass or function(key,value) return[err,value];
         })
         .set('name', {
-            //readonly: true,  //默认true
-            nullable: false,
+            //readonly: false,  //默认false
+            nullable: false, //默认ture
             formatter: 'string',
         }),
 };
 
 
 var router;
-[config, router] = getRouter(config);
+[config, router] = createRouter(config);
 
 
 //router的特例设置

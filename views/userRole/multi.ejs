@@ -27,6 +27,9 @@
 </div>
 <script>
     userRole = {};
+    userRole.privileges = [];
+    userRole.menus = [];
+    userRole.tabs = [];
     //表格字段设置*************************************************************************
     userRole.fields = [];
     userRole.fields[0] = [];
@@ -95,8 +98,9 @@
                 fitColumns: true,
                 idField: 'id',
                 textField: 'id',
-                url: 'userRole/privileges',
-                //data: ,
+                //url: 'userRole/privileges',
+                //mode: 'local',
+                data: userRole.privileges,
                 columns: [
                     [{
                         field: 'ck',
@@ -149,8 +153,8 @@
                 fitColumns: true,
                 idField: 'id',
                 textField: 'id',
-                url: 'userRole/privileges',
-                //data: ,
+                //url: 'userRole/privileges',
+                data: userRole.privileges,
                 columns: [
                     [{
                         field: 'ck',
@@ -173,6 +177,10 @@
                         width: 100
                     }]
                 ],
+                onShowPanel: function() {
+                    //$(this).combogrid('grid').datagrid('loadData', userRole.privileges);
+                    //console.log(this);
+                },
                 onChange: function(newValue, oldValue) {
                     if (Array.isArray(oldValue) && oldValue.length !== 0) {
                         let cell = $('#userRole_table').datagrid('cell');
@@ -203,8 +211,8 @@
                 fitColumns: true,
                 idField: 'id',
                 textField: 'id',
-                url: 'userRole/privileges',
-                //data: ,
+                //url: 'userRole/privileges', //本地需后期赋值
+
                 columns: [
                     [{
                         field: 'ck',
@@ -264,51 +272,7 @@
     // });
 
     //表格初始化*************************************************************************
-    $('#userRole_table').datagrid({
-        idField: 'id',
-        //loadMsg: '数据加载中,请稍后',
-        fit: true,
-        singleSelect: false,
-        url: '/userRole',
-        method: 'post',
-        toolbar: '#userRole_table_toolbar',
-        striped: true,
-        pagination: true,
-        rownumbers: true,
-        pageNumber: 1,
-        pageSize: '30',
-        pageList: [30, 50, 100],
-        sortName: 'id',
-        remoteSort: false,
-        multiSort: true,
-        columns: userRole.fields,
-        //根据字段类型设置编辑器初始状态
-        onCellEdit: function(index, field, value) {
-            var ed = $(this).datagrid('getEditor', {
-                index: index,
-                field: field
-            });
-            switch (field) {
-                case 'privileges':
-                case 'menus':
-                case 'tabs':
-                    $(ed.target).combogrid('textbox').select();
-                    $(ed.target).combogrid('showPanel');
-                    break;
-                default:
-                    $(ed.target).textbox('textbox').select();
-                    break;
-            }
 
-        },
-        // onBeginEdit: function(index, row) {
-        //     console.log([1, 2, 6].indexOf(row.id));
-        //     if ([1, 2, 6].indexOf(row.id) !== -1) {
-        //         console.log(index);
-        //         $('#userRole_table').datagrid('endEdit', index);
-        //     }
-        // }
-    }).datagrid('enableCellEditing');
 
     //绑定菜单按钮的键盘设置*************************************************************************
     userRole.keydown = function(e) {
@@ -338,7 +302,8 @@
 
         }
     };
-    $('#userRole_table').datagrid('getPanel').keydown(userRole.keydown);
+
+
 
 
     //button设置*************************************************************************
@@ -378,7 +343,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/userRole/save', sendObject)
+        $.post('/userRole/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#userRole_table').datagrid('getPanel').focus(); //重置焦点
@@ -441,4 +406,67 @@
         });
 
     };
+
+    userRole.init = function() {
+        $('#userRole_table').datagrid({
+            idField: 'id',
+            //loadMsg: '数据加载中,请稍后',
+            fit: true,
+            singleSelect: false,
+            url: '/userRole/multi',
+            method: 'post',
+            toolbar: '#userRole_table_toolbar',
+            striped: true,
+            pagination: true,
+            rownumbers: true,
+            pageNumber: 1,
+            pageSize: '30',
+            pageList: [30, 50, 100],
+            sortName: 'id',
+            remoteSort: false,
+            multiSort: true,
+            columns: userRole.fields,
+            //根据字段类型设置编辑器初始状态
+            onCellEdit: function(index, field, value) {
+                var ed = $(this).datagrid('getEditor', {
+                    index: index,
+                    field: field
+                });
+                switch (field) {
+                    case 'privileges':
+                    case 'menus':
+                    case 'tabs':
+                        $(ed.target).combogrid('grid').datagrid('loadData', userRole.privileges);
+                        $(ed.target).combogrid('textbox').select();
+                        $(ed.target).combogrid('showPanel');
+                        break;
+                    default:
+                        $(ed.target).textbox('textbox').select();
+                        break;
+                }
+
+            },
+            // onBeginEdit: function(index, row) {
+            //     console.log([1, 2, 6].indexOf(row.id));
+            //     if ([1, 2, 6].indexOf(row.id) !== -1) {
+            //         console.log(index);
+            //         $('#userRole_table').datagrid('endEdit', index);
+            //     }
+            // }
+        }).datagrid('enableCellEditing');
+
+        $('#userRole_table').datagrid('getPanel').keydown(userRole.keydown);
+    };
+
+    //表格初始化*************************************************************************
+    $.post('userRole/initData', {}, function(data) {
+        if (!data.err) {
+            userRole.privileges = data.result;
+            userRole.init();
+        } else {
+            $.messager.alert('失败', data.message, 'warning', function() {
+                $('#userRole_table').datagrid('getPanel').focus(); //重置焦点
+            });
+        }
+    });
 </script>

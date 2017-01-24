@@ -69,6 +69,7 @@
                     min: 0,
                     precision: 2,
                     prefix: '￥',
+                    required: true,
                 }
             }
         });
@@ -81,8 +82,7 @@
                 type: 'numberbox',
                 options: {
                     min: 0,
-                    // precision: 2,
-                    // prefix: '￥',
+                    required: true,
                 }
             }
         });
@@ -195,7 +195,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/commodity/save', sendObject)
+        $.post('/commodity/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#commodity_table').datagrid('getPanel').focus(); //重置焦点
@@ -245,7 +245,7 @@
             //loadMsg: '数据加载中,请稍后',
             fit: true,
             singleSelect: false,
-            url: '/commodity',
+            url: '/commodity/multi',
             method: 'post',
             toolbar: '#commodity_table_toolbar',
             striped: true,
@@ -291,7 +291,7 @@
     //表格初始化*************************************************************************
     $.post('commodity/initData', {}, function(data) {
         if (!data.err) {
-            commodity.types = data.types;
+            commodity.types = data.result;
             commodity.init();
         } else {
             $.messager.alert('失败', data.message, 'warning', function() {

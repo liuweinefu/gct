@@ -49,9 +49,6 @@
             type: 'textbox',
             options: {}
         },
-        other: function() {
-            console.log('a');
-        },
     });
 
 
@@ -167,7 +164,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/commodityType/save', sendObject)
+        $.post('/commodityType/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#commodityType_table').datagrid('getPanel').focus(); //重置焦点

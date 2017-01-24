@@ -122,7 +122,7 @@
         //loadMsg: '数据加载中,请稍后',
         fit: true,
         singleSelect: false,
-        url: '/memberRole',
+        url: '/memberRole/multi',
         method: 'post',
         toolbar: '#memberRole_table_toolbar',
         striped: true,
@@ -228,7 +228,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/memberRole/save', sendObject)
+        $.post('/memberRole/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#memberRole_table').datagrid('getPanel').focus(); //重置焦点
