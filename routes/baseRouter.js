@@ -13,7 +13,8 @@ function createRouter(outConfig) {
     config.multiData = true; //boolean
     config.singleData = true; //boolean
     config.initArray = []; // [{ db: 'user_role', fields: ['id', 'name'] }]
-    config.dbTable = ''; //db or view
+    config.viewTable = ''; //db or view
+    config.dbTable = '';
     config.fieldsMap = new Map(); //Map()
     //     .set('id', {
     //     readonly: true, //默认false
@@ -25,6 +26,8 @@ function createRouter(outConfig) {
 
     //覆盖初始值
     config = Object.assign(config, outConfig);
+    config.viewTable = config.viewTable === '' ? config.dbTable : config.viewTable;
+
 
 
     var router = require('express').Router();
@@ -286,11 +289,11 @@ function createRouter(outConfig) {
         }
 
         if (!req.body.name || !req.body.value) {
-            selectQueries.push('SELECT count(*) as count FROM ' + config.dbTable);
-            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.dbTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+            selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable);
+            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
         } else {
-            selectQueries.push('SELECT count(*) as count FROM ' + config.dbTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
-            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.dbTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+            selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
+            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
         };
 
         req.dbCon.queryAsync(selectQueries.join(';'))
@@ -356,7 +359,7 @@ function createRouter(outConfig) {
     router.get('/exportExcel', router.getCon, function(req, res, next) {
         if (!config.exportAble) { next(); return; };
 
-        req.dbCon.queryAsync('SELECT ' + config.exportExcelFields.join(',') + ' FROM ' + config.dbTable)
+        req.dbCon.queryAsync('SELECT ' + config.exportExcelFields.join(',') + ' FROM ' + config.viewTable)
             .then(function(result) {
                 let data = [];
                 let keys = Object.keys(result[0]);
@@ -403,7 +406,7 @@ function createRouter(outConfig) {
             .then(function(con) {
                 currentCon = con;
                 currentCon.queryAsync = Promise.promisify(currentCon.query);
-                return currentCon.queryAsync('SELECT ' + keys[0] + ' FROM ' + config.dbTable);
+                return currentCon.queryAsync('SELECT ' + keys[0] + ' FROM ' + config.viewTable);
             })
             .then(function(rows) {
                 currentCon.release();

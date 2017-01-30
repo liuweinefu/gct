@@ -11,7 +11,8 @@ var config = {
     exportAble: true,
     exportExcelFields: ['name', 'price', 'count', 'remark', 'commodity_type_id', 'commodity_type_name'], //array
     initArray: [{ db: 'commodity_type', fields: ['id', 'name'] }], // [{ db: 'user_role', fields: ['id', 'name'] }]
-    dbTable: 'view_commodity', //db or view
+    viewTable: 'view_commodity',
+    dbTable: 'commodity', //db or view
     //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
     fieldsMap: new Map()
         .set('id', {
