@@ -9,8 +9,8 @@ var config = {
     //multiData: true,
     //singleData: true,
     mainIndex: 'multi', //multi or single
-    //importAble: true,
-    //exportAble: true,
+    importAble: true,
+    exportAble: true,
     exportExcelFields: ['id', 'name'], //array
     dbTable: 'commodity_type', //db or view
     //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
