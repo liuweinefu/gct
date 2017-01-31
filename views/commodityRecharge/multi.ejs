@@ -1,0 +1,282 @@
+<!--用户管理页面 -->
+<table id="commodityRecharge_table">
+</table>
+<div id="commodityRecharge_table_toolbar">
+    <table style="width:100%">
+        <tr>
+            <td style="width:40%">
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:commodityRecharge.tbSearchName,menu:'#commodityRecharge_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="commodityRecharge_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'commodity_name'">商品类型</div>
+                    <div data-options="name:'recharge_single_price'">入库单价</div>
+                    <div data-options="name:'recharge_all_price'">入库总价</div>
+                    <div data-options="name:'recharge_count'">入库数量</div>
+                    <div data-options="name:'remark'">备注</div>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <!--<a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="commodityRecharge.import()">导入(<ins>W</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="commodityRecharge.export()">导出(<ins>Q</ins>)</a>
+                    <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
+                    <!--<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="commodityRecharge.add()">增加(<ins>A</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="commodityRecharge.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="commodityRecharge.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="commodityRecharge.redo()">撤销(<ins>R</ins>)</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    commodityRecharge = {};
+    commodityRecharge.types = [];
+    //表格字段设置*************************************************************************
+    commodityRecharge.setFields = function() {
+        let fields = [];
+        fields[0] = [];
+        fields[0].push({
+            field: 'ck',
+            checkbox: true
+        });
+        fields[0].push({
+            field: 'id',
+            title: '充值记录ID',
+            width: 80
+        });
+        fields[0].push({
+            field: 'commodity_id',
+            title: '商品ID',
+            width: 80
+        });
+        fields[0].push({
+            field: 'commodity_name',
+            title: '商品名',
+            width: 100,
+        });
+        fields[0].push({
+            field: 'commodity_count',
+            title: '商品库存',
+            width: 100,
+        });
+        fields[0].push({
+            field: 'commodity_price',
+            title: '商品售价',
+            width: 100,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
+        });
+        fields[0].push({
+            field: 'recharge_time',
+            title: '入库时间',
+            sortable: true,
+            width: 100,
+        });
+        fields[0].push({
+            field: 'recharge_count',
+            title: '入库数量',
+            width: 100,
+        });
+        fields[0].push({
+            field: 'recharge_single_price',
+            title: '入库单价',
+            width: 100,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
+        });
+        fields[0].push({
+            field: 'recharge_all_price',
+            title: '入库总结',
+            width: 100,
+        });
+
+        fields[0].push({
+            field: 'remark',
+            title: '备注',
+            width: 100,
+            sortable: true,
+            editor: {
+                type: 'textbox',
+                options: {}
+            }
+        });
+
+        return fields;
+    }
+
+
+
+    //绑定菜单按钮的键盘设置*************************************************************************
+    commodityRecharge.keydown = function(e) {
+        //console.log(e);
+        if (e.altKey === false) {
+            return;
+        }
+        switch (e.key) {
+            // case "w":
+            //     commodityRecharge.import();
+            //     break;
+            case "q":
+                commodityRecharge.export();
+                break;
+            case "s":
+                commodityRecharge.save();
+                break;
+                // case "a":
+                //     commodityRecharge.add();
+                //     break;
+            case "d":
+                commodityRecharge.delete();
+                break;
+            case "r":
+                commodityRecharge.redo();
+                break;
+
+        }
+    };
+
+    //button设置*************************************************************************
+    commodityRecharge.tbSearchName = function(value, name) {
+        //$('#commodityRecharge_table').datagrid('unselectAll');
+        //s$('#commodityRecharge_table').datagrid('uncheckAll');
+        $('#commodityRecharge_table').datagrid('load', {
+            name: name,
+            value: value
+        });
+
+
+    };
+
+    commodityRecharge.save = function() {
+        //console.log($('#commodityRecharge_table').datagrid('cell'));
+        //接受当前编辑内容，并结束编辑
+        if ($('#commodityRecharge_table').datagrid('cell')) {
+            $('#commodityRecharge_table').datagrid('endEdit', $('#commodityRecharge_table').datagrid('cell').index);
+        };
+
+
+        $('#commodityRecharge_table').datagrid('loading');
+        let sendObject = {}
+        sendObject.insert = $('#commodityRecharge_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#commodityRecharge_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#commodityRecharge_table').datagrid('getChanges', 'updated');
+        if (sendObject.insert.length === 0 && sendObject.delete.length === 0 && sendObject.update.length === 0) {
+            $.messager.alert('提示', '没有更改', 'info', function() {
+                $('#commodityRecharge_table').datagrid('loaded');
+                $('#commodityRecharge_table').datagrid('getPanel').focus(); //重置焦点
+            });
+            return;
+        }
+        let sendString = JSON.stringify(sendObject);
+        sendObject = {
+            value: sendString
+        };
+        //console.log(JSON.stringify(sendObject));
+        $.post('/commodityRecharge/multi/save', sendObject)
+            .done(function(data) {
+                $.messager.alert('提示', data.message, 'info', function() {
+                    $('#commodityRecharge_table').datagrid('getPanel').focus(); //重置焦点
+                });
+                $('#commodityRecharge_table').datagrid('reload');
+                $('#commodityRecharge_table').datagrid('loaded');
+            })
+            .fail(function(err) {
+                $.messager.alert('失败', '请检查网络连接', 'warning', function() {
+                    $('#commodityRecharge_table').datagrid('getPanel').focus(); //重置焦点
+                });
+            });
+    };
+
+    // commodityRecharge.add = function() {
+    //     $('#commodityRecharge_table').datagrid('appendRow', {
+    //         id: 'N ' + Math.round(Math.random() * 1000),
+    //         commodity_id: 1,
+    //         commodity_name: '足底',
+    //     });
+    // };
+    commodityRecharge.delete = function() {
+
+        let allChecked = $('#commodityRecharge_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
+        let allDeleteId = [];
+        if (Array.isArray(allChecked) && allChecked.length != 0) {
+            allChecked.forEach(function(item) {
+                allDeleteId.push(item.id);
+            })
+        };
+        allDeleteId.forEach(function(id) {
+            $('#commodityRecharge_table').datagrid('deleteRow', $('#commodityRecharge_table').datagrid('getRowIndex', id));
+        });
+
+    };
+    commodityRecharge.redo = function() {
+        $('#commodityRecharge_table').datagrid('rejectChanges');
+    };
+    commodityRecharge.export = function() {
+        window.location.href = "commodityRecharge/exportExcel";
+    };
+
+    commodityRecharge.init = function() {
+
+        $('#commodityRecharge_table').datagrid({
+            idField: 'id',
+            //loadMsg: '数据加载中,请稍后',
+            fit: true,
+            singleSelect: false,
+            url: '/commodityRecharge/multi',
+            method: 'post',
+            toolbar: '#commodityRecharge_table_toolbar',
+            striped: true,
+            pagination: true,
+            rownumbers: true,
+            pageNumber: 1,
+            pageSize: '30',
+            pageList: [30, 50, 100],
+            sortName: 'id',
+            remoteSort: false,
+            multiSort: true,
+            columns: commodityRecharge.setFields(),
+            //根据字段类型设置编辑器初始状态
+            onCellEdit: function(index, field, value) {
+                var ed = $(this).datagrid('getEditor', {
+                    index: index,
+                    field: field
+                });
+                switch (field) {
+                    case 'commodityRecharge_type_id':
+                        $(ed.target).combogrid('textbox').select();
+                        $(ed.target).combogrid('showPanel');
+                        break;
+                    default:
+                        $(ed.target).textbox('textbox').select();
+                        break;
+                }
+
+            },
+            // onBeginEdit: function(index, row) {
+            //     console.log([1, 2, 6].indexOf(row.id));
+            //     if ([1, 2, 6].indexOf(row.id) !== -1) {
+            //         console.log(index);
+            //         $('#commodityRecharge_table').datagrid('endEdit', index);
+            //     }
+            // }
+        }).datagrid('enableCellEditing');
+
+        $('#commodityRecharge_table').datagrid('getPanel').keydown(commodityRecharge.keydown);
+    }
+
+
+    //表格初始化*************************************************************************
+    commodityRecharge.init();
+    // $.post('commodityRecharge/initData', {}, function(data) {
+    //     if (!data.err) {
+    //         commodityRecharge.types = data.result;
+    //         commodityRecharge.init();
+    //     } else {
+    //         $.messager.alert('失败', data.message, 'warning', function() {
+    //             $('#commodityRecharge_table').datagrid('getPanel').focus(); //重置焦点
+    //         });
+    //     }
+    // })
+</script>

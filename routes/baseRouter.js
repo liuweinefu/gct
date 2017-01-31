@@ -63,6 +63,14 @@ function createRouter(outConfig) {
             if (config.fieldsMap.get(key).nullable === false && value === '') { err = true; };
             return [err, value];
         },
+        __boolean: function(key, value) {
+            if (value === true || value === 'true') { value = 1 };
+            if (value === false || value === 'false') { value = 0 };
+            if (value !== 1 && value !== 0) { value = '' };
+            let err = false;
+            if (config.fieldsMap.get(key).nullable === false && value === '') { err = true; };
+            return [err, value];
+        },
         __int: function(key, value) {
             if (!Number.isInteger(value)) { value = Number.parseInt(value) };
             let err = false;

@@ -118,6 +118,8 @@ var member = require('./routes/member');
 var memberRole = require('./routes/memberRole');
 var commodity = require('./routes/commodity');
 var commodityType = require('./routes/commodityType');
+var commodityRecharge = require('./routes/commodityRecharge');
+var userWage = require('./routes/userWage');
 
 
 
@@ -130,6 +132,8 @@ app.use('/member', member);
 app.use('/memberRole', memberRole);
 app.use('/commodity', commodity);
 app.use('/commodityType', commodityType);
+app.use('/commodityRecharge', commodityRecharge);
+app.use('/userWage', userWage);
 
 
 

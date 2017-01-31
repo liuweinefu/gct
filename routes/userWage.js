@@ -7,36 +7,30 @@ var config = {
     multiData: true,
     //singleData: true,
     exportAble: true, //boolean 
-    exportExcelFields: ['id', 'commodity_id', 'commodity_name', 'commodity_count', 'commodity_price', 'create_time', 'recharge_count', 'recharge_single_price', 'recharge_all_price', 'remark'], //array
+    exportExcelFields: ['id', 'user_id', 'user_name', 'create_time', 'base_wage', 'deduction_wage', 'member_consumption_ids', 'remark'], //array
     mainIndex: 'multi', //multi or single
-    dbTable: 'commodity_recharge', //db or view
+    dbTable: 'user_wage', //db or view
     //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
     fieldsMap: new Map()
         .set('id', {
             readonly: true, //默认false
         })
-        .set('commodity_id', {
+        .set('user_id', {
             readonly: true, //默认false
         })
-        .set('commodity_name', {
-            readonly: true, //默认false
-        })
-        .set('commodity_count', {
-            readonly: true, //默认false
-        })
-        .set('commodity_price', {
+        .set('user_name', {
             readonly: true, //默认false
         })
         .set('create_time', {
             readonly: true, //默认false
         })
-        .set('recharge_count', {
+        .set('base_wage', {
             readonly: true, //默认false
         })
-        .set('recharge_single_price', {
+        .set('deduction_wage', {
             readonly: true, //默认false
         })
-        .set('recharge_all_price', {
+        .set('member_consumption_ids', {
             readonly: true, //默认false
         })
         .set('remark', {

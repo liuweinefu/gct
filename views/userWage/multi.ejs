@@ -1,0 +1,270 @@
+<!--用户管理页面 -->
+<table id="userWage_table">
+</table>
+<div id="userWage_table_toolbar">
+    <table style="width:100%">
+        <tr>
+            <td style="width:40%">
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:userWage.tbSearchName,menu:'#userWage_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="userWage_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'user_id'">员工ID</div>
+                    <div data-options="name:'user_name'">员工名</div>
+                    <div data-options="name:'member_consumption_ids'">消费记录</div>
+                    <div data-options="name:'remark'">备注</div>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <!--<a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="userWage.import()">导入(<ins>W</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="userWage.export()">导出(<ins>Q</ins>)</a>
+                    <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
+                    <!--<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="userWage.add()">增加(<ins>A</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="userWage.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="userWage.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="userWage.redo()">撤销(<ins>R</ins>)</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    userWage = {};
+    userWage.types = [];
+    //表格字段设置*************************************************************************
+    userWage.setFields = function() {
+        let fields = [];
+        fields[0] = [];
+        fields[0].push({
+            field: 'ck',
+            checkbox: true
+        });
+        fields[0].push({
+            field: 'id',
+            title: '工资结算ID',
+            width: 80
+        });
+        fields[0].push({
+            field: 'user_id',
+            title: '员工ID',
+            width: 80
+        });
+        fields[0].push({
+            field: 'user_name',
+            title: '员工名',
+            width: 100,
+        });
+        fields[0].push({
+            field: 'create_time',
+            title: '创建时间',
+            width: 100,
+        });
+        fields[0].push({
+            field: 'base_wage',
+            title: '底薪',
+            width: 100,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
+        });
+        fields[0].push({
+            field: 'deduction_wage',
+            title: '提成工资',
+            width: 100,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
+        });
+        fields[0].push({
+            field: 'member_consumption_ids',
+            title: '会员消费记录',
+            sortable: true,
+            width: 100,
+        });
+        fields[0].push({
+            field: 'remark',
+            title: '备注',
+            width: 100,
+            sortable: true,
+            editor: {
+                type: 'textbox',
+                options: {}
+            }
+        });
+
+        return fields;
+    }
+
+
+
+    //绑定菜单按钮的键盘设置*************************************************************************
+    userWage.keydown = function(e) {
+        //console.log(e);
+        if (e.altKey === false) {
+            return;
+        }
+        switch (e.key) {
+            // case "w":
+            //     userWage.import();
+            //     break;
+            case "q":
+                userWage.export();
+                break;
+            case "s":
+                userWage.save();
+                break;
+                // case "a":
+                //     userWage.add();
+                //     break;
+            case "d":
+                userWage.delete();
+                break;
+            case "r":
+                userWage.redo();
+                break;
+
+        }
+    };
+
+    //button设置*************************************************************************
+    userWage.tbSearchName = function(value, name) {
+        //$('#userWage_table').datagrid('unselectAll');
+        //s$('#userWage_table').datagrid('uncheckAll');
+        $('#userWage_table').datagrid('load', {
+            name: name,
+            value: value
+        });
+
+
+    };
+
+    userWage.save = function() {
+        //console.log($('#userWage_table').datagrid('cell'));
+        //接受当前编辑内容，并结束编辑
+        if ($('#userWage_table').datagrid('cell')) {
+            $('#userWage_table').datagrid('endEdit', $('#userWage_table').datagrid('cell').index);
+        };
+
+
+        $('#userWage_table').datagrid('loading');
+        let sendObject = {}
+        sendObject.insert = $('#userWage_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#userWage_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#userWage_table').datagrid('getChanges', 'updated');
+        if (sendObject.insert.length === 0 && sendObject.delete.length === 0 && sendObject.update.length === 0) {
+            $.messager.alert('提示', '没有更改', 'info', function() {
+                $('#userWage_table').datagrid('loaded');
+                $('#userWage_table').datagrid('getPanel').focus(); //重置焦点
+            });
+            return;
+        }
+        let sendString = JSON.stringify(sendObject);
+        sendObject = {
+            value: sendString
+        };
+        //console.log(JSON.stringify(sendObject));
+        $.post('/userWage/multi/save', sendObject)
+            .done(function(data) {
+                $.messager.alert('提示', data.message, 'info', function() {
+                    $('#userWage_table').datagrid('getPanel').focus(); //重置焦点
+                });
+                $('#userWage_table').datagrid('reload');
+                $('#userWage_table').datagrid('loaded');
+            })
+            .fail(function(err) {
+                $.messager.alert('失败', '请检查网络连接', 'warning', function() {
+                    $('#userWage_table').datagrid('getPanel').focus(); //重置焦点
+                });
+            });
+    };
+
+    // userWage.add = function() {
+    //     $('#userWage_table').datagrid('appendRow', {
+    //         id: 'N ' + Math.round(Math.random() * 1000),
+    //         commodity_id: 1,
+    //         commodity_name: '足底',
+    //     });
+    // };
+    userWage.delete = function() {
+
+        let allChecked = $('#userWage_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
+        let allDeleteId = [];
+        if (Array.isArray(allChecked) && allChecked.length != 0) {
+            allChecked.forEach(function(item) {
+                allDeleteId.push(item.id);
+            })
+        };
+        allDeleteId.forEach(function(id) {
+            $('#userWage_table').datagrid('deleteRow', $('#userWage_table').datagrid('getRowIndex', id));
+        });
+
+    };
+    userWage.redo = function() {
+        $('#userWage_table').datagrid('rejectChanges');
+    };
+    userWage.export = function() {
+        window.location.href = "userWage/exportExcel";
+    };
+
+    userWage.init = function() {
+
+        $('#userWage_table').datagrid({
+            idField: 'id',
+            //loadMsg: '数据加载中,请稍后',
+            fit: true,
+            singleSelect: false,
+            url: '/userWage/multi',
+            method: 'post',
+            toolbar: '#userWage_table_toolbar',
+            striped: true,
+            pagination: true,
+            rownumbers: true,
+            pageNumber: 1,
+            pageSize: '30',
+            pageList: [30, 50, 100],
+            sortName: 'id',
+            remoteSort: false,
+            multiSort: true,
+            columns: userWage.setFields(),
+            //根据字段类型设置编辑器初始状态
+            onCellEdit: function(index, field, value) {
+                var ed = $(this).datagrid('getEditor', {
+                    index: index,
+                    field: field
+                });
+                switch (field) {
+                    case 'userWage_type_id':
+                        $(ed.target).combogrid('textbox').select();
+                        $(ed.target).combogrid('showPanel');
+                        break;
+                    default:
+                        $(ed.target).textbox('textbox').select();
+                        break;
+                }
+
+            },
+            // onBeginEdit: function(index, row) {
+            //     console.log([1, 2, 6].indexOf(row.id));
+            //     if ([1, 2, 6].indexOf(row.id) !== -1) {
+            //         console.log(index);
+            //         $('#userWage_table').datagrid('endEdit', index);
+            //     }
+            // }
+        }).datagrid('enableCellEditing');
+
+        $('#userWage_table').datagrid('getPanel').keydown(userWage.keydown);
+    }
+
+
+    //表格初始化*************************************************************************
+    userWage.init();
+    // $.post('userWage/initData', {}, function(data) {
+    //     if (!data.err) {
+    //         userWage.types = data.result;
+    //         userWage.init();
+    //     } else {
+    //         $.messager.alert('失败', data.message, 'warning', function() {
+    //             $('#userWage_table').datagrid('getPanel').focus(); //重置焦点
+    //         });
+    //     }
+    // })
+</script>
