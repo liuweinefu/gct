@@ -44,7 +44,16 @@
             field: 'id',
             title: '会员ID',
             width: 50,
-            sortable: true
+        });
+        fields[0].push({
+            field: 'nothing',
+            title: '操作',
+            width: 100,
+            formatter: function(value, row, index) {
+                return '<button onclick="member.addCase(\'' + row.id + '\')">添加病例</button>';
+                //return '<a href="#" onclick="member.add()">添加病例</a>';
+                //return '<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="user.add()">添加病例</a>';
+            },
         });
         fields[0].push({
             field: 'name',
@@ -199,6 +208,10 @@
 
 
     //button设置*************************************************************************
+    member.addCase = function(memberID) {
+        console.log(memberID.toString());
+
+    }
     member.tbSearchName = function(value, name) {
         //$('#member_table').datagrid('unselectAll');
         //s$('#member_table').datagrid('uncheckAll');
@@ -337,13 +350,60 @@
                 }
 
             },
-            // onBeginEdit: function(index, row) {
-            //     console.log([1, 2, 6].indexOf(row.id));
-            //     if ([1, 2, 6].indexOf(row.id) !== -1) {
-            //         console.log(index);
-            //         $('#member_table').datagrid('endEdit', index);
-            //     }
-            // }
+
+            //显示病例列表
+            view: detailview,
+            detailFormatter: function(index, row) {
+                return '<div style="padding:2px"><table class="ddv"></table></div>';
+            },
+            onExpandRow: function(index, row) {
+                var ddv = $(this).datagrid('getRowDetail', index).find('table.ddv');
+                ddv.datagrid({
+                    url: '/member/multi', //'datagrid22_getdetail.php?itemid=' + row.itemid,
+                    fitColumns: true,
+                    singleSelect: true,
+                    rownumbers: true,
+                    loadMsg: '',
+                    height: 'auto',
+                    columns: [
+                        [{
+                            field: 'nothing',
+                            title: '操作',
+                            width: 80,
+                            formatter: function(value, row, index) {
+                                return '<button onclick="member.addCase(\'' + row.name + '\')">编辑</button> <button onclick="member.addCase(\'' + row.phone + '\')">打印</button>';
+                                //return '<a href="#" onclick="member.add()">添加病例</a>';
+                                //return '<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="user.add()">添加病例</a>';
+                            },
+
+                        }, {
+                            field: 'id',
+                            title: '会员ID',
+                            width: 50,
+                        }, {
+                            field: 'name',
+                            title: '会员名',
+                            width: 50,
+                            align: 'right'
+                        }, {
+                            field: 'phone',
+                            title: '电话',
+                            width: 50,
+                            align: 'right'
+                        }]
+                    ],
+                    onResize: function() {
+                        $('#member_table').datagrid('fixDetailRowHeight', index);
+                    },
+                    onLoadSuccess: function() {
+                        setTimeout(function() {
+                            $('#member_table').datagrid('fixDetailRowHeight', index);
+                        }, 0);
+                    }
+                });
+                $('#member_table').datagrid('fixDetailRowHeight', index);
+            }
+
         }).datagrid('enableCellEditing');
 
         $('#member_table').datagrid('getPanel').keydown(member.keydown);
