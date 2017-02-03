@@ -50,7 +50,7 @@
             title: '操作',
             width: 100,
             formatter: function(value, row, index) {
-                return '<button onclick="member.addCase(\'' + row.id + '\')">添加病例</button>';
+                return '<button onclick="member.addCase(\'' + row.id + '\')">查看消费记录</button>';
                 //return '<a href="#" onclick="member.add()">添加病例</a>';
                 //return '<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="user.add()">添加病例</a>';
             },
@@ -354,24 +354,32 @@
             //显示病例列表
             view: detailview,
             detailFormatter: function(index, row) {
-                return '<div style="padding:2px"><table class="ddv"></table></div>';
+                return '<div style="padding:2px" ><table class="ddv"></table></div>';
             },
             onExpandRow: function(index, row) {
                 var ddv = $(this).datagrid('getRowDetail', index).find('table.ddv');
                 ddv.datagrid({
-                    url: '/member/multi', //'datagrid22_getdetail.php?itemid=' + row.itemid,
+                    // url: '/member/multi', //'datagrid22_getdetail.php?itemid=' + row.itemid,
+                    url: '/privilege/multi', //'datagrid22_getdetail.php?itemid=' + row.itemid,
                     fitColumns: true,
                     singleSelect: true,
                     rownumbers: true,
                     loadMsg: '',
                     height: 'auto',
+                    toolbar: [{
+                        iconCls: 'icon-add',
+                        text: '添加病例',
+                        handler: function() {
+                            alert('编辑按钮')
+                        }
+                    }],
                     columns: [
                         [{
                             field: 'nothing',
                             title: '操作',
                             width: 80,
                             formatter: function(value, row, index) {
-                                return '<button onclick="member.addCase(\'' + row.name + '\')">编辑</button> <button onclick="member.addCase(\'' + row.phone + '\')">打印</button>';
+                                return '<button onclick="member.addCase(\'' + row.name + '\')">编辑</button> <button onclick="member.addCase(\'' + row.phone + '\')">打印</button> <button onclick="member.addCase(\'' + row.phone + '\')">删除</button>';
                                 //return '<a href="#" onclick="member.add()">添加病例</a>';
                                 //return '<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="user.add()">添加病例</a>';
                             },
