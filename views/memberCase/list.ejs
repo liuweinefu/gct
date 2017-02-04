@@ -1,0 +1,277 @@
+<!--用户管理页面 -->
+<div id="cc" class="easyui-layout" data-options="fit:true,">
+    <div data-options="region:'north',collapsible:false" style="height:50px;">
+        <table>
+            <tr>
+                <td>用户ID</td>
+                <td>用户名</td>
+                <td>电话</td>
+                <td>其他联系方式</td>
+                <td>备注</td>
+                <td>用户类型</td>
+            </tr>
+            <tr>
+                <td>
+                    <%= id %>
+                </td>
+                <td>
+                    <%= name %>
+                </td>
+                <td>
+                    <%= phone %>
+                </td>
+                <td>
+                    <%= other_contacts %>
+                </td>
+                <td>
+                    <%= remark %>
+                </td>
+                <td>
+                    <%= member_role_name %>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!--<div data-options="region:'south',title:'South Title',split:true" style="height:100px;"></div>-->
+    <div data-options="region:'west',title:'病例列表',collapsible:false">
+        <table id="memberCase_table">
+
+        </table>
+    </div>
+    <div data-options="region:'east',title:'详细信息',collapsible:false" style="width:300px">
+        ???
+    </div>
+    <!--<div data-options="region:'center',title:'center title'" style="padding:5px;background:#eee;"></div>-->
+</div>
+
+
+
+<script>
+    memberCase = {};
+    memberCase.types = [];
+    //表格字段设置*************************************************************************
+    memberCase.setFields = function() {
+        let fields = [];
+        fields[0] = [];
+        // fields[0].push({
+        //     field: 'ck',
+        //     checkbox: true
+        // });
+        fields[0].push({
+            field: 'id',
+            title: 'ID',
+
+        });
+        fields[0].push({
+            field: 'create_time',
+            title: '创建时间',
+
+        });
+        fields[0].push({
+            field: 'last_update_time',
+            title: '最后更新时间',
+
+        });
+        fields[0].push({
+            field: 'remark',
+            title: '备注',
+
+            sortable: true,
+        });
+
+        return fields;
+    }
+
+
+
+    //绑定菜单按钮的键盘设置*************************************************************************
+    memberCase.keydown = function(e) {
+        //console.log(e);
+        if (e.altKey === false) {
+            return;
+        }
+        switch (e.key) {
+            // case "w":
+            //     memberCase.import();
+            //     break;
+            case "q":
+                memberCase.export();
+                break;
+            case "s":
+                memberCase.save();
+                break;
+                // case "a":
+                //     memberCase.add();
+                //     break;
+            case "d":
+                memberCase.delete();
+                break;
+            case "r":
+                memberCase.redo();
+                break;
+
+        }
+    };
+
+    //button设置*************************************************************************
+    memberCase.tbSearchName = function(value, name) {
+        //$('#memberCase_table').datagrid('unselectAll');
+        //s$('#memberCase_table').datagrid('uncheckAll');
+        $('#memberCase_table').datagrid('load', {
+            name: name,
+            value: value
+        });
+
+
+    };
+
+    memberCase.save = function() {
+        //console.log($('#memberCase_table').datagrid('cell'));
+        //接受当前编辑内容，并结束编辑
+        if ($('#memberCase_table').datagrid('cell')) {
+            $('#memberCase_table').datagrid('endEdit', $('#memberCase_table').datagrid('cell').index);
+        };
+
+
+        $('#memberCase_table').datagrid('loading');
+        let sendObject = {}
+        sendObject.insert = $('#memberCase_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#memberCase_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#memberCase_table').datagrid('getChanges', 'updated');
+        if (sendObject.insert.length === 0 && sendObject.delete.length === 0 && sendObject.update.length === 0) {
+            $.messager.alert('提示', '没有更改', 'info', function() {
+                $('#memberCase_table').datagrid('loaded');
+                $('#memberCase_table').datagrid('getPanel').focus(); //重置焦点
+            });
+            return;
+        }
+        let sendString = JSON.stringify(sendObject);
+        sendObject = {
+            value: sendString
+        };
+        //console.log(JSON.stringify(sendObject));
+        $.post('/memberCase/multi/save', sendObject)
+            .done(function(data) {
+                $.messager.alert('提示', data.message, 'info', function() {
+                    $('#memberCase_table').datagrid('getPanel').focus(); //重置焦点
+                });
+                $('#memberCase_table').datagrid('reload');
+                $('#memberCase_table').datagrid('loaded');
+            })
+            .fail(function(err) {
+                $.messager.alert('失败', '请检查网络连接', 'warning', function() {
+                    $('#memberCase_table').datagrid('getPanel').focus(); //重置焦点
+                });
+            });
+    };
+
+    // memberCase.add = function() {
+    //     $('#memberCase_table').datagrid('appendRow', {
+    //         id: 'N ' + Math.round(Math.random() * 1000),
+    //         commodity_id: 1,
+    //         commodity_name: '足底',
+    //     });
+    // };
+    memberCase.delete = function() {
+
+        let allChecked = $('#memberCase_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
+        let allDeleteId = [];
+        if (Array.isArray(allChecked) && allChecked.length != 0) {
+            allChecked.forEach(function(item) {
+                allDeleteId.push(item.id);
+            })
+        };
+        allDeleteId.forEach(function(id) {
+            $('#memberCase_table').datagrid('deleteRow', $('#memberCase_table').datagrid('getRowIndex', id));
+        });
+
+    };
+    memberCase.redo = function() {
+        $('#memberCase_table').datagrid('rejectChanges');
+    };
+    memberCase.export = function() {
+        window.location.href = "memberCase/exportExcel";
+    };
+    memberCase.add = function() {
+        let id = 'N ' + Math.round(Math.random() * 1000);
+        $('#memberCase_table').datagrid('appendRow', {
+            id: id,
+            remark: '',
+        });
+        $('#memberCase_table').datagrid('selectRow', $('#memberCase_table').datagrid('getRowIndex', id));
+
+
+    };
+
+    memberCase.init = function() {
+
+        $('#memberCase_table').datagrid({
+                idField: 'id',
+                //loadMsg: '数据加载中,请稍后',
+                fit: true,
+                singleSelect: true,
+                url: '/memberCase/list',
+                method: 'post',
+                toolbar: [{
+                    iconCls: 'icon-add',
+                    handler: 'memberCase.add',
+                }, '-', {
+                    iconCls: 'icon-remove',
+                    handler: function() {
+                        alert('帮助按钮')
+                    }
+                }],
+                striped: true,
+                pagination: true,
+                rownumbers: true,
+                pageNumber: 1,
+                pageSize: '30',
+                pageList: [30, 50, 100],
+                sortName: 'id',
+                remoteSort: false,
+                multiSort: true,
+                columns: memberCase.setFields(),
+                //根据字段类型设置编辑器初始状态
+                onCellEdit: function(index, field, value) {
+                    var ed = $(this).datagrid('getEditor', {
+                        index: index,
+                        field: field
+                    });
+                    switch (field) {
+                        case 'memberCase_type_id':
+                            $(ed.target).combogrid('textbox').select();
+                            $(ed.target).combogrid('showPanel');
+                            break;
+                        default:
+                            $(ed.target).textbox('textbox').select();
+                            break;
+                    }
+
+                },
+                // onBeginEdit: function(index, row) {
+                //     console.log([1, 2, 6].indexOf(row.id));
+                //     if ([1, 2, 6].indexOf(row.id) !== -1) {
+                //         console.log(index);
+                //         $('#memberCase_table').datagrid('endEdit', index);
+                //     }
+                // }
+            })
+            //.datagrid('enableCellEditing');
+
+        $('#memberCase_table').datagrid('getPanel').keydown(memberCase.keydown);
+    }
+
+
+    //表格初始化*************************************************************************
+    memberCase.init();
+    // $.post('memberCase/initData', {}, function(data) {
+    //     if (!data.err) {
+    //         memberCase.types = data.result;
+    //         memberCase.init();
+    //     } else {
+    //         $.messager.alert('失败', data.message, 'warning', function() {
+    //             $('#memberCase_table').datagrid('getPanel').focus(); //重置焦点
+    //         });
+    //     }
+    // })
+</script>

@@ -326,53 +326,6 @@ function createRouter(outConfig) {
                 req.dbCon.release();
             });
     });
-    router.post('/list/:fields/:id', router.getCon, function(req, res, next) {
-        if (req.params.fields === undefined || req.params.id === undefined) {
-            next();
-        }
-        let fields = request.params.fields.toString().trim();
-        let id = parseInt(request.params.id);
-        if (fields === '' || Number.isNaN(id)) {
-            next();
-        };
-
-
-        if (!config.multiData) { next(); return; };
-        let selectQueries = [];
-
-
-        let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
-        let rows = Number.isNaN(parseInt(req.body.rows)) ? 10 : parseInt(req.body.rows);
-        let offset = (page - 1) * rows;
-
-        let dbFields = [];
-        for (let key of config.fieldsMap.keys()) {
-            if (config.fieldsMap.get(key).formatter === 'pass') { continue; }
-            dbFields.push(key);
-        }
-
-        if (!req.body.name || !req.body.value) {
-            selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable);
-            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
-        } else {
-            selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
-            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
-        };
-
-        req.dbCon.queryAsync(selectQueries.join(';'))
-            .then(function(rows) {
-                res.json({
-                    total: rows[0][0].count,
-                    rows: rows[1]
-                });
-            })
-            .catch(function(err) {
-                next(err);
-            })
-            .finally(function() {
-                req.dbCon.release();
-            });
-    });
 
     router.post('/multi/save', router.getCon, function(req, res, next) {
         req.body = JSON.parse(req.body.value);
