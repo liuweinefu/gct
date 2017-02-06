@@ -124,6 +124,8 @@ var commodity = require('./routes/commodity');
 var commodityType = require('./routes/commodityType');
 var commodityRecharge = require('./routes/commodityRecharge');
 
+var uploadPic = require('./routes/uploadPic');
+app.use('/uploadPic', uploadPic);
 
 
 
@@ -142,6 +144,8 @@ app.use('/memberRecharge', memberRecharge);
 app.use('/commodity', commodity);
 app.use('/commodityType', commodityType);
 app.use('/commodityRecharge', commodityRecharge);
+
+
 
 
 
