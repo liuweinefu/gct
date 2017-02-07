@@ -32,6 +32,7 @@
 <script>
     member = {};
     member.roles = []; //需初始化数据    
+
     //表格字段设置*************************************************************************
     member.setFields = function() {
         let fields = [];
@@ -51,6 +52,7 @@
             title: '记录',
             width: 150,
             formatter: function(value, row, index) {
+                member.currentMember = row;
                 return '<button onclick="member.listCase(\'' + row.id + '\')">健康记录</button>  <button onclick="member.listConsumption(\'' + row.id + '\')">消费记录</button>';
                 //return '<a href="#" onclick="member.add()">添加病例</a>';
                 //return '<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="user.add()">添加病例</a>';
@@ -210,22 +212,27 @@
 
     //button设置*************************************************************************
     member.listCase = function(memberID) {
-        $('#mainImport').window({
-            title: '健康记录',
-            width: 800,
-            height: 600,
-            collapsible: false,
-            minimizable: false,
-            maximizable: false,
-            modal: true,
-            href: 'memberCase/list/' + memberID,
-            onClose: function() {
-                $('#member_table').datagrid('reload');
-                //console.log('window close!');
-            }
-        });
-        //console.log(memberID.toString());
-
+        if (memberID === undefined) {
+            $.messager.alert('提示', '无当前用户', 'info', function() {
+                $('#member_table').datagrid('getPanel').focus(); //重置焦点
+            });
+        } else {
+            $('#mainImport').window({
+                title: '健康记录',
+                width: 800,
+                height: 600,
+                collapsible: false,
+                minimizable: false,
+                maximizable: false,
+                modal: true,
+                href: 'member/case/' + memberID,
+                // onClose: function() {
+                //     $('#member_table').datagrid('reload');
+                //     //console.log('window close!');
+                // }
+            });
+            //console.log(memberID.toString());
+        }
     }
     member.listConsumption = function(memberID) {
         $('#mainImport').window({

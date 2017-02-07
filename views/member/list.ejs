@@ -1,0 +1,112 @@
+<div id="cc" class="easyui-layout" data-options="fit:true,">
+    <div data-options="region:'north',collapsible:false" style="height:50px;">
+        <table border="1">
+            <tr>
+                <td>用户ID:
+                    <b><%= id %></b>
+                </td>
+                <td>用户名:
+                    <b><%= name %></b>
+                </td>
+                <td>用户类型:
+                    <b><%= member_role_name %></b>
+                </td>
+            </tr>
+            <tr>
+                <td>电话:
+                    <b><%= phone %></b>
+                </td>
+                <td>其他联系方式:
+                    <b><%= other_contacts %></b>
+                </td>
+                <td>备注:
+                    <b><%= remark %></b>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!--<div data-options="region:'south',title:'South Title',split:true" style="height:100px;"></div>-->
+    <!--<div data-options="region:'west',title:'病例列表',collapsible:false"> </div>-->
+    <!--<div data-options="region:'east',title:'详细信息',collapsible:false" style="width:300px"> </div>-->
+    <div data-options="region:'center',title:'center title'" style="padding:5px;background:#eee;">
+        <form id="ff" action="/member/case" method="post" enctype="multipart/form-data">
+            <table>
+                <tr>
+                    <td colspan="2">
+                        <label>健康记录备注</label>
+                        <input name="memberCase" class="easyui-textbox" data-options="multiline:true,value:<%= member_case %>" style="width:760px;height:50px">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table>
+                            <tr>
+                                <td style="width:180px;float:left;margin-left:0px">
+                                    <label>正面</label>
+                                    <input type="file" name="upPic" class="dropify" data-height="320" data-default-file="<%= upPic %>" />
+                                </td>
+                                <td style="width:180px;float:left;margin-left:30px">
+                                    <label for="downPic">背面</label>
+                                    <input type="file" name="downPic" class="dropify" data-height="320" data-default-file="<%= downPic %>" />
+
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>
+                        <table>
+                            <tr>
+                                <td style="width:300px;float:left;margin-left:0px ">
+                                    <label for="leftPic">左侧面</label>
+                                    <input type="file" name="leftPic" class="dropify" data-height="140" data-default-file="<%= leftPic %>" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width:300px;float:left;margin-left:0px ">
+                                    <label for="rightPic">右侧面</label>
+                                    <input type="file" name="rightPic" class="dropify" data-height="140" data-default-file="<%= rightPic %>" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="memberCase.submit()" style="width:80px;float:right;margin-right:40px ">保存</a>
+                    </td>
+                </tr>
+            </table>
+
+
+
+
+        </form>
+
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Basic
+        $('.dropify').dropify({
+            messages: {
+                'default': '点击或拖拽添加图片',
+                'replace': '点击或拖拽添加图片',
+                'remove': '清空',
+                'error': '出错了.'
+            }
+        });
+
+    });
+    memberCase = {};
+    memberCase.submit = function() {
+        $('#ff').form('submit', {
+            success: function(data) {
+                var data = eval('(' + data + ')'); // change the JSON string to javascript object    
+                if (data.success) {
+                    alert(data.message)
+                }
+            }
+        });
+    };
+</script>
