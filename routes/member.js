@@ -84,13 +84,9 @@ router.get('/case/:id', router.getCon, function(req, res, next) {
         next();
     }
 
-    req.dbCon.queryAsync('SELECT id,name,phone,other_contacts,remark,member_role_name,member_case FROM view_member WHERE id= ' + mysqlPool.escape(req.params.id))
+    req.dbCon.queryAsync('SELECT id,name,phone,other_contacts,remark,member_role_name,member_case FROM ' + config.viewTable + ' WHERE id= ' + mysqlPool.escape(req.params.id))
         .then(function(rows) {
             req.session.currentMember = Object.assign({}, rows[0]);
-            req.session.currentMember.upPic = '';
-            req.session.currentMember.downPic = '';
-            req.session.currentMember.leftPic = '';
-            req.session.currentMember.rightPic = '';
             res.render(router.getFileName(config.routerName, true) + 'list', req.session.currentMember);
         })
         .catch(function(err) {
@@ -102,33 +98,98 @@ router.get('/case/:id', router.getCon, function(req, res, next) {
 
 });
 
-router.post('/case', function(req, res, next) {
+router.post('/case', router.getCon, function(req, res, next) {
     if (req.session.currentMember === undefined) { next(err); };
     var form = new multiparty.Form({ uploadDir: './public/tmp/' });
 
     form.parse(req, function(err, fields, files) {
         if (err) { next(err); };
-        console.log(files.files[0].originalFileName);
+        let localMessage = [];
+        try {
+            //upPic
+            if (Array.isArray(files.upPic) && files.upPic[0].size != 0) {
+                fs.renameSync(files.upPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_up.jpg');
+                localMessage.push('正面上传成功');
+            } else {
+                fs.unlinkSync(files.upPic[0].path);
+                localMessage.push('正面未更新');
+            }
 
-        // fs.rename(files.upload[0].path, './public/memberCase/leftPic.jpg', function(err) {
-        //     if (err) { next(err); };
-        //     res.json({
-        //         err: false,
-        //         message: '上传成功'
+            //downPic
+            if (Array.isArray(files.downPic) && files.downPic[0].size != 0) {
+                fs.renameSync(files.downPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_down.jpg');
+                localMessage.push('背面上传成功');
+            } else {
+                fs.unlinkSync(files.downPic[0].path);
+                localMessage.push('背面未更新');
+            }
 
-        //     });
-        // });
+            //leftPic
+            if (Array.isArray(files.leftPic) && files.leftPic[0].size != 0) {
+                fs.renameSync(files.leftPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_left.jpg');
+                localMessage.push('左侧上传成功');
+            } else {
+                fs.unlinkSync(files.leftPic[0].path);
+                localMessage.push('左侧未更新');
+            }
 
-        // console.log(fields);
-        // console.log(files.originalFilename);
-        // console.log(files.path);
+            //rightPic
+            if (Array.isArray(files.rightPic) && files.rightPic[0].size != 0) {
+                fs.renameSync(files.rightPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_right.jpg');
+                localMessage.push('右侧上传成功');
+            } else {
+                fs.unlinkSync(files.rightPic[0].path);
+                localMessage.push('右侧未更新');
+            }
+
+        } catch (e) {
+            next(e);
+
+        }
+
+
+        if (Array.isArray(fields.memberCase) && fields.memberCase.length !== 0 && fields.memberCase[0] !== req.session.currentMember.member_case) {
+            //回车转为br标签
+            function return2Br(str) {
+                return str.replace(/\r?\n/g, "<br />");
+            }
+            // //普通字符转换成转意符
+            // function html2Escape(sHtml) {
+            //     return sHtml.replace(/[<>&"]/g, function(c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]; });
+            // }
+
+            fields.memberCase[0] = return2Br(fields.memberCase[0]);
+
+            req.dbCon.queryAsync('UPDATE ' + config.dbTable + ' SET member_case=' + mysqlPool.escape(fields.memberCase[0]) + ' WHERE id=' + req.session.currentMember.id)
+                .then(function(rows) {
+                    if (rows.changedRows === 1) {
+                        localMessage.push('健康记录更新成功');
+                        res.json({
+                            err: false,
+                            message: localMessage
+                        });
+                    } else {
+                        localMessage.push('健康记录更新失败');
+                        res.json({
+                            err: false,
+                            message: localMessage
+                        });
+                    }
+                })
+                .catch(function(err) {
+                    next(err);
+                })
+                .finally(function() {
+                    req.dbCon.release();
+                });
+        } else {
+            localMessage.push('健康记录未更新');
+            res.json({
+                err: false,
+                message: localMessage
+            });
+        }
     });
-
-
-
-
-
-
 });
 
 //router的特例设置
