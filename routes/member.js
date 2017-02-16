@@ -99,59 +99,56 @@ router.get('/case/:id', router.getCon, function(req, res, next) {
 });
 
 router.post('/case', router.getCon, function(req, res, next) {
-    if (req.session.currentMember === undefined) { next(err); };
+    if (req.session.currentMember === undefined) { next(err); return; };
     var form = new multiparty.Form({ uploadDir: './public/tmp/' });
 
     form.parse(req, function(err, fields, files) {
         if (err) { next(err); };
         let localMessage = [];
-        try {
-            //upPic
-            if (Array.isArray(files.upPic) && files.upPic[0].size != 0) {
-                fs.renameSync(files.upPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_up.jpg');
-                localMessage.push('正面上传成功');
-            } else {
-                fs.unlinkSync(files.upPic[0].path);
-                localMessage.push('正面未更新');
-            }
 
-            //downPic
-            if (Array.isArray(files.downPic) && files.downPic[0].size != 0) {
-                fs.renameSync(files.downPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_down.jpg');
-                localMessage.push('背面上传成功');
-            } else {
-                fs.unlinkSync(files.downPic[0].path);
-                localMessage.push('背面未更新');
-            }
-
-            //leftPic
-            if (Array.isArray(files.leftPic) && files.leftPic[0].size != 0) {
-                fs.renameSync(files.leftPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_left.jpg');
-                localMessage.push('左侧上传成功');
-            } else {
-                fs.unlinkSync(files.leftPic[0].path);
-                localMessage.push('左侧未更新');
-            }
-
-            //rightPic
-            if (Array.isArray(files.rightPic) && files.rightPic[0].size != 0) {
-                fs.renameSync(files.rightPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_right.jpg');
-                localMessage.push('右侧上传成功');
-            } else {
-                fs.unlinkSync(files.rightPic[0].path);
-                localMessage.push('右侧未更新');
-            }
-
-        } catch (e) {
-            next(e);
-
+        //upPic
+        if (Array.isArray(files.upPic) && files.upPic[0].size != 0) {
+            fs.renameSync(files.upPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_up.jpg');
+            localMessage.push('正面上传成功');
+        } else {
+            fs.unlinkSync(files.upPic[0].path);
+            localMessage.push('正面未更新');
         }
+
+        //downPic
+        if (Array.isArray(files.downPic) && files.downPic[0].size != 0) {
+            fs.renameSync(files.downPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_down.jpg');
+            localMessage.push('背面上传成功');
+        } else {
+            fs.unlinkSync(files.downPic[0].path);
+            localMessage.push('背面未更新');
+        }
+
+        //leftPic
+        if (Array.isArray(files.leftPic) && files.leftPic[0].size != 0) {
+            fs.renameSync(files.leftPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_left.jpg');
+            localMessage.push('左侧上传成功');
+        } else {
+            fs.unlinkSync(files.leftPic[0].path);
+            localMessage.push('左侧未更新');
+        }
+
+        //rightPic
+        if (Array.isArray(files.rightPic) && files.rightPic[0].size != 0) {
+            fs.renameSync(files.rightPic[0].path, './public/memberCase/ID' + req.session.currentMember.id + '_right.jpg');
+            localMessage.push('右侧上传成功');
+        } else {
+            fs.unlinkSync(files.rightPic[0].path);
+            localMessage.push('右侧未更新');
+        }
+
+
 
 
         if (Array.isArray(fields.memberCase) && fields.memberCase.length !== 0 && fields.memberCase[0] !== req.session.currentMember.member_case) {
             //回车转为br标签
             function return2Br(str) {
-                return str.replace(/\r?\n/g, "<br />");
+                return str.replace(/\r?\n/g, " ");
             }
             // //普通字符转换成转意符
             // function html2Escape(sHtml) {
@@ -182,6 +179,8 @@ router.post('/case', router.getCon, function(req, res, next) {
                 .finally(function() {
                     req.dbCon.release();
                 });
+
+
         } else {
             localMessage.push('健康记录未更新');
             res.json({

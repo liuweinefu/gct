@@ -7,6 +7,7 @@ function createRouter(outConfig) {
     if (!outConfig) { throw new Error('路由器初始化错误'); }
     var config = {};
     config.routerName = ''; //__filename:实际router的文件名
+    config.mainIndex = '';
     config.exportAble = false; //boolean 
     config.exportExcelFields = []; //array
     config.importAble = false; //boolean

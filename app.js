@@ -124,10 +124,9 @@ var commodity = require('./routes/commodity');
 var commodityType = require('./routes/commodityType');
 var commodityRecharge = require('./routes/commodityRecharge');
 
-var uploadPic = require('./routes/uploadPic');
-app.use('/uploadPic', uploadPic);
 
-
+var mix = require('./routes/mix');
+app.use('/mix', mix);
 
 
 
