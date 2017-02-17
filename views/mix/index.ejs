@@ -11,31 +11,72 @@
     <!--<div data-options="region:'south',title:'South Title',split:true" style="height:100px;"></div>-->
     <!--<div data-options="region:'west',title:'病例列表',collapsible:false"> </div>-->
     <!--<div data-options="region:'east',title:'详细信息',collapsible:false" style="width:300px"> </div>-->
-    <div data-options="region:'center',title:'健康记录'" style="padding:5px;background:#eee;">
+    <div data-options="region:'center',title:'记账'" style="padding:5px;background:#eee;">
+        <!--<div id='p' class="easyui-panel" data-options="fit:true,border:false,closed:true">-->
+        <div id='p' class="easyui-panel" data-options="fit:true,border:false">
 
 
+            <table id='member_info'>
+                <tr>
+                    <td> </td>
+                    <td> </td>
+                    <td> </td>
+                </tr>
+                <tr>
+                    <td> </td>
+                    <td> </td>
+                    <td> </td>
+                </tr>
+            </table>
+
+            <div id="mix_table_toolbar">
+                <table style="width:100%">
+                    <tr>
+                        <td>
+                            <input id="mix_user" name="mix_user" />
+                            <input id="mix_commodity" name="mix_commodity" />
+
+
+                            <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="mix.add()">添加</a>
+                        </td>
+                        <td>
+                            <div>
+                                <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.delete()">充值</a>
+                                <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.save()">病例</a>
+                                <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="member.delete()">结算</a>
+                                <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="member.save()">关闭</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <table id="mix_table">
+            </table>
+
+
+
+        </div>
     </div>
 </div>
 
-<div id="mixDlg" class="easyui-dialog" title="密码验证" data-options="
-            iconCls:'icon-search',
-            closed:true,
-            modal: true,
-            buttons: [{
-                    text:'确定',
-                    iconCls:'icon-ok',
-                    handler:mix.check
-                }]" style="width:400px;height:150px;padding:10px">
-
-    <input id='mixPass' class="easyui-passwordbox" prompt="Password" iconWidth="28" style="width:100%;height:34px;padding:10px">
-    <!--<a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="mix.check()">确定</a>-->
+<div id="mixPassDlg" class="easyui-dialog" title="密码验证" data-options=" iconCls: 'icon-search', closed:true, modal: true, buttons: [{ text: '确定',handler:mix.check }] " style="width:400px;height:150px;padding:10px ">
+    <input id="mixPass" class="easyui-passwordbox" prompt="密码" iconWidth="28 " style="width:100%;height:34px;padding:10px ">
 </div>
+
+<div id="mixRechangeDlg" class="easyui-dialog" title="充值" data-options=" iconCls: 'icon-search', closed:true, modal: true, buttons: [{ text: '确定', handler:mix.rechange }] " style="width:400px;height:150px;padding:10px ">
+    <input id="mixRechange" class="easyui-numberbox" data-options="min:0,precision:2" prompt="金额" iconWidth="28 " style="width:100%;height:34px;padding:10px ">
+</div>
+
+
 
 <script>
     mix = {};
+
     mix.tbSearchName = function(value, name) {
 
-        $.post("mix", {
+        $.post("mix ", {
                 name: name,
                 value: value
             },
@@ -44,15 +85,15 @@
                     $.messager.alert('错误', data.message, 'error');
                     $('#mixSearchbox').searchbox('clear');
                 } else {
-                    $('#mixDlg').dialog('open');
+                    $('#mixPassDlg').dialog('open');
                     $('#mixPass').textbox('textbox').focus();
                 }
 
-            }, "json");
+            }, "json ");
     };
     mix.check = function() {
         pass = $('#mixPass').textbox('getValue');
-        $.post("mix/check", {
+        $.post("mix/check ", {
                 pass: pass,
             },
             function(data) {
@@ -61,13 +102,154 @@
                     $('#mixPass').textbox('clear');
                     $('#mixPass').textbox('textbox').focus();
                 } else {
-                    $('#mixDlg').dialog('close');
+                    $('#mixPassDlg').dialog('close');
+                    $('#p').panel('open');
+                    $("#member_info > tbody > tr >td").each(function() {
+                        $(this).empty().append(data.member[0][0] + ':<b>' + data.member[0][1] + '</b>');
+                        data.member.shift();
+                    });
+                    mix.comodity = data.comodity;
+                    mix.user = data.user;
                     //初始化消费列表
-                    // 
-                    // 
-                    // 
-                    console.log('OK');
+                    mix.initMixTable();
+
                 }
-            }, "json");
+            }, "json ");
     };
+
+    mix.initMixTable = function() {
+        $('#mix_commodity').combogrid({
+            panelWidth: 430,
+            value: '1',
+            idField: 'id',
+            textField: 'name',
+            // url: 'datagrid_data.json',
+            data: mix.comodity,
+            columns: [
+                [{
+                    field: 'id',
+                    title: '商品ID',
+                    width: 60
+                }, {
+                    field: 'name',
+                    title: '商品',
+                    width: 100
+                }, {
+                    field: 'price',
+                    title: '售价',
+                    width: 120
+                }, {
+                    field: 'count',
+                    title: '库存',
+                    width: 120
+                }]
+            ]
+        });
+
+        $('#mix_user').combogrid({
+            panelWidth: 280,
+            value: '1',
+            idField: 'id',
+            textField: 'name',
+            //url: 'datagrid_data.json',
+            data: mix.user,
+            columns: [
+                [{
+                    field: 'id',
+                    title: '员工ID',
+                    width: 60
+                }, {
+                    field: 'name',
+                    title: '员工',
+                    width: 100
+                }]
+            ]
+        });
+
+        $('#mix_table').datagrid({
+
+            //idField: 'id',
+            //loadMsg: '数据加载中,请稍后',
+            fit: true,
+            //singleSelect: false,
+            //url: '/member/multi',
+            method: 'post',
+            toolbar: '#mix_table_toolbar',
+            striped: true,
+            pagination: true,
+            rownumbers: true,
+
+            remoteSort: false,
+            multiSort: true,
+            columns: [
+                [{
+                    field: 'service_user_id',
+                    title: '技师ID',
+                    sortable: true,
+                    width: 60,
+                }, {
+                    field: 'service_user_name',
+                    title: '技师',
+                    sortable: true,
+                    width: 60,
+                }, {
+                    field: 'commodity_id',
+                    title: '商品ID',
+                    sortable: true,
+                    width: 60,
+                }, {
+                    field: 'commodity_name',
+                    title: '商品',
+                    sortable: true,
+                    width: 60,
+                }, {
+                    field: 'commodity_price',
+                    title: '商品售价',
+                    sortable: true,
+                    width: 60,
+                }, {
+                    field: 'commodity_count',
+                    title: '商品个数',
+                    sortable: true,
+                    width: 60,
+                }, {
+                    field: 'price',
+                    title: '实收价格',
+                    sortable: true,
+                    width: 60,
+                }, {
+                    field: 'is_cash',
+                    title: '现金',
+                    sortable: true,
+                    width: 60,
+                }, {
+                    field: 'remark',
+                    title: '备注',
+                    sortable: true,
+                    width: 60,
+                }]
+            ],
+            //根据字段类型设置编辑器初始状态
+            // onCellEdit: function(index, field, value) {
+            //     var ed = $(this).datagrid('getEditor', {
+            //         index: index,
+            //         field: field
+            //     });
+            //     switch (field) {
+            //         case 'phone':
+            //             break;
+            //         case 'member_role_id':
+            //             $(ed.target).combogrid('textbox').select();
+            //             $(ed.target).combogrid('showPanel');
+            //             break;
+            //         default:
+            //             $(ed.target).textbox('textbox').select();
+            //             break;
+            //     }
+
+            // },
+        }).datagrid('enableCellEditing');
+
+
+    }
 </script>
