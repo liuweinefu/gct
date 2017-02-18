@@ -7,7 +7,7 @@ var config = {
     multiData: true,
     //singleData: true,
     exportAble: true, //boolean 
-    exportExcelFields: ['id', 'create_time', 'price', 'is_cash', 'commodity_id', 'commodity_name', 'commodity_count', 'member_id', 'member_name', 'write_user_id', 'write_user_name', 'service_user_id', 'service_user_name', 'is_close', 'remark'], //array
+    exportExcelFields: ['id', 'create_time', 'price', 'count', 'is_cash', 'commodity_id', 'commodity_name', 'commodity_price', 'member_id', 'member_name', 'write_user_id', 'write_user_name', 'service_user_id', 'service_user_name', 'is_close', 'remark'], //array
     mainIndex: 'multi', //multi or single
     dbTable: 'member_consumption', //db or view
     //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
@@ -21,6 +21,9 @@ var config = {
         .set('price', {
             readonly: true, //默认false            
         })
+        .set('count', {
+            readonly: true, //默认false            
+        })
         .set('is_cash', {
             readonly: true, //默认false
         })
@@ -30,7 +33,7 @@ var config = {
         .set('commodity_name', {
             readonly: true, //默认false
         })
-        .set('commodity_count', {
+        .set('commodity_price', {
             readonly: true, //默认false
         })
         .set('member_id', {

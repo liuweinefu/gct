@@ -93,7 +93,7 @@ router.post('/check', router.getCon, function(req, res, next) {
                 res.json({
                     err: false,
                     member: member,
-                    comodity: row[0],
+                    commodity: row[0],
                     user: row[1]
                 });
             }
@@ -107,9 +107,87 @@ router.post('/check', router.getCon, function(req, res, next) {
 
 });
 
-router.post('/consumption', function() {
+router.post('/pay', router.getCon, function(req, res, next) {
+    req.body = JSON.parse(req.body.value);
+    req.dbCon.beginTransactionAsync = Promise.promisify(req.dbCon.beginTransaction);
+    req.dbCon.commitAsync = Promise.promisify(req.dbCon.commit);
+    req.dbCon.rollbackAsync = Promise.promisify(req.dbCon.rollback);
+
+    req.dbCon.beginTransactionAsync()
+        .then(function() {
+            //返回一个promise数组
+            return req.body.map(function(item) {
+                //处理每条记录
+                let consumption = Object.assign({}, item);
+                let queries = [];
+                queries.push('SELECT id,name,count,price FROM commodity WHERE id=' + mysqlPool.escape(item.commodity_id));
+                queries.push('SELECT id,name,balance FROM member WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
+                if (item.is_cash) {
+                    queries.pop();
+                }
+
+                return req.dbCon.queryAsync(queries.join(';'))
+                    .then(function(row) {
+                        if (row[0][0].count - item.count < 0) {
+                            return Promise.reject('库存不足');
+                        };
+                        consumption.commodity_id = row[0][0].id;
+                        consumption.commodity_name = row[0][0].name;
+                        consumption.commodity_price = row[0][0].price * 100 / 100;
+
+                        if (!item.is_cash && row[1][0].balance - item.price * 100 / 100 < 0) {
+                            return Promise.reject('会员余额不足');
+                        } else {
+                            consumption.service_user_id = row[1][0].id;
+                            consumption.service_user_name = row[1][0].name;
+                        }
+
+                        consumption.member_id = req.session.currentMember.id;
+                        consumption.member_name = req.session.currentMember.name;
+
+                        consumption.write_user_id = req.session.user.id;
+                        consumption.write_user_name = req.session.user.name;
+                        return true;
+
+                    })
+                    .then(function() {
+                        let queries = [];
+
+                        queries.push('INSERT INTO member_consumption (' + Object.keys(consumption).join(',') + ') VALUES (' + Object.keys(consumption).map(function(key) { return '"' + consumption[key] + '"'; }).join(',') + ')');
+                        queries.push('UPDATE commodity SET count=count-1 WHERE id=' + mysqlPool.escape(item.commodity_id));
+                        queries.push('UPDATE member SET balance=balance-' + item.price + ' WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
+                        if (item.is_cash) {
+                            queries.pop();
+                        }
+                        return req.dbCon.queryAsync(queries.join(';'))
+                    })
 
 
-})
+            })
+
+        })
+        .then(function(PromiseArray) {
+            return Promise.all(PromiseArray)
+        })
+        .then(function(value) {
+            res.json({
+                err: false,
+                message: '结算完成',
+            });
+            req.dbCon.commitAsync();
+        })
+        .catch(function(err) {
+            req.dbCon.rollbackAsync();
+            next(err);
+        })
+        .finally(function() {
+            req.dbCon.release();
+        });
+
+
+
+    console.log(req.body);
+
+});
 
 module.exports = router;
