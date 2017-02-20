@@ -41,6 +41,15 @@
             checkbox: true
         });
         fields[0].push({
+            field: 'nothing',
+            title: '记录',
+            width: 150,
+            formatter: function(value, row, index) {
+                user.currentUser = row;
+                return '<button onclick="user.wage(\'' + row.id + '\')">工资结算</button>  <button onclick="user.listConsumption(\'' + row.id + '\')">工资记录</button>';
+            },
+        });
+        fields[0].push({
             field: 'id',
             title: '员工ID',
             width: 50,
@@ -344,16 +353,44 @@
         $('#user_table').datagrid('getPanel').keydown(user.keydown);
     };
 
-
-    //表格初始化*************************************************************************
-    $.post('user/initData', {}, function(data) {
-        if (!data.err) {
-            user.roles = data.result;
-            user.init();
-        } else {
-            $.messager.alert('失败', data.message, 'warning', function() {
+    user.wage = function(userID) {
+        if (userID === undefined) {
+            $.messager.alert('提示', '无当前用户', 'info', function() {
                 $('#user_table').datagrid('getPanel').focus(); //重置焦点
             });
+        } else {
+            $('#mainImport').empty();
+            $('#mainImport').window({
+                title: '工资结算',
+                width: 800,
+                height: 600,
+                collapsible: false,
+                minimizable: false,
+                maximizable: false,
+                modal: true,
+                href: 'user/wage/' + userID,
+                // onClose: function() {
+                //     $('#member_table').datagrid('reload');
+                //     //console.log('window close!');
+                // }
+            });
+            //console.log(memberID.toString());
         }
+    };
+    user.listConsumption = function() {
+
+    };
+    //表格初始化*************************************************************************
+    $(document).ready(function() {
+        $.post('user/initData', {}, function(data) {
+            if (!data.err) {
+                user.roles = data.result;
+                user.init();
+            } else {
+                $.messager.alert('失败', data.message, 'warning', function() {
+                    $('#user_table').datagrid('getPanel').focus(); //重置焦点
+                });
+            }
+        });
     });
 </script>

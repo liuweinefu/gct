@@ -82,12 +82,13 @@ var router;
 router.get('/case/:id', router.getCon, function(req, res, next) {
     if (req.params.id === undefined) {
         next();
+        return;
     }
 
     req.dbCon.queryAsync('SELECT id,name,phone,other_contacts,remark,member_role_name,member_case FROM ' + config.viewTable + ' WHERE id= ' + mysqlPool.escape(req.params.id))
         .then(function(rows) {
             req.session.currentMember = Object.assign({}, rows[0]);
-            res.render(router.getFileName(config.routerName, true) + 'list', req.session.currentMember);
+            res.render(router.getFileName(config.routerName, true) + 'case', req.session.currentMember);
         })
         .catch(function(err) {
             next(err);

@@ -458,14 +458,18 @@
 
 
     //表格初始化*************************************************************************
-    $.post('member/initData', {}, function(data) {
-        if (!data.err) {
-            member.roles = data.result;
-            member.init();
-        } else {
-            $.messager.alert('失败', data.message, 'warning', function() {
-                $('#member_table').datagrid('getPanel').focus(); //重置焦点
-            });
-        }
-    })
+    $(document).ready(function() {
+        // Basic
+        $.post('member/initData', {}, function(data) {
+            if (!data.err) {
+                member.roles = data.result;
+                member.init();
+            } else {
+                $.messager.alert('失败', data.message, 'warning', function() {
+                    $('#member_table').datagrid('getPanel').focus(); //重置焦点
+                });
+            }
+        });
+
+    });
 </script>

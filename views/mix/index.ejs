@@ -12,8 +12,8 @@
     <!--<div data-options="region:'west',title:'病例列表',collapsible:false"> </div>-->
     <!--<div data-options="region:'east',title:'详细信息',collapsible:false" style="width:300px"> </div>-->
     <div data-options="region:'center',title:'记账'" style="padding:5px;background:#eee;">
-        <!--<div id='p' class="easyui-panel" data-options="fit:true,border:false,closed:true">-->
-        <div id='p' class="easyui-panel" data-options="fit:true,border:false">
+        <div id='p' class="easyui-panel" data-options="fit:true,border:false,closed:true">
+
 
 
 
@@ -38,7 +38,7 @@
 
                         <td>
                             <div>
-                                <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.rechange()">充值</a>
+                                <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.rechargeShow()">充值</a>
                                 <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.case()">病例</a>&nbsp; &nbsp;&nbsp;&nbsp;
                                 <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.add()">添加</a>
                                 <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.delete()">删除</a>
@@ -64,8 +64,8 @@
     <input id="mixPass" class="easyui-passwordbox" prompt="密码" iconWidth="28 " style="width:100%;height:34px;padding:10px ">
 </div>
 
-<div id="mixRechangeDlg" class="easyui-dialog" title="充值" data-options=" iconCls: 'icon-search', closed:true, modal: true, buttons: [{ text: '确定', handler:mix.rechange }] " style="width:400px;height:150px;padding:10px ">
-    <input id="mixRechange" class="easyui-numberbox" data-options="min:0,precision:2" prompt="金额" iconWidth="28 " style="width:100%;height:34px;padding:10px ">
+<div id="mixrechargeDlg" class="easyui-dialog" title="充值" data-options=" iconCls: 'icon-search', closed:true, modal: true, buttons: [{ text: '确定', handler:mix.recharge }] " style="width:400px;height:150px;padding:10px ">
+    <input id="mixrecharge" class="easyui-numberbox" data-options="min:0,precision:2" prompt="金额" iconWidth="28 " style="width:100%;height:34px;padding:10px ">
 </div>
 
 
@@ -74,6 +74,7 @@
     mix = {};
     mix.commodity = [];
     mix.user = [];
+    mix.hasInitTable = false;
 
     mix.tbSearchName = function(value, name) {
 
@@ -87,11 +88,39 @@
                     $('#mixSearchbox').searchbox('clear');
                 } else {
                     $('#mixPassDlg').dialog('open');
-                    $('#mixPass').textbox('textbox').focus();
+                    $('#mixrecharge').textbox('textbox').focus();
                 }
 
             }, "json ");
     };
+    mix.rechargeShow = function() {
+        $('#mixrechargeDlg').dialog('open');
+        $('#mixrecharge').textbox('clear');
+        $('#mixrecharge').textbox('textbox').focus();
+
+    };
+    mix.recharge = function() {
+        value = $('#mixrecharge').textbox('getValue');
+        console.log('value:' + value);
+        if (value * 100 <= 0) {
+            $.messager.alert('错误', '充值金额必须大于0', 'error');
+        } else {
+            $.post("mix/recharge", {
+                value: value,
+            }, function(data) {
+                if (data.err) {
+                    $.messager.alert('错误', data.message, 'error');
+                } else {
+                    $($("#member_info > tbody > tr >td")[2]).empty().append('余额:<b>' + data.balance + '</b>');
+                    $.messager.alert('信息', data.message, 'info', function() {
+                        $('#mixrecharge').textbox('clear');
+                        $('#mixrechargeDlg').dialog('close');
+                    });
+                }
+            });
+        }
+    }
+
     mix.check = function() {
         pass = $('#mixPass').textbox('getValue');
         $.post("mix/check ", {
@@ -103,6 +132,7 @@
                     $('#mixPass').textbox('clear');
                     $('#mixPass').textbox('textbox').focus();
                 } else {
+                    $('#mixPass').textbox('clear');
                     $('#mixPassDlg').dialog('close');
                     $('#p').panel('open');
                     $("#member_info > tbody > tr >td").each(function() {
@@ -112,7 +142,12 @@
                     mix.commodity = data.commodity;
                     mix.user = data.user;
                     //初始化消费列表
-                    mix.initMixTable();
+                    if (mix.hasInitTable) {
+                        $('#mix_table').datagrid('rejectChanges');
+                    } else {
+                        mix.initMixTable();
+                    }
+
 
                 }
             }, 'json');
@@ -281,7 +316,7 @@
                 price: 0,
                 count: 1,
                 is_cash: 0,
-                remark: '今日最佳'
+                remark: ''
             }],
             // 根据字段类型设置编辑器初始状态
             onCellEdit: function(index, field, value) {
@@ -309,21 +344,32 @@
             },
         }).datagrid('enableCellEditing');
 
-
+        mix.hasInitTable = true;
     };
 
     mix.add = function() {
+        //接受当前编辑内容，并结束编辑
+        if ($('#mix_table').datagrid('cell')) {
+            $('#mix_table').datagrid('endEdit', $('#mix_table').datagrid('cell').index);
+        };
+
         $('#mix_table').datagrid('appendRow', {
             service_user_id: $('#mix_table').datagrid('getData').total > 1 ? $('#mix_table').datagrid('getData').rows[$('#mix_table').datagrid('getData').total - 1].service_user_id : 1,
             commodity_id: 1,
             price: 0,
             count: 1,
             is_cash: 0,
-            remark: '今日最佳'
+            remark: ''
         });
     };
     mix.delete = function() {
-        $('#mix_table').datagrid('getChecked').forEach(function(row) {
+        //接受当前编辑内容，并结束编辑
+        if ($('#mix_table').datagrid('cell')) {
+            $('#mix_table').datagrid('endEdit', $('#mix_table').datagrid('cell').index);
+        };
+        let deleteRow = Object.assign([], $('#mix_table').datagrid('getChecked'));
+
+        deleteRow.forEach(function(row) {
             $('#mix_table').datagrid('deleteRow', $('#mix_table').datagrid('getRowIndex', row));
         });
     };
@@ -335,44 +381,69 @@
         };
 
 
-        if ($('#mix_table').datagrid('getData').rows.length === 0) {
+        if ($('#mix_table').datagrid('getData').total === 0) {
             $.messager.alert('提示', '没有结算数据', 'info');
             return;
         }
-        let message = '总计: ';
-        let allprice = $('#mix_table').datagrid('getData').rows.reduce(function(accumulator, currentRow) {
-            return accumulator + Number.parseInt(currentRow.price * 100);
+
+        let cash = $('#mix_table').datagrid('getData').rows.filter(function(item) {
+            return Boolean(item.is_cash);
+        });
+        let message = '现金: ';
+        let cashPrice = cash.reduce(function(accumulator, currentRow) {
+            return accumulator + currentRow.price * 100;
         }, 0) / 100;
-        message = message + allprice + '元</br>';
+        message = message + cashPrice + '元</br>';
+        let noCash = $('#mix_table').datagrid('getData').rows.filter(function(item) {
+            return !Boolean(item.is_cash);
+        });
+        let noCashPrice = noCash.reduce(function(accumulator, currentRow) {
+            return accumulator + currentRow.price * 100;
+        }, 0) / 100;
+        message = message + '非现金:' + noCashPrice + '元</br>'
+
+        let allprice = $('#mix_table').datagrid('getData').rows.reduce(function(accumulator, currentRow) {
+            return accumulator + currentRow.price * 100;
+        }, 0) / 100;
+        message = message + '总计' + allprice + '元</br>';
+
 
         let zero = [];
         zero = $('#mix_table').datagrid('getData').rows.filter(function(row) {
-            return Number.parseInt(row.price * 100) === 0;
+            return row.price * 100 === 0;
         });
         if (zero.length > 0) {
-            message = message + '提醒:有' + zero.length + '个商品价格为0';
+            message = message + '提醒:有' + zero.length + '个商品价格为0.00元';
 
         };
 
-        function send() {
-            $.post('mix/pay', {
-                value: JSON.stringify($('#mix_table').datagrid('getData').rows)
-            }, function(data) {
-                console.log(data);
-            }, 'json');
-
-        }
-
         $.messager.confirm('确认结算', message, function(save) {
             if (save) {
-                send();
-                console.log('结算');
-                // 退出操作;
+                $('#mix_table').datagrid('loading');
+                $.post('mix/pay', {
+                    value: JSON.stringify($('#mix_table').datagrid('getData').rows)
+                }, function(data) {
+                    console.log(data);
+                    if (data.err) {
+                        $.messager.alert('错误', data.message, 'error');
+                        $('#mix_table').datagrid('loaded');
+                    } else {
+                        $.messager.alert('信息', data.message, 'info');
+                        $('#mix_table').datagrid('loaded');
+                        $('#p').panel('close');
+                    }
+
+                }, 'json');
+            } else {
+                $('#mix_table').datagrid('loaded');
             }
         });
 
 
 
 
+    };
+    mix.close = function() {
+        $('#p').panel('close');
     };
 </script>

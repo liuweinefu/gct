@@ -292,7 +292,7 @@ function createRouter(outConfig) {
 
     router.post('/multi', router.getCon, function(req, res, next) {
         if (!config.multiData) { next(); return; };
-        let selectQueries = [];
+
 
 
         let page = Number.isNaN(parseInt(req.body.page)) ? 1 : parseInt(req.body.page);
@@ -305,19 +305,18 @@ function createRouter(outConfig) {
             dbFields.push(key);
         }
 
+        let query = '';
         if (!req.body.name || !req.body.value) {
-            selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable);
-            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+            query = 'SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
         } else {
-            selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
-            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+            query = 'SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
         };
 
-        req.dbCon.queryAsync(selectQueries.join(';'))
+        req.dbCon.queryAsync(query)
             .then(function(rows) {
                 res.json({
-                    total: rows[0][0].count,
-                    rows: rows[1]
+                    total: rows.length,
+                    rows: rows
                 });
             })
             .catch(function(err) {
@@ -326,6 +325,29 @@ function createRouter(outConfig) {
             .finally(function() {
                 req.dbCon.release();
             });
+
+        // let selectQueries = [];
+        // if (!req.body.name || !req.body.value) {
+        //     selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable);
+        //     selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+        // } else {
+        //     selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
+        //     selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+        // };
+
+        // req.dbCon.queryAsync(selectQueries.join(';'))
+        //     .then(function(rows) {
+        //         res.json({
+        //             total: rows[0][0].count,
+        //             rows: rows[1]
+        //         });
+        //     })
+        //     .catch(function(err) {
+        //         next(err);
+        //     })
+        //     .finally(function() {
+        //         req.dbCon.release();
+        //     });
     });
 
     router.post('/multi/save', router.getCon, function(req, res, next) {
@@ -349,15 +371,15 @@ function createRouter(outConfig) {
                 let count = 0;
                 count = router.countBackNumber(values[0]);
                 if (count !== 0) {
-                    message = message + '添加:' + count + '条数据,<br>'
+                    message = message + '添加:' + count + '条数据,<br> '
                 }
                 count = router.countBackNumber(values[1]);
                 if (count !== 0) {
-                    message = message + '更新:' + count + '条数据,<br>'
+                    message = message + '更新:' + count + '条数据,<br> '
                 }
                 count = router.countBackNumber(values[2]);
                 if (count !== 0) {
-                    message = message + '删除:' + count + '条数据'
+                    message = message + '删除:' + count + '条数据 '
                 }
                 res.json({
                     err: false,

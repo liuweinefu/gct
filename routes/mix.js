@@ -8,6 +8,9 @@ router.getCon = function(req, res, next) {
         if (err) { next(err) };
         req.dbCon = con;
         req.dbCon.queryAsync = Promise.promisify(req.dbCon.query);
+        req.dbCon.beginTransactionAsync = Promise.promisify(req.dbCon.beginTransaction);
+        req.dbCon.commitAsync = Promise.promisify(req.dbCon.commit);
+        req.dbCon.rollbackAsync = Promise.promisify(req.dbCon.rollback);
         next();
     });
 };
@@ -107,12 +110,59 @@ router.post('/check', router.getCon, function(req, res, next) {
 
 });
 
+router.post('/recharge', router.getCon, function(req, res, next) {
+    if (req.session.currentMember === undefined || req.session.currentMember.id === undefined) {
+        res.json({
+            err: true,
+            message: '无有效用户'
+        });
+        return;
+    };
+    if (req.body.value * 100 <= 0) {
+        res.json({
+            err: true,
+            message: '充值金额必须大于0'
+        });
+        return;
+    };
+    let rechargeRecord = [];
+    rechargeRecord.push(['member_id', req.session.currentMember.id]);
+    rechargeRecord.push(['member_name', req.session.currentMember.name]);
+    rechargeRecord.push(['write_user_id', req.session.user.id]);
+    rechargeRecord.push(['write_user_name', req.session.user.name]);
+    rechargeRecord.push(['recharge_price', req.body.value * 100 / 100]);
+
+    let queries = [];
+    queries.push('UPDATE member SET balance=balance+' + mysqlPool.escape(req.body.value) + ' WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
+    queries.push('INSERT INTO member_recharge (' + rechargeRecord.map(function(item) { return item[0]; }).join(',') + ') VALUES (' + rechargeRecord.map(function(item) { return '"' + item[1] + '"'; }).join(',') + ')');
+    queries.push('SELECT balance FROM member WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
+
+    req.dbCon.beginTransactionAsync()
+        .then(function() {
+            return req.dbCon.queryAsync(queries.join(';'));
+        })
+        .then(function(rows) {
+            res.json({
+                err: false,
+                message: '充值完成!</br>本次充值:' + req.body.value + '元</br>会员余额:' + rows[2][0].balance + '元',
+                balance: rows[2][0].balance
+            });
+            req.dbCon.commitAsync();
+        })
+        .catch(function(err) {
+            req.dbCon.rollbackAsync();
+            next(err);
+        })
+        .finally(function() {
+            req.dbCon.release();
+        });
+});
+
 router.post('/pay', router.getCon, function(req, res, next) {
     req.body = JSON.parse(req.body.value);
-    req.dbCon.beginTransactionAsync = Promise.promisify(req.dbCon.beginTransaction);
-    req.dbCon.commitAsync = Promise.promisify(req.dbCon.commit);
-    req.dbCon.rollbackAsync = Promise.promisify(req.dbCon.rollback);
 
+
+    let balance = 0;
     req.dbCon.beginTransactionAsync()
         .then(function() {
             //返回一个promise数组
@@ -122,25 +172,25 @@ router.post('/pay', router.getCon, function(req, res, next) {
                 let queries = [];
                 queries.push('SELECT id,name,count,price FROM commodity WHERE id=' + mysqlPool.escape(item.commodity_id));
                 queries.push('SELECT id,name,balance FROM member WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
-                if (item.is_cash) {
-                    queries.pop();
-                }
-
+                queries.push('SELECT id,name FROM user WHERE id=' + mysqlPool.escape(item.service_user_id));
                 return req.dbCon.queryAsync(queries.join(';'))
                     .then(function(row) {
                         if (row[0][0].count - item.count < 0) {
-                            return Promise.reject('库存不足');
+                            return Promise.reject({ message: '库存不足' });
                         };
                         consumption.commodity_id = row[0][0].id;
                         consumption.commodity_name = row[0][0].name;
                         consumption.commodity_price = row[0][0].price * 100 / 100;
 
+                        balance = row[1][0].balance;
                         if (!item.is_cash && row[1][0].balance - item.price * 100 / 100 < 0) {
-                            return Promise.reject('会员余额不足');
+                            return Promise.reject({ message: '会员余额不足' });
                         } else {
-                            consumption.service_user_id = row[1][0].id;
-                            consumption.service_user_name = row[1][0].name;
+                            balance = row[1][0].balance - item.price * 100 / 100;
                         }
+
+                        consumption.service_user_id = row[2][0].id;
+                        consumption.service_user_name = row[2][0].name;
 
                         consumption.member_id = req.session.currentMember.id;
                         consumption.member_name = req.session.currentMember.name;
@@ -170,9 +220,10 @@ router.post('/pay', router.getCon, function(req, res, next) {
             return Promise.all(PromiseArray)
         })
         .then(function(value) {
+
             res.json({
                 err: false,
-                message: '结算完成',
+                message: '结算完成;会员余额:' + balance + '元',
             });
             req.dbCon.commitAsync();
         })
@@ -183,10 +234,6 @@ router.post('/pay', router.getCon, function(req, res, next) {
         .finally(function() {
             req.dbCon.release();
         });
-
-
-
-    console.log(req.body);
 
 });
 
