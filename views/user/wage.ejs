@@ -133,7 +133,7 @@
                         });
 
                     } else {
-                        $.messager.alert('结算完成', data.message, 'info', function() {
+                        $.messager.alert('结算完成', data.message + '</br>' + message, 'info', function() {
                             $('#wage_table').datagrid('loaded');
                             $('#mainImport').window('close');
                             $('#mainImport').empty();

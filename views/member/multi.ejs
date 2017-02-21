@@ -50,10 +50,10 @@
         fields[0].push({
             field: 'nothing',
             title: '记录',
-            width: 150,
+            width: 90,
             formatter: function(value, row, index) {
                 member.currentMember = row;
-                return '<button onclick="member.listCase(\'' + row.id + '\')">健康记录</button>  <button onclick="member.listConsumption(\'' + row.id + '\')">消费记录</button>';
+                return '<button onclick="member.listCase(\'' + row.id + '\')">健康记录</button>';
                 //return '<a href="#" onclick="member.add()">添加病例</a>';
                 //return '<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="user.add()">添加病例</a>';
             },

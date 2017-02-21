@@ -166,7 +166,8 @@ router.post('/saveWage', router.getCon, function(req, res, next) {
         .then(function(rows) {
             res.json({
                 err: false,
-                message: '结算完成!</br>员工<b>' + req.session.currentUser.name + '</b></br>底薪:<b>' + baseWage + '</b>元</br>奖金:<b>' + deductionWage + '</b>元</br>合计:<b>' + (baseWage * 100 + deductionWage * 100) / 100 + '</b>元',
+                message: '结算已入库',
+                //message: '结算完成!</br>员工<b>' + req.session.currentUser.name + '</b></br>底薪:<b>' + baseWage + '</b>元</br>奖金:<b>' + deductionWage + '</b>元</br>合计:<b>' + (baseWage * 100 + deductionWage * 100) / 100 + '</b>元',
             });
             req.dbCon.commitAsync();
         })
@@ -179,6 +180,25 @@ router.post('/saveWage', router.getCon, function(req, res, next) {
         });
 });
 
+router.get('/listWage/:id', router.getCon, function(req, res, next) {
+    if (req.params.id === undefined) {
+        next();
+        return;
+    }
+
+    req.dbCon.queryAsync('SELECT id,name,base_wage FROM ' + config.viewTable + ' WHERE id= ' + mysqlPool.escape(req.params.id))
+        .then(function(rows) {
+            req.session.currentUser = Object.assign({}, rows[0]);
+            res.render(router.getFileName(config.routerName, true) + 'wage', req.session.currentUser);
+        })
+        .catch(function(err) {
+            next(err);
+        })
+        .finally(function() {
+            req.dbCon.release();
+        });
+
+});
 
 
 

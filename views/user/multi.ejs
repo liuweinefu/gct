@@ -43,10 +43,10 @@
         fields[0].push({
             field: 'nothing',
             title: '记录',
-            width: 150,
+            width: 90,
             formatter: function(value, row, index) {
                 user.currentUser = row;
-                return '<button onclick="user.wage(\'' + row.id + '\')">工资结算</button>  <button onclick="user.listConsumption(\'' + row.id + '\')">工资记录</button>';
+                return '<button onclick="user.wage(\'' + row.id + '\')">工资结算</button>';
             },
         });
         fields[0].push({
@@ -375,11 +375,9 @@
                 // }
             });
             //console.log(memberID.toString());
-        }
+        };
     };
-    user.listConsumption = function() {
 
-    };
     //表格初始化*************************************************************************
     $(document).ready(function() {
         $.post('user/initData', {}, function(data) {
