@@ -46,7 +46,34 @@ var router;
 [config, router] = createRouter(config);
 
 
+router.post('/listConsumption/:ids', router.getCon, function(req, res, next) {
+    if (req.params.ids === undefined || req.params.ids.trim() === '') {
+        res.json({
+            total: 0,
+            rows: []
+        });
+        next();
+        return;
+    }
 
+
+    req.dbCon.queryAsync('SELECT id,create_time,price,count,is_cash,commodity_id,commodity_name,commodity_price,member_id,member_name,write_user_name,service_user_name,is_close,remark FROM member_consumption WHERE id in (' + mysqlPool.escape(req.params.ids).slice(1, -1) + ')')
+        .then(function(rows) {
+            res.json({
+                total: rows.length,
+                rows: rows
+            });
+        })
+        .catch(function(err) {
+            next(err);
+        })
+        .finally(function() {
+            req.dbCon.release();
+        });
+
+
+
+});
 
 //router的特例设置
 

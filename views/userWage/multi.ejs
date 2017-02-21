@@ -242,13 +242,92 @@
                 }
 
             },
-            // onBeginEdit: function(index, row) {
-            //     console.log([1, 2, 6].indexOf(row.id));
-            //     if ([1, 2, 6].indexOf(row.id) !== -1) {
-            //         console.log(index);
-            //         $('#userWage_table').datagrid('endEdit', index);
-            //     }
-            // }
+
+            //工资记录清单
+            view: detailview,
+            detailFormatter: function(index, row) {
+                return '<div style="padding:2px"><table class="ddv"></table></div>';
+            },
+            onExpandRow: function(index, row) {
+                var ddv = $(this).datagrid('getRowDetail', index).find('table.ddv');
+                let ids = row.member_consumption_ids ? row.member_consumption_ids : ''
+                ddv.datagrid({
+                    url: 'userWage/listConsumption/' + ids,
+                    fitColumns: true,
+                    singleSelect: true,
+                    rownumbers: true,
+                    loadMsg: '',
+                    height: 'auto',
+                    columns: [
+                        [{
+                            field: 'id',
+                            title: '消费记录ID',
+                            width: 80
+                        }, {
+                            field: 'service_user_name',
+                            title: '服务员工',
+                            width: 100,
+                        }, {
+                            field: 'create_time',
+                            title: '消费时间',
+                            width: 80
+                        }, {
+                            field: 'price',
+                            title: '消费金额',
+                            width: 100,
+                        }, {
+                            field: 'count',
+                            title: '消费数量',
+                            width: 100,
+                        }, {
+                            field: 'is_cash',
+                            title: '是否现金',
+                            width: 100,
+                            formatter: function(value, row, index) {
+                                return value === 1 ? '是' : '否';
+                            },
+                        }, {
+                            field: 'commodity_name',
+                            title: '商品名',
+                            width: 100,
+                        }, {
+                            field: 'commodity_price',
+                            title: '商品售价',
+                            width: 100,
+                        }, {
+                            field: 'member_name',
+                            title: '会员名',
+                            width: 100,
+                        }, {
+                            field: 'write_user_name',
+                            title: '记录员工',
+                            width: 100,
+                        }, {
+                            field: 'is_close',
+                            title: '是否已结算',
+                            width: 100,
+                            formatter: function(value, row, index) {
+                                return value === 1 ? '是' : '否';
+                            },
+                        }]
+                    ],
+                    groupField: 'commodity_id',
+                    view: groupview,
+                    groupFormatter: function(value, rows) {
+                        return '(' + rows[0].commodity_name + '): ' + rows.length + '次';
+                    },
+                    onResize: function() {
+                        $('#userWage_table').datagrid('fixDetailRowHeight', index);
+                    },
+                    onLoadSuccess: function() {
+                        setTimeout(function() {
+                            $('#userWage_table').datagrid('fixDetailRowHeight', index);
+                        }, 0);
+                    }
+                });
+                $('#userWage_table').datagrid('fixDetailRowHeight', index);
+            },
+
         }).datagrid('enableCellEditing');
 
         $('#userWage_table').datagrid('getPanel').keydown(userWage.keydown);

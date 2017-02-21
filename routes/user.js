@@ -180,25 +180,7 @@ router.post('/saveWage', router.getCon, function(req, res, next) {
         });
 });
 
-router.get('/listWage/:id', router.getCon, function(req, res, next) {
-    if (req.params.id === undefined) {
-        next();
-        return;
-    }
 
-    req.dbCon.queryAsync('SELECT id,name,base_wage FROM ' + config.viewTable + ' WHERE id= ' + mysqlPool.escape(req.params.id))
-        .then(function(rows) {
-            req.session.currentUser = Object.assign({}, rows[0]);
-            res.render(router.getFileName(config.routerName, true) + 'wage', req.session.currentUser);
-        })
-        .catch(function(err) {
-            next(err);
-        })
-        .finally(function() {
-            req.dbCon.release();
-        });
-
-});
 
 
 
