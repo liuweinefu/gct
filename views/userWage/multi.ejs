@@ -57,6 +57,13 @@
             field: 'create_time',
             title: '创建时间',
             width: 100,
+            formatter: function(value, row, index) {
+                if (!Number.isNaN(Date.parse(value))) {
+                    return new Date(Date.parse(value)).toLocaleString();
+                } else {
+                    return '';
+                }
+            },
         });
         fields[0].push({
             field: 'base_wage',
@@ -68,7 +75,7 @@
         });
         fields[0].push({
             field: 'deduction_wage',
-            title: '提成工资',
+            title: '奖金',
             width: 100,
             formatter: function(value, row, index) {
                 return '￥' + Number.parseFloat(value).toFixed(2);
@@ -270,7 +277,14 @@
                         }, {
                             field: 'create_time',
                             title: '消费时间',
-                            width: 80
+                            width: 80,
+                            formatter: function(value, row, index) {
+                                if (!Number.isNaN(Date.parse(value))) {
+                                    return new Date(Date.parse(value)).toLocaleString();
+                                } else {
+                                    return '';
+                                }
+                            },
                         }, {
                             field: 'price',
                             title: '消费金额',

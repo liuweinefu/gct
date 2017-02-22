@@ -65,11 +65,25 @@
         fields[0].push({
             field: 'create_time',
             title: '创建时间',
+            formatter: function(value, row, index) {
+                if (!Number.isNaN(Date.parse(value))) {
+                    return new Date(Date.parse(value)).toLocaleString();
+                } else {
+                    return '';
+                }
+            },
 
         });
         fields[0].push({
             field: 'last_update_time',
             title: '最后更新时间',
+            formatter: function(value, row, index) {
+                if (!Number.isNaN(Date.parse(value))) {
+                    return new Date(Date.parse(value)).toLocaleString();
+                } else {
+                    return '';
+                }
+            },
 
         });
         fields[0].push({

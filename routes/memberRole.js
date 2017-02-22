@@ -9,7 +9,7 @@ var config = {
     mainIndex: 'multi', //multi or single
     importAble: true,
     exportAble: true,
-    exportExcelFields: ['name', 'discount'], //array
+    exportExcelFields: ['name'], //array
     //initArray: [{ db: 'user_role', fields: ['id', 'name'] }], // [{ db: 'user_role', fields: ['id', 'name'] }];
     dbTable: 'member_role', //db or view
     //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
@@ -20,11 +20,6 @@ var config = {
             //formatter: 'int', // string,int,float,pass or function(key,value) return[err,value];
         })
         .set('name', {
-            //readonly: false,  //默认false
-            nullable: false, //默认ture
-            formatter: 'string',
-        })
-        .set('discount', {
             //readonly: false,  //默认false
             nullable: false, //默认ture
             formatter: 'string',

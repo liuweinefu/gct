@@ -53,7 +53,14 @@
         fields[0].push({
             field: 'create_time',
             title: '消费时间',
-            width: 80
+            width: 80,
+            formatter: function(value, row, index) {
+                if (!Number.isNaN(Date.parse(value))) {
+                    return new Date(Date.parse(value)).toLocaleString();
+                } else {
+                    return '';
+                }
+            },
         });
         fields[0].push({
             field: 'price',

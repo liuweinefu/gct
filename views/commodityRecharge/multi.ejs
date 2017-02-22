@@ -72,6 +72,13 @@
             title: '入库时间',
             sortable: true,
             width: 100,
+            formatter: function(value, row, index) {
+                if (!Number.isNaN(Date.parse(value))) {
+                    return new Date(Date.parse(value)).toLocaleString();
+                } else {
+                    return '';
+                }
+            },
         });
         fields[0].push({
             field: 'recharge_count',
