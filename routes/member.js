@@ -95,7 +95,7 @@ router.get('/case/:id', router.getCon, function(req, res, next) {
 });
 
 router.post('/case', router.getCon, function(req, res, next) {
-    if (req.session.currentMember === undefined) { next(err); return; };
+    if (req.session.currentMember === undefined) { next(); return; };
     var form = new multiparty.Form({ uploadDir: './public/tmp/' });
 
     form.parse(req, function(err, fields, files) {
@@ -155,19 +155,12 @@ router.post('/case', router.getCon, function(req, res, next) {
 
             req.dbCon.queryAsync('UPDATE ' + config.dbTable + ' SET member_case=' + mysqlPool.escape(fields.memberCase[0]) + ' WHERE id=' + req.session.currentMember.id)
                 .then(function(rows) {
-                    if (rows.changedRows === 1) {
-                        localMessage.push('健康记录更新成功');
-                        res.json({
-                            err: false,
-                            message: localMessage
-                        });
-                    } else {
-                        localMessage.push('健康记录更新失败');
-                        res.json({
-                            err: false,
-                            message: localMessage
-                        });
-                    }
+                    req.session.currentMember.member_case = mysqlPool.escape(fields.memberCase[0]);
+                    localMessage.push('健康记录更新成功');
+                    res.json({
+                        err: false,
+                        message: localMessage
+                    });
                 })
                 .catch(function(err) {
                     next(err);
@@ -187,13 +180,13 @@ router.post('/case', router.getCon, function(req, res, next) {
     });
 });
 
-//router的特例设置
 
+router.get('/listCase', function(req, res, next) {
+    if (req.session.currentMember === undefined) { next(); return; };
+    res.render(router.getFileName(config.routerName, true) + 'listCase', req.session.currentMember);
 
-// router.get('/abc', function(req, res, next) {
-//     console.log(config.fieldsMap);
-//     next();
-// });
+});
+
 
 
 module.exports = router;

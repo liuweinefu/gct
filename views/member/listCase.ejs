@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>关陈堂_按摩示意图_
+        <%= name %>
+    </title>
+</head>
+
+<body>
+    <p>
+        <b><%= name %></b> 按摩说明:
+        <%= member_case %>
+    </p>
+    <hr>
+
+
+    <table style="width:210mm;" border="0">
+
+        <tr>
+            <td>
+                <img src="/memberCase/ID<%= id %>_up.jpg" alt="正面" style="width:90mm;height:130mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
+            </td>
+            <td>
+                <img src="/memberCase/ID<%= id %>_down.jpg" alt="背面" style="width:90mm;height:130mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <img src="/memberCase/ID<%= id %>_left.jpg" alt="左面" style="width:180mm;height:60mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <img src="/memberCase/ID<%= id %>_right.jpg" alt="右面" style="width:180mm;height:60mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
