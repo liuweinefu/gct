@@ -29,6 +29,7 @@
         </tr>
     </table>
 </div>
+<div id='commodityRechargeDlg'></div>
 <script>
     commodity = {};
     commodity.types = [];
@@ -43,7 +44,7 @@
         fields[0].push({
             field: 'nothing',
             title: '操作',
-            width: 90,
+            width: 60,
             formatter: function(value, row, index) {
                 return '<button onclick="commodity.recharge(\'' + row.id + '\')">入库</button>';
                 //return '<a href="#" onclick="member.add()">添加病例</a>';
@@ -248,8 +249,30 @@
     commodity.export = function() {
         window.location.href = "commodity/exportExcel";
     };
-    commodity.recharge = function() {
-
+    commodity.recharge = function(commodityID) {
+        if (commodityID === undefined) {
+            $.messager.alert('提示', '无当前用户', 'info', function() {
+                $('#commodity_table').datagrid('getPanel').focus(); //重置焦点
+            });
+        } else {
+            $('#commodityRechargeDlg').empty();
+            $('#commodityRechargeDlg').window({
+                title: '商品入库',
+                width: 600,
+                height: 200,
+                collapsible: false,
+                minimizable: false,
+                maximizable: false,
+                modal: true,
+                href: 'commodity/recharge/' + commodityID,
+                onClose: function() {
+                    $('#commodityRechargeDlg').empty();
+                    $('#commodity_table').datagrid('reload');
+                    //console.log('window close!');
+                }
+            });
+            // //console.log(memberID.toString());
+        };
     };
 
     commodity.init = function() {

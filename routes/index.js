@@ -159,4 +159,10 @@ router.post('/captcha', function(req, res) {
     });
 });
 
+router.get('/logout', function(req, res, next) {
+    req.session.destroy();
+    res.render('logout');
+});
+
+
 module.exports = router;

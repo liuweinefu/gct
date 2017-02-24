@@ -9,7 +9,7 @@ var config = {
     mainIndex: 'multi', //multi or single
     importAble: true,
     exportAble: true,
-    exportExcelFields: ['name', 'pass', 'balance', 'phone', 'other_contacts', 'create_time', 'remark', 'member_role_id', 'member_role_name', 'discount', 'member_case'], //array
+    exportExcelFields: ['name', 'pass', 'balance', 'phone', 'other_contacts', 'create_time', 'remark', 'member_role_id', 'member_role_name', 'member_case'], //array
     initArray: [{ db: 'member_role', fields: ['id', 'name'] }], // [{ db: 'user_role', fields: ['id', 'name'] }]
     dbTable: 'member',
     viewTable: 'view_member', //db or view
@@ -60,11 +60,6 @@ var config = {
             //readonly: false,  //默认false
             nullable: false, //默认ture
             formatter: 'int',
-        })
-        .set('discount', {
-            readonly: true, //默认false
-            //nullable: false, //默认ture
-            //formatter: 'string',
         })
         .set('member_case', {
             //readonly: true, //默认false

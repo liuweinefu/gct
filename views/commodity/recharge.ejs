@@ -1,0 +1,125 @@
+<!--用户管理页面 -->
+<table id="commodity_recharge_form" style="width:100%">
+    <tr>
+        <td>
+            <input class="easyui-textbox" data-options="label: '商品名:',labelPosition: 'top',value:'<%=name%>',readonly:true,disabled:true">
+        </td>
+        <td>
+            <input class="easyui-numberbox" data-options="label: '商品售价:',labelPosition: 'top',value:'<%=price%>',readonly:true,disabled:true">
+        </td>
+        <td>
+            <input class="easyui-numberbox" data-options="label: '商品现有库存:',labelPosition: 'top',value:'<%=count%>',readonly:true,disabled:true">
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <input id='recharge_count' class="easyui-numberbox" data-options="">
+        </td>
+        <td>
+            <input id='recharge_all_price' class="easyui-numberbox" data-options="">
+        </td>
+        <td>
+            <input id='recharge_single_price' class="easyui-numberbox" data-options="label: '本次入库单价:',labelPosition: 'top',readonly:true,min:0,precision:2,groupSeparator:',',prefix:'￥',disabled:true">
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <input id='recharge_remark' class="easyui-textbox" data-options="label: '备注:',labelPosition: 'top'," style="width:400px">
+        </td>
+        <td>
+            </br>
+            <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="commodityRecharge.save()">保存</a>
+            <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="commodityRecharge.cancel()">取消</a>
+        </td>
+    </tr>
+</table>
+
+<script>
+    commodityRecharge = {};
+    commodityRecharge.setSinglePrice = function(newValue, oldValue) {
+        let allPrice = Number.parseFloat($('#recharge_all_price').numberbox('getValue'));
+        let count = Number.parseInt($('#recharge_count').numberbox('getValue'));
+        if (Number.isNaN(count) || count === 0 || Number.isNaN(allPrice) || allPrice === 0) {
+            $('#recharge_single_price').numberbox('setValue', 0);
+        } else {
+            $('#recharge_single_price').numberbox('setValue', allPrice / count)
+        };
+    };
+    commodityRecharge.save = function() {
+        let allPrice = Number.parseFloat($('#recharge_all_price').numberbox('getValue'));
+        let count = Number.parseInt($('#recharge_count').numberbox('getValue'));
+        let remark = $('#recharge_remark').textbox('getValue');
+
+        if (Number.isNaN(count) || count === 0) {
+            $.messager.alert('错误', '商品数量不能为0', 'warning', function() {
+                $('#recharge_count').numberbox('setValue', 0)
+            });
+        } else if (Number.isNaN(allPrice) || allPrice === 0) {
+            $.messager.confirm('提示', '商品总价为0，是否继续', function(r) {
+                if (r) {
+                    commodityRecharge.sendData({
+                        count: count,
+                        allPrice: allPrice,
+                        remark: remark
+                    });
+                }
+            });
+        } else {
+            commodityRecharge.sendData({
+                count: count,
+                allPrice: allPrice,
+                remark: remark
+            });
+        };
+    };
+    commodityRecharge.sendData = function(value) {
+        let message = '数量:' + value.count + '</br>总价:' + value.allPrice + '</br>是否入库';
+        $.messager.confirm('提示', message, function(r) {
+            if (r) {
+                $.post("commodity/recharge", {
+                    count: value.count,
+                    allPrice: value.allPrice,
+                    remark: value.remark
+                }, function(data) {
+                    if (data.err) {
+                        $.messager.alert('错误', data.message, 'error');
+                        $('#recharge_count').numberbox('setValue', 0);
+                        $('#recharge_all_price').numberbox('setValue', 0);
+                    } else {
+                        $.messager.alert('信息', data.message + '</br>' + message.slice(0, -4), 'info', function() {
+                            $('#mainImport').window('close');
+                        });
+                    }
+                });
+                //console.log(value);
+            }
+        });
+    };
+
+    commodityRecharge.cancel = function() {
+        $('#commodityRechargeDlg').window('close');
+    };
+
+    //初始化
+    $(document).ready(function() {
+        $('#recharge_count').numberbox({
+            label: '本次入库量:',
+            labelPosition: 'top',
+            min: 0,
+            groupSeparator: ',',
+            onChange: commodityRecharge.setSinglePrice,
+            value: 0,
+        });
+
+        $('#recharge_all_price').numberbox({
+            label: '本次入库总价:',
+            labelPosition: 'top',
+            min: 0,
+            precision: 2,
+            groupSeparator: ',',
+            prefix: '￥',
+            onChange: commodityRecharge.setSinglePrice,
+            value: 0,
+        });
+    });
+</script>
