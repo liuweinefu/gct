@@ -9,7 +9,7 @@ var config = {
     mainIndex: 'multi', //multi or single
     importAble: true,
     exportAble: true,
-    exportExcelFields: ['name', 'base_wage', 'deduction_wage', 'privileges', 'menus', 'tabs'], //array
+    exportExcelFields: ['name', 'base_wage', 'privileges', 'menus', 'tabs'], //array
     initArray: [{ db: 'privilege', fields: ['id', 'name', 'url', 'type'] }], // [{ db: 'user_role', fields: ['id', 'name'] }];
     dbTable: 'user_role', //db or view
     //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
@@ -26,27 +26,22 @@ var config = {
         })
         .set('base_wage', {
             //readonly: false,  //默认false
-            nullable: false, //默认ture
+            nullable: true, //默认true
             formatter: 'float',
-        })
-        .set('deduction_wage', {
-            //readonly: false,  //默认false
-            nullable: true, //默认ture
-            formatter: 'string',
         })
         .set('privileges', {
             //readonly: false,  //默认false
-            nullable: false, //默认ture
+            nullable: true, //默认true
             formatter: 'string',
         })
         .set('menus', {
             //readonly: false,  //默认false
-            nullable: false, //默认ture
+            nullable: true, //默认true
             formatter: 'string',
         })
         .set('tabs', {
             //readonly: false,  //默认false
-            nullable: false, //默认ture
+            nullable: true, //默认true
             formatter: 'string',
         }),
 

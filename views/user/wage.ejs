@@ -33,18 +33,18 @@
         });
         fields[0].push({
             field: 'id',
-            title: '消费记录ID',
-            width: 80
+            title: '消费ID',
+            width: 85
         });
         fields[0].push({
             field: 'service_user_name',
-            title: '服务员工',
+            title: '服务者',
             width: 100,
         });
         fields[0].push({
             field: 'create_time',
             title: '消费时间',
-            width: 80,
+            width: 220,
             formatter: function(value, row, index) {
                 if (!Number.isNaN(Date.parse(value))) {
                     return new Date(Date.parse(value)).toLocaleString();
@@ -57,6 +57,9 @@
             field: 'price',
             title: '消费金额',
             width: 100,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
         });
         fields[0].push({
             field: 'count',
@@ -65,7 +68,7 @@
         });
         fields[0].push({
             field: 'is_cash',
-            title: '是否现金',
+            title: '现金',
             width: 100,
             formatter: function(value, row, index) {
                 return value === 1 ? '是' : '否';
@@ -73,28 +76,31 @@
         });
         fields[0].push({
             field: 'commodity_name',
-            title: '商品名',
+            title: '商品',
             width: 100,
         });
         fields[0].push({
             field: 'commodity_price',
             title: '商品售价',
             width: 100,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
         });
         fields[0].push({
             field: 'member_name',
-            title: '会员名',
+            title: '会员',
             width: 100,
         });
         fields[0].push({
             field: 'write_user_name',
-            title: '记录员工',
+            title: '记录者',
             width: 100,
         });
 
         fields[0].push({
             field: 'is_close',
-            title: '是否已结算',
+            title: '已结算',
             width: 100,
             formatter: function(value, row, index) {
                 return value === 1 ? '是' : '否';
@@ -167,6 +173,7 @@
             idField: 'id',
             //loadMsg: '数据加载中,请稍后',
             fit: true,
+            fitColumns: true,
             singleSelect: false,
             url: '/user/wage',
             method: 'post',
@@ -177,7 +184,7 @@
             pageNumber: 1,
             pageSize: '30',
             pageList: [30, 50, 100],
-            sortName: 'id',
+            //sortName: 'id',
             remoteSort: false,
             multiSort: true,
             columns: wage.setFields(),

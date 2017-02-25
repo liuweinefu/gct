@@ -187,6 +187,25 @@ router.get('/listCase', function(req, res, next) {
 
 });
 
+router.post('/cleanPass', router.getCon, function(req, res, next) {
+    if (req.body.id === undefined) {
+        next();
+        return;
+    };
+    req.dbCon.queryAsync('UPDATE ' + config.dbTable + ' SET pass=""')
+        .then(function(rows) {
+            res.json({
+                err: false,
+                message: '密码已清空'
+            });
+        })
+        .catch(function(err) {
+            next(err);
+        })
+        .finally(function() {
+            req.dbCon.release();
+        });
+});
 
 
 module.exports = router;

@@ -41,11 +41,10 @@
             checkbox: true
         });
         fields[0].push({
-            field: 'nothing',
+            field: 'wageClose',
             title: '记录',
             width: 90,
             formatter: function(value, row, index) {
-                user.currentUser = row;
                 return '<button onclick="user.wage(\'' + row.id + '\')">工资结算</button>';
             },
         });
@@ -77,12 +76,13 @@
                 type: 'passwordbox',
                 options: {
                     prompt: '重置密码',
-                    validType: 'length[6,6]',
+                    validType: 'length[6,30]',
                     invalidMessage: '请输入至少6位密码',
                     showEye: true
                 }
             }
         });
+
         fields[0].push({
             field: 'phone',
             title: '手机',
@@ -308,6 +308,7 @@
             idField: 'id',
             //loadMsg: '数据加载中,请稍后',
             fit: true,
+            fitColumns: true,
             singleSelect: false,
             url: '/user/multi',
             method: 'post',
@@ -377,6 +378,7 @@
             //console.log(memberID.toString());
         };
     };
+
 
     //表格初始化*************************************************************************
     $(document).ready(function() {

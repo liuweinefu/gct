@@ -82,7 +82,7 @@ router.post('/', function(req, res, next) {
         .then(function(con) {
             currentCon = con;
             currentCon.queryAsync = Promise.promisify(currentCon.query);
-            return currentCon.queryAsync('SELECT id,name,phone,other_contacts,last_login_time,remark,user_role_name,privileges,menus,tabs,base_wage,deduction_wage FROM view_user WHERE name= ? and pass = ?', [userName, userPass]);
+            return currentCon.queryAsync('SELECT id,name,phone,other_contacts,last_login_time,remark,user_role_name,privileges,menus,tabs,base_wage FROM view_user WHERE name= ? and pass = ?', [userName, userPass]);
         })
         .then(function(rows) {
             if (rows.length !== 1) { return Promise.reject(new Error('用户错误')); }

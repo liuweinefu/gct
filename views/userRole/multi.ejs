@@ -74,16 +74,6 @@
             }
         });
         fields[0].push({
-            field: 'deduction_wage',
-            title: '提成薪金',
-            width: 170,
-            sortable: false,
-            editor: {
-                type: 'textbox',
-                options: {}
-            }
-        });
-        fields[0].push({
             field: 'privileges',
             title: '权限',
             width: 170,
@@ -394,6 +384,7 @@
             idField: 'id',
             //loadMsg: '数据加载中,请稍后',
             fit: true,
+            fitColumns: true,
             singleSelect: false,
             url: '/userRole/multi',
             method: 'post',

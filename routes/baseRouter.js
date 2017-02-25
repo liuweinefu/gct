@@ -699,7 +699,11 @@ function createRouter(outConfig) {
         if (!Array.isArray(config.initArray) || config.initArray.length === 0) { next(); return; }
         let selectQueries = [];
         config.initArray.forEach(function(item) {
-            selectQueries.push('SELECT ' + item.fields.join(',') + ' FROM ' + item.db);
+            if (Array.isArray(item.order) && item.order.length > 0) {
+                selectQueries.push('SELECT ' + item.fields.join(',') + ' FROM ' + item.db + ' ORDER BY ' + item.order.join(','));
+            } else {
+                selectQueries.push('SELECT ' + item.fields.join(',') + ' FROM ' + item.db + ' ORDER BY ' + item.fields[0]);
+            };
         })
         req.dbCon.queryAsync(selectQueries.join(';'))
             .then(function(rows) {

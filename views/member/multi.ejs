@@ -48,7 +48,7 @@
             width: 60,
         });
         fields[0].push({
-            field: 'nothing',
+            field: 'listCase',
             title: '操作',
             width: 90,
             formatter: function(value, row, index) {
@@ -80,9 +80,19 @@
                 type: 'passwordbox',
                 options: {
                     prompt: '重置密码',
+                    validType: 'length[6,30]',
+                    invalidMessage: '请输入至少6位密码',
                     showEye: true
                 }
             }
+        });
+        fields[0].push({
+            field: 'cleanPass',
+            title: '删除密码',
+            width: 90,
+            formatter: function(value, row, index) {
+                return '<button onclick="member.cleanPass(\'' + row.id + '\')">清空密码</button>';
+            },
         });
         fields[0].push({
             field: 'balance',
@@ -307,6 +317,7 @@
         $('#member_table').datagrid('appendRow', {
             id: 'N ' + Math.round(Math.random() * 1000),
             name: '新会员 ' + Math.round(Math.random() * 1000),
+            balance: 0,
             member_role_id: 1,
         });
     };
@@ -356,6 +367,7 @@
             idField: 'id',
             //loadMsg: '数据加载中,请稍后',
             fit: true,
+            fitColumns: true,
             singleSelect: false,
             url: '/member/multi',
             method: 'post',
@@ -455,7 +467,29 @@
 
         $('#member_table').datagrid('getPanel').keydown(member.keydown);
     }
+    member.cleanPass = function(memberID) {
+        let memberName = $('#member_table').datagrid('getData').rows.find(function(item) {
+            return item.id == memberID;
+        }).name;
 
+        $('#member_table').datagrid('loading');
+        $.messager.confirm('确认信息', '<b>' + memberName + '</b>的密码将被清空？', function(r) {
+            if (r) {
+                $.post('/member/cleanPass', {
+                    id: memberID
+                }).done(function(data) {
+                    $.messager.alert('信息', data.message, 'info', function() {
+                        $('#member_table').datagrid('loaded');
+                    });
+
+                });
+            } else {
+                $('#member_table').datagrid('loaded');
+            }
+        });
+
+
+    };
 
     //表格初始化*************************************************************************
     $(document).ready(function() {
