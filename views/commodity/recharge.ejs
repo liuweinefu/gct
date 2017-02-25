@@ -87,7 +87,7 @@
                         $('#recharge_all_price').numberbox('setValue', 0);
                     } else {
                         $.messager.alert('信息', data.message + '</br>' + message.slice(0, -4), 'info', function() {
-                            $('#mainImport').window('close');
+                            $('#commodityRechargeDlg').window('close');
                         });
                     }
                 });

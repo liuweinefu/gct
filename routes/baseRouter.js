@@ -305,18 +305,21 @@ function createRouter(outConfig) {
             dbFields.push(key);
         }
 
-        let query = '';
-        if (!req.body.name || !req.body.value) {
-            query = 'SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+
+        let selectQueries = [];
+        if (req.body.name === undefined || !req.body.value === undefined) {
+            selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable);
+            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
         } else {
-            query = 'SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows);
+            selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
+            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
         };
 
-        req.dbCon.queryAsync(query)
+        req.dbCon.queryAsync(selectQueries.join(';'))
             .then(function(rows) {
                 res.json({
-                    total: rows.length,
-                    rows: rows
+                    total: rows[0][0].count,
+                    rows: rows[1]
                 });
             })
             .catch(function(err) {
@@ -325,29 +328,6 @@ function createRouter(outConfig) {
             .finally(function() {
                 req.dbCon.release();
             });
-
-        // let selectQueries = [];
-        // if (!req.body.name || !req.body.value) {
-        //     selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable);
-        //     selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
-        // } else {
-        //     selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
-        //     selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
-        // };
-
-        // req.dbCon.queryAsync(selectQueries.join(';'))
-        //     .then(function(rows) {
-        //         res.json({
-        //             total: rows[0][0].count,
-        //             rows: rows[1]
-        //         });
-        //     })
-        //     .catch(function(err) {
-        //         next(err);
-        //     })
-        //     .finally(function() {
-        //         req.dbCon.release();
-        //     });
     });
 
     router.post('/multi/save', router.getCon, function(req, res, next) {

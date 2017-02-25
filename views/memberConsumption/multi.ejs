@@ -7,15 +7,11 @@
             <td style="width:40%">
                 <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:memberConsumption.tbSearchName,menu:'#memberConsumption_table_toolbar_serchbox_mm'" style="width:80%">
                 <div id="memberConsumption_table_toolbar_serchbox_mm" style="width:130px">
-                    <div data-options="name:'commodity_id'">商品ID</div>
-                    <div data-options="name:'commodity_name'">商品</div>
-                    <div data-options="name:'is_cash'">是否现金（1或0）</div>
-                    <div data-options="name:'member_id'">会员ID</div>
                     <div data-options="name:'member_name'">会员</div>
-                    <div data-options="name:'write_user_id'">记录员工ID</div>
+                    <div data-options="name:'commodity_name'">商品</div>
                     <div data-options="name:'write_user_name'">记录员工</div>
-                    <div data-options="name:'service_user_id'">服务员工ID</div>
                     <div data-options="name:'service_user_name'">服务员工</div>
+                    <div data-options="name:'is_cash'">是否现金（1或0）</div>
                     <div data-options="name:'is_close'">是否结算（1或0）</div>
                     <div data-options="name:'remark'">备注</div>
                 </div>
@@ -47,13 +43,13 @@
         });
         fields[0].push({
             field: 'id',
-            title: '消费记录ID',
+            title: '消费ID',
             width: 80
         });
         fields[0].push({
             field: 'create_time',
             title: '消费时间',
-            width: 80,
+            width: 180,
             formatter: function(value, row, index) {
                 if (!Number.isNaN(Date.parse(value))) {
                     return new Date(Date.parse(value)).toLocaleString();
@@ -66,6 +62,9 @@
             field: 'price',
             title: '消费金额',
             width: 100,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
         });
         fields[0].push({
             field: 'count',
@@ -81,11 +80,6 @@
             },
         });
         fields[0].push({
-            field: 'commodity_id',
-            title: '商品ID',
-            width: 100,
-        });
-        fields[0].push({
             field: 'commodity_name',
             title: '商品名',
             width: 100,
@@ -94,11 +88,9 @@
             field: 'commodity_price',
             title: '商品售价',
             width: 100,
-        });
-        fields[0].push({
-            field: 'member_id',
-            title: '会员ID',
-            width: 100,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
         });
         fields[0].push({
             field: 'member_name',
@@ -106,18 +98,8 @@
             width: 100,
         });
         fields[0].push({
-            field: 'write_user_id',
-            title: '记录员工ID',
-            width: 100,
-        });
-        fields[0].push({
             field: 'write_user_name',
             title: '记录员工',
-            width: 100,
-        });
-        fields[0].push({
-            field: 'service_user_id',
-            title: '服务员工ID',
             width: 100,
         });
         fields[0].push({
@@ -264,6 +246,7 @@
             idField: 'id',
             //loadMsg: '数据加载中,请稍后',
             fit: true,
+            fitColumns: true,
             singleSelect: false,
             url: '/memberConsumption/multi',
             method: 'post',
