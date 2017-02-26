@@ -42,12 +42,7 @@
         });
         fields[0].push({
             field: 'id',
-            title: '充值记录ID',
-            width: 80
-        });
-        fields[0].push({
-            field: 'commodity_id',
-            title: '商品ID',
+            title: '充值ID',
             width: 80
         });
         fields[0].push({
@@ -69,10 +64,10 @@
             },
         });
         fields[0].push({
-            field: 'recharge_time',
+            field: 'create_time',
             title: '入库时间',
             sortable: true,
-            width: 100,
+            width: 200,
             formatter: function(value, row, index) {
                 if (!Number.isNaN(Date.parse(value))) {
                     return new Date(Date.parse(value)).toLocaleString();
@@ -231,6 +226,7 @@
             idField: 'id',
             //loadMsg: '数据加载中,请稍后',
             fit: true,
+            fitColumns: true,
             singleSelect: false,
             url: '/commodityRecharge/multi',
             method: 'post',
@@ -252,11 +248,7 @@
                     field: field
                 });
                 switch (field) {
-                    case 'commodityRecharge_type_id':
-                        $(ed.target).combogrid('textbox').select();
-                        $(ed.target).combogrid('showPanel');
-                        break;
-                    default:
+                    case 'remark':
                         $(ed.target).textbox('textbox').select();
                         break;
                 }

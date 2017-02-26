@@ -83,9 +83,10 @@ app.use(function(req, res, next) {
     // if (F.isNotSet(req.session.local) ||
     //     F.isNotSet(req.session.local.privilegs) ||
     //     (req.session.local.privilegs.indexOf(req.path) === -1)) {
-    if (!Array.isArray(req.session.privilegs) || req.session.privilegs.indexOf(req.path) === -1) {
-        //return next(new Error('权限错误'));
-        return next();
+    if (!Array.isArray(req.session.privileges) || req.session.privileges.indexOf(req.path.split('/', 2)[1]) === -1) {
+
+        return next(new Error('权限错误'));
+        //return next();
     } else {
         return next();
     }
@@ -112,33 +113,33 @@ app.use(function(req, res, next) {
 
 var index = require('./routes/index');
 var privilege = require('./routes/privilege');
+var mix = require('./routes/mix');
 var user = require('./routes/user');
 var userRole = require('./routes/userRole');
 var userWage = require('./routes/userWage');
 var member = require('./routes/member');
 var memberRole = require('./routes/memberRole');
 var memberConsumption = require('./routes/memberConsumption');
-//var memberCase = require('./routes/memberCase');
 var memberRecharge = require('./routes/memberRecharge');
 var commodity = require('./routes/commodity');
 var commodityType = require('./routes/commodityType');
 var commodityRecharge = require('./routes/commodityRecharge');
 
 
-var mix = require('./routes/mix');
-app.use('/mix', mix);
+
+
 
 
 
 app.use('/', index);
 app.use('/privilege', privilege);
+app.use('/mix', mix);
 app.use('/user', user);
 app.use('/userRole', userRole);
 app.use('/userWage', userWage);
 app.use('/member', member);
 app.use('/memberRole', memberRole);
 app.use('/memberConsumption', memberConsumption);
-//app.use('/memberCase', memberCase);
 app.use('/memberRecharge', memberRecharge);
 app.use('/commodity', commodity);
 app.use('/commodityType', commodityType);

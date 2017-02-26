@@ -26,8 +26,14 @@ router.post('/', router.getCon, function(req, res, next) {
         });
         return;
     }
+    let query = '';
+    if (req.body.isStrict === "true") {
+        query = 'SELECT id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' = "' + req.body.value.trim() + '"';
+    } else {
+        query = 'SELECT id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"';
+    }
 
-    req.dbCon.queryAsync('SELECT id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"')
+    req.dbCon.queryAsync(query)
         .then(function(row) {
             if (row.length === 1) {
                 req.session.currentMember = row[0];
@@ -236,5 +242,101 @@ router.post('/pay', router.getCon, function(req, res, next) {
         });
 
 });
+
+router.post('/listMemberRole', router.getCon, function(req, res, next) {
+
+    req.dbCon.queryAsync('SELECT id,name FROM member_role ORDER BY id')
+        .then(function(rows) {
+            req.session.memberRole = rows;
+            res.json(rows);
+        })
+        .catch(function(err) {
+            next(err);
+        })
+        .finally(function() {
+            req.dbCon.release();
+        });
+
+});
+
+router.post('/addNewMember', router.getCon, function(req, res, next) {
+    let newMember = [];
+    //name
+    if (req.body.name === undefined || req.body.name.length < 3 || req.body.name.length > 30) {
+        res.json({
+            err: true,
+            message: '用户名错误'
+        });
+        return;
+    } else {
+        newMember.push(['name', req.body.name]);
+    };
+
+    //pass
+    if (req.body.pass === undefined) {
+        res.json({
+            err: true,
+            message: '密码错误'
+        });
+        return;
+    };
+    if (req.body.pass.length !== 0 && (req.body.pass.length < 6 || req.body.name.length > 30)) {
+        res.json({
+            err: true,
+            message: '密码错误'
+        });
+        return;
+    } else if (req.body.pass.length === 0) {
+        newMember.push(['pass', '']);
+    } else {
+        newMember.push(['pass', md5(req.body.pass)]);
+    };
+
+    //member_role_id
+    if (req.body.member_role_id === undefined || req.session.memberRole.findIndex(function(item) { return item.id == req.body.member_role_id }) === -1) {
+        res.json({
+            err: true,
+            message: '用户角色错误'
+        });
+        return;
+    } else {
+        newMember.push(['member_role_id', req.body.member_role_id]);
+    };
+
+    //phone
+    if (req.body.phone === undefined || req.body.phone.length !== 11) {
+        res.json({
+            err: true,
+            message: '电话错误'
+        });
+        return;
+    } else {
+        newMember.push(['phone', req.body.phone]);
+    };
+
+    newMember.push(['other_contacts', req.body.other_contacts]);
+    newMember.push(['remark', req.body.remark]);
+
+
+    let query = 'INSERT INTO member (' + newMember.map(function(item) { return item[0]; }).join(',') + ') VALUES (' + newMember.map(function(item) { return '"' + item[1] + '"'; }).join(',') + ')';
+
+    req.dbCon.queryAsync(query)
+        .then(function(rows) {
+
+            res.json({
+                err: false,
+                message: '用户添加成功'
+            });
+        })
+        .catch(function(err) {
+            next(err);
+        })
+        .finally(function() {
+            req.dbCon.release();
+        });
+
+});
+
+
 
 module.exports = router;
