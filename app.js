@@ -76,7 +76,7 @@ app.use(function(req, res, next) {
     // console.log("check login-----------start");
     // console.log(req.path);
     // console.log("check login-----------end");
-    if (['/', '/login', '/logout'].indexOf(req.path) !== -1) {
+    if (['/', '/login', '/logout', '/captcha'].indexOf(req.path) !== -1) {
         return next();
     }
 

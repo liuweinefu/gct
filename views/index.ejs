@@ -27,15 +27,17 @@
 
 <body class="easyui-layout">
     <!--<div data-options="region:'north',title:'North Title',split:true" style="height:100px;"></div>-->
-    <div data-options="region:'south'" style="height:50px;">gct 2016-</div>
+    <div data-options="region:'south'" style="height:30px;">
+        <div id='mainfooter' style="margin:0 auto; width:400px; height:25px;"></div>
+    </div>
     <!--<div data-options="region:'east',iconCls:'icon-reload',title:'East',split:true" style="width:100px;"></div>-->
-    <div data-options="region:'west',title:'菜单',split:true" style="width:150px;">
+    <div data-options="region:'west',title:'菜单',split:true,maxWidth:'150px'" style="width:150px;">
         <ul id="mainMenu"></ul>
     </div>
     <div data-options="region:'center'" style="padding:5px;background:#eee;">
         <div id="mainTab"></div>
     </div>
-    <div id="mainfooter"></div>
+    <!--<div id="mainfooter"></div>-->
 
     <div id="mainWindow"></div>
     <div id="mainImport"></div>
@@ -108,7 +110,24 @@
             }
         }
         main.setUser = function(user) {
-            //console.log('setUser');
+            function getNowFormatDate() {
+                var date = new Date();
+                var seperator1 = "-";
+                var seperator2 = ":";
+                var month = date.getMonth() + 1;
+                var strDate = date.getDate();
+                if (month >= 1 && month <= 9) {
+                    month = "0" + month;
+                }
+                if (strDate >= 0 && strDate <= 9) {
+                    strDate = "0" + strDate;
+                }
+                var currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate +
+                    " " + date.getHours() + seperator2 + date.getMinutes() +
+                    seperator2 + date.getSeconds();
+                return currentdate;
+            }
+            $('#mainfooter').empty().append('<b>GCT-2017     当前用户：' + user.name + '（' + user.user_role_name + '）' + getNowFormatDate() + '登录</b>');
         }
 
         main._builtMenuList = function(menus) {
