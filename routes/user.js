@@ -98,7 +98,7 @@ router.post('/wage', router.getCon, function(req, res, next) {
     // queries.push('SELECT count(*) as count FROM member_consumption WHERE id=' + mysqlPool.escape(req.session.currentUser.id));
     // queries.push();
 
-    req.dbCon.queryAsync('SELECT id,create_time,price,count,is_cash,commodity_id,commodity_name,commodity_price,member_id,member_name,write_user_name,service_user_name,is_close,remark FROM member_consumption WHERE is_close != "1" AND service_user_id=' + mysqlPool.escape(req.session.currentUser.id))
+    req.dbCon.queryAsync('SELECT id,create_time,price,count,is_discount,is_cash,commodity_id,commodity_name,commodity_price,member_id,member_name,write_user_name,service_user_name,is_close,remark FROM member_consumption WHERE is_close != "1" AND service_user_id=' + mysqlPool.escape(req.session.currentUser.id))
         .then(function(rows) {
             req.session.currentUser.consumptionIDs = rows.map(function(record) { return record.id });
             res.json({

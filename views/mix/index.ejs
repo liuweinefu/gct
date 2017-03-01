@@ -78,7 +78,7 @@
 </div>
 
 <div id="mixaddMemberDlg" class="easyui-dialog" title="新增会员" data-options=" iconCls: 'icon-search', closed:true, modal: true, buttons: [{ text: '确定', handler:mix.addMember }] " style="width:400px;height:580px;padding:10px ">
-    <input id="newMember_card_id" class="easyui-textbox" data-options="label: '会员卡号:<b>（必须）</b>',labelPosition: 'top',required:true,validType:['length[1,30]']" prompt="" iconWidth="28 " style="width:100%;height:50px;padding:10px ">
+    <input id="newMember_card_id" class="easyui-numberbox" data-options="label: '会员卡号:<b>（必须）</b>',labelPosition: 'top',required:true,validType:['length[1,30]']" prompt="" iconWidth="28 " style="width:100%;height:50px;padding:10px ">
     </br>
     </br>
     <input id="newMember_name" class="easyui-textbox" data-options="label: '用户姓名:<b>（必须）</b>',labelPosition: 'top',required:true,validType:['length[3,30]']" prompt="" iconWidth="28 " style="width:100%;height:50px;padding:10px ">
@@ -91,7 +91,7 @@
     />
     </br>
     </br>
-    <input id="newMember_phone" class="easyui-textbox" data-options="label: '手机:<b>（必须）</b>',labelPosition: 'top',required:true,validType:['length[11,11]'],missingMessage:'请输入11位手机号',invalidMessage:'手机号位数不对'" prompt="" iconWidth="28 " style="width:100%;height:50px;padding:10px ">
+    <input id="newMember_phone" class="easyui-numberbox" data-options="label: '手机:<b>（必须）</b>',labelPosition: 'top',required:true,validType:['length[11,11]'],missingMessage:'请输入11位手机号',invalidMessage:'手机号位数不对'" prompt="" iconWidth="28 " style="width:100%;height:50px;padding:10px ">
     </br>
     </br>
     <input id="newMember_other_contacts" class="easyui-textbox" data-options="label: '其他联系方式:',labelPosition: 'top'," prompt="" iconWidth="28 " style="width:100%;height:50px;padding:10px ">
@@ -163,7 +163,7 @@
             } else {
                 $.messager.alert('信息', data.message, 'info', function() {
                     $('#mixaddMemberDlg').dialog('close');
-                    $('#mixSearchbox').searchbox('setValue', newMember.name);
+                    $('#mixSearchbox').searchbox('setValue', newMember.card_id);
                 });
             }
         });
@@ -340,20 +340,44 @@
                         }
                     },
                 }, {
+                    field: 'is_discount',
+                    title: '是否打折',
+                    sortable: false,
+                    width: 60,
+                    formatter: function(value, row, index) {
+                        return value === '1' ? '是' : '否';
+                    },
+                    editor: {
+                        type: 'combobox',
+                        options: {
+                            panelWidth: 160,
+                            editable: false,
+                            valueField: 'id',
+                            textField: 'name',
+                            data: [{
+                                id: 1,
+                                name: '是'
+                            }, {
+                                id: 0,
+                                name: '否'
+                            }],
+                        }
+                    },
+                }, {
                     field: 'price',
                     title: '实收价格',
                     sortable: false,
                     width: 60,
                     formatter: function(value, row, index) {
-                        return '￥' + Number.parseFloat(value).toFixed(2);
-                    },
-                    editor: {
-                        type: 'numberbox',
-                        options: {
-                            min: 0,
-                            precision: 2,
-                            prefix: '￥',
+                        let price = mix.commodity.find(function(element) {
+                            return element.id == row.commodity_id;
+                        }).price;
+                        price = price * row.count * 1;
+                        if (row.is_discount == 1) {
+                            price = price * mix.member['折扣率'].slice(0, -1) * 0.01;
                         }
+                        row.price = price;
+                        return '￥' + Number.parseFloat(price).toFixed(2);
                     },
                 }, {
                     field: 'is_cash',
@@ -395,7 +419,8 @@
                 commodity_id: 1,
                 price: 0,
                 count: 1,
-                is_cash: 0,
+                is_cash: '0',
+                is_discount: '1',
                 remark: ''
             }],
             // 根据字段类型设置编辑器初始状态
@@ -410,11 +435,11 @@
                         $(ed.target).combobox('showPanel');
                         break;
                     case 'service_user_id':
+                    case 'is_discount':
                     case 'is_cash':
                         $(ed.target).combogrid('textbox').select();
                         $(ed.target).combogrid('showPanel');
                         break;
-                    case 'price':
                     case 'count':
                     case 'remark':
                         $(ed.target).textbox('textbox').select();
@@ -438,7 +463,8 @@
             commodity_id: 1,
             price: 0,
             count: 1,
-            is_cash: 0,
+            is_discount: '1',
+            is_cash: '0',
             remark: ''
         });
     };
@@ -467,7 +493,7 @@
         }
 
         let cash = $('#mix_table').datagrid('getData').rows.filter(function(item) {
-            return Boolean(item.is_cash);
+            return item.is_cash == 1;
         });
         let message = '现金: ';
         let cashPrice = cash.reduce(function(accumulator, currentRow) {
@@ -475,7 +501,7 @@
         }, 0) / 100;
         message = message + cashPrice + '元</br>';
         let noCash = $('#mix_table').datagrid('getData').rows.filter(function(item) {
-            return !Boolean(item.is_cash);
+            return item.is_cash != 1;
         });
         let noCashPrice = noCash.reduce(function(accumulator, currentRow) {
             return accumulator + currentRow.price * 100;
@@ -503,7 +529,7 @@
                 $.post('mix/pay', {
                     value: JSON.stringify($('#mix_table').datagrid('getData').rows)
                 }, function(data) {
-                    console.log(data);
+                    //console.log(data);
                     if (data.err) {
                         $.messager.alert('错误', data.message, 'error');
                         $('#mix_table').datagrid('loaded');

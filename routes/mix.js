@@ -172,32 +172,42 @@ router.post('/pay', router.getCon, function(req, res, next) {
     req.body = JSON.parse(req.body.value);
 
 
-    let balance = 0;
     req.dbCon.beginTransactionAsync()
         .then(function() {
             //返回一个promise数组
             return req.body.map(function(item) {
                 //处理每条记录
                 let consumption = Object.assign({}, item);
+
                 let queries = [];
-                queries.push('SELECT id,name,count,price FROM commodity WHERE id=' + mysqlPool.escape(item.commodity_id));
-                queries.push('SELECT id,name,balance FROM member WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
-                queries.push('SELECT id,name FROM user WHERE id=' + mysqlPool.escape(item.service_user_id));
+                queries.push('SELECT id,name,count,price FROM commodity WHERE id=' + mysqlPool.escape(consumption.commodity_id));
+                queries.push('SELECT balance FROM member WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
+                queries.push('SELECT id,name FROM user WHERE id=' + mysqlPool.escape(consumption.service_user_id));
                 return req.dbCon.queryAsync(queries.join(';'))
                     .then(function(row) {
-                        if (row[0][0].count - item.count < 0) {
-                            return Promise.reject({ message: '库存不足' });
+                        consumption.count = Number.parseInt(consumption.count);
+                        if (Number.isNaN(consumption.count) || consumption.count === 0) {
+                            return Promise.reject({ message: row[0][0].name + '消费数量无效' });
                         };
+                        if (row[0][0].count - consumption.count < 0) {
+                            return Promise.reject({ message: row[0][0].name + '库存不足' });
+                        };
+
                         consumption.commodity_id = row[0][0].id;
                         consumption.commodity_name = row[0][0].name;
                         consumption.commodity_price = row[0][0].price * 100 / 100;
 
-                        balance = row[1][0].balance;
-                        if (!item.is_cash && row[1][0].balance - item.price * 100 / 100 < 0) {
+
+
+                        consumption.price = consumption.commodity_price * consumption.count;
+                        if (consumption.is_discount == '1') {
+                            consumption.price = consumption.price * req.session.currentMember.discount;
+                        };
+
+
+                        if (consumption.is_cash != '1' && row[1][0].balance - consumption.price < 0) {
                             return Promise.reject({ message: '会员余额不足' });
-                        } else {
-                            balance = row[1][0].balance - item.price * 100 / 100;
-                        }
+                        };
 
                         consumption.service_user_id = row[2][0].id;
                         consumption.service_user_name = row[2][0].name;
@@ -214,26 +224,30 @@ router.post('/pay', router.getCon, function(req, res, next) {
                         let queries = [];
 
                         queries.push('INSERT INTO member_consumption (' + Object.keys(consumption).join(',') + ') VALUES (' + Object.keys(consumption).map(function(key) { return '"' + consumption[key] + '"'; }).join(',') + ')');
-                        queries.push('UPDATE commodity SET count=count-1 WHERE id=' + mysqlPool.escape(item.commodity_id));
-                        queries.push('UPDATE member SET balance=balance-' + item.price + ' WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
-                        if (item.is_cash) {
+                        queries.push('UPDATE commodity SET count=count-' + consumption.count + ' WHERE id=' + mysqlPool.escape(item.commodity_id));
+                        queries.push('UPDATE member SET balance=balance-' + consumption.price + ' WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
+
+                        if (consumption.is_cash == '1') {
                             queries.pop();
                         }
                         return req.dbCon.queryAsync(queries.join(';'))
-                    })
+                    });
 
 
-            })
+            });
 
         })
         .then(function(PromiseArray) {
             return Promise.all(PromiseArray)
         })
         .then(function(value) {
+            return req.dbCon.queryAsync('SELECT balance FROM member WHERE id=' + mysqlPool.escape(req.session.currentMember.id))
+        })
+        .then(function(row) {
 
             res.json({
                 err: false,
-                message: '结算完成;会员余额:' + balance + '元',
+                message: '结算完成;会员余额:' + row[0].balance + '元',
             });
             req.dbCon.commitAsync();
         })
@@ -266,14 +280,14 @@ router.post('/listMemberRole', router.getCon, function(req, res, next) {
 router.post('/addNewMember', router.getCon, function(req, res, next) {
     let newMember = [];
     //card_id
-    if (req.body.card_id === undefined || req.body.card_id.length > 30) {
+    if (req.body.card_id === undefined || req.body.card_id.length > 30 || Number.isNaN(Number.parseInt(req.body.card_id))) {
         res.json({
             err: true,
             message: '用户卡号错误'
         });
         return;
     } else {
-        newMember.push(['card_id', req.body.card_id]);
+        newMember.push(['card_id', Number.parseInt(req.body.card_id)]);
     };
     //name
     if (req.body.name === undefined || req.body.name.length < 3 || req.body.name.length > 30) {
@@ -318,14 +332,14 @@ router.post('/addNewMember', router.getCon, function(req, res, next) {
     };
 
     //phone
-    if (req.body.phone === undefined || req.body.phone.length !== 11) {
+    if (req.body.phone === undefined || Number.isNaN(Number.parseInt(req.body.phone)) || req.body.phone.length !== 11) {
         res.json({
             err: true,
             message: '电话错误'
         });
         return;
     } else {
-        newMember.push(['phone', req.body.phone]);
+        newMember.push(['phone', Number.parseInt(req.body.phone)]);
     };
 
     newMember.push(['other_contacts', req.body.other_contacts]);

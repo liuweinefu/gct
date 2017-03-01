@@ -67,8 +67,16 @@
             width: 100,
         });
         fields[0].push({
+            field: 'is_discount',
+            title: '是否打折',
+            width: 100,
+            formatter: function(value, row, index) {
+                return value === 1 ? '是' : '否';
+            },
+        });
+        fields[0].push({
             field: 'is_cash',
-            title: '现金',
+            title: '是否现金',
             width: 100,
             formatter: function(value, row, index) {
                 return value === 1 ? '是' : '否';

@@ -11,6 +11,7 @@
                     <div data-options="name:'commodity_name'">商品</div>
                     <div data-options="name:'write_user_name'">记录员工</div>
                     <div data-options="name:'service_user_name'">服务员工</div>
+                    <div data-options="name:'is_discount'">是否打折（1或0）</div>
                     <div data-options="name:'is_cash'">是否现金（1或0）</div>
                     <div data-options="name:'is_close'">是否结算（1或0）</div>
                     <div data-options="name:'remark'">备注</div>
@@ -72,11 +73,19 @@
             width: 100,
         });
         fields[0].push({
+            field: 'is_discount',
+            title: '是否打折',
+            width: 100,
+            formatter: function(value, row, index) {
+                return value == 1 ? '是' : '否';
+            },
+        });
+        fields[0].push({
             field: 'is_cash',
             title: '是否现金',
             width: 100,
             formatter: function(value, row, index) {
-                return value === 1 ? '是' : '否';
+                return value == 1 ? '是' : '否';
             },
         });
         fields[0].push({
@@ -112,7 +121,7 @@
             title: '是否已结算',
             width: 100,
             formatter: function(value, row, index) {
-                return value === 1 ? '是' : '否';
+                return value == 1 ? '是' : '否';
             },
         });
         fields[0].push({
