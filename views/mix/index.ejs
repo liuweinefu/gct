@@ -6,6 +6,7 @@
         <input type="checkbox" id='mixSearchboxValueIsStrict' name="mixSearchboxValueIsStrict"><label for="mixSearchboxValueIsStrict">严格查找</label>
 
         <div id="member_table_toolbar_serchbox_mm" style="width:150px">
+            <div data-options="name:'card_id'">会员卡号</div>
             <div data-options="name:'name'">会员姓名</div>
             <div data-options="name:'phone'">会员手机</div>
             <div data-options="name:'other_contacts'">会员其他联系方式</div>
@@ -23,17 +24,20 @@
             <div id="mix_table_toolbar">
                 <table style="width:100%">
                     <tr>
-                        <td>
+                        <td style="width:70%">
                             <table id='member_info'>
                                 <tr>
+                                    <td style="width:15%"> </td>
+                                    <td> </td>
                                     <td> </td>
                                     <td> </td>
                                     <td> </td>
                                 </tr>
                                 <tr>
                                     <td> </td>
-                                    <td> </td>
-                                    <td> </td>
+                                    <td colspan="2"> </td>
+                                    <td colspan="2"> </td>
+
                                 </tr>
                             </table>
                         </td>
@@ -73,7 +77,10 @@
     <input id="mixrecharge" class="easyui-numberbox" data-options="min:0,precision:2" prompt="金额" iconWidth="28 " style="width:100%;height:34px;padding:10px ">
 </div>
 
-<div id="mixaddMemberDlg" class="easyui-dialog" title="新增会员" data-options=" iconCls: 'icon-search', closed:true, modal: true, buttons: [{ text: '确定', handler:mix.addMember }] " style="width:400px;height:500px;padding:10px ">
+<div id="mixaddMemberDlg" class="easyui-dialog" title="新增会员" data-options=" iconCls: 'icon-search', closed:true, modal: true, buttons: [{ text: '确定', handler:mix.addMember }] " style="width:400px;height:580px;padding:10px ">
+    <input id="newMember_card_id" class="easyui-textbox" data-options="label: '会员卡号:<b>（必须）</b>',labelPosition: 'top',required:true,validType:['length[1,30]']" prompt="" iconWidth="28 " style="width:100%;height:50px;padding:10px ">
+    </br>
+    </br>
     <input id="newMember_name" class="easyui-textbox" data-options="label: '用户姓名:<b>（必须）</b>',labelPosition: 'top',required:true,validType:['length[3,30]']" prompt="" iconWidth="28 " style="width:100%;height:50px;padding:10px ">
     </br>
     </br>
@@ -99,6 +106,7 @@
     mix = {};
     mix.commodity = [];
     mix.user = [];
+    mix.member = {};
     mix.hasInitTable = false;
 
     mix.tbSearchName = function(value, name) {
@@ -127,10 +135,12 @@
 
     };
     mix.addMemberShow = function() {
-        $('#mixaddMemberDlg').dialog('open');
-        $('#newMember_name').textbox('clear');
-        $('#newMember_name').textbox('textbox').focus();
 
+        $('#mixaddMemberDlg').dialog('open');
+        $('#newMember_card_id').textbox('clear');
+        $('#newMember_card_id').textbox('textbox').focus();
+
+        $('#newMember_name').textbox('clear');
         $('#newMember_pass').textbox('clear');
         $('#newMember_role_id').textbox('clear');
         $('#newMember_phone').textbox('clear');
@@ -139,6 +149,7 @@
     }
     mix.addMember = function() {
         let newMember = {
+            card_id: $('#newMember_card_id').textbox('getValue'),
             name: $('#newMember_name').textbox('getValue'),
             pass: $('#newMember_pass').textbox('getValue'),
             member_role_id: $('#newMember_role_id').textbox('getValue'),
@@ -171,7 +182,7 @@
                 if (data.err) {
                     $.messager.alert('错误', data.message, 'error');
                 } else {
-                    $($("#member_info > tbody > tr >td")[2]).empty().append('余额:<b>' + data.balance + '</b>');
+                    $($("#member_info > tbody > tr >td")[4]).empty().append('余额:<b>￥' + data.balance + '</b>');
                     $.messager.alert('信息', data.message, 'info', function() {
                         $('#mixrecharge').textbox('clear');
                         $('#mixrechargeDlg').dialog('close');
@@ -192,15 +203,21 @@
                     $('#mixPass').textbox('clear');
                     $('#mixPass').textbox('textbox').focus();
                 } else {
+                    mix.commodity = data.commodity;
+                    mix.user = data.user;
+                    mix.member = {};
+                    data.member.forEach(function(item) {
+                        mix.member[item[0]] = item[1];
+                    })
                     $('#mixPass').textbox('clear');
                     $('#mixPassDlg').dialog('close');
                     $('#p').panel('open');
                     $("#member_info > tbody > tr >td").each(function() {
+                        data.member[0][1] = data.member[0][1] ? data.member[0][1] : '';
                         $(this).empty().append(data.member[0][0] + ':<b>' + data.member[0][1] + '</b>');
                         data.member.shift();
                     });
-                    mix.commodity = data.commodity;
-                    mix.user = data.user;
+
                     //初始化消费列表
                     if (mix.hasInitTable) {
                         $('#mix_table').datagrid('rejectChanges');

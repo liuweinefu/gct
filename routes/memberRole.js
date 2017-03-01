@@ -1,6 +1,5 @@
 var createRouter = require('./baseRouter');
 
-'name', 'discount'
 
 var config = {
     routerName: __filename,
@@ -20,6 +19,24 @@ var config = {
             //formatter: 'int', // string,int,float,pass or function(key,value) return[err,value];
         })
         .set('name', {
+            //readonly: false,  //默认false
+            nullable: false, //默认ture
+            formatter: 'string',
+        })
+        .set('discount', {
+            //readonly: false,  //默认false
+            nullable: false, //默认ture
+            formatter: function(key, value) {
+                if (typeof value !== 'number') { value = Number.parseFloat(value) };
+                let err = false;
+                if (Number.isNaN(value) || value < 0 || value > 1) {
+                    err = true;
+                    value = 0;
+                };
+                return [err, value];
+            },
+        })
+        .set('remark', {
             //readonly: false,  //默认false
             nullable: false, //默认ture
             formatter: 'string',

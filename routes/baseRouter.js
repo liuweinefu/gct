@@ -81,7 +81,10 @@ function createRouter(outConfig) {
         __float: function(key, value) {
             if (typeof value !== 'number') { value = Number.parseFloat(value) };
             let err = false;
-            if (config.fieldsMap.get(key).nullable === false && Number.isNaN(value)) { err = true; };
+            if (config.fieldsMap.get(key).nullable === false && Number.isNaN(value)) {
+                err = true;
+                value = 0;
+            };
             return [err, value];
         },
         __pass: function(key, value) {

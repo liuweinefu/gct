@@ -28,9 +28,9 @@ router.post('/', router.getCon, function(req, res, next) {
     }
     let query = '';
     if (req.body.isStrict === "true") {
-        query = 'SELECT id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' = "' + req.body.value.trim() + '"';
+        query = 'SELECT id,card_id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case,discount FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' = "' + req.body.value.trim() + '"';
     } else {
-        query = 'SELECT id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"';
+        query = 'SELECT id,card_id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case,discount FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"';
     }
 
     req.dbCon.queryAsync(query)
@@ -84,9 +84,12 @@ router.post('/check', router.getCon, function(req, res, next) {
     }
 
     let member = [];
-    member.push(['用户名', req.session.currentMember.name]);
+    member.push(['会员名', req.session.currentMember.name]);
+    member.push(['会员卡号', req.session.currentMember.card_id]);
     member.push(['用户类型', req.session.currentMember.member_role_name]);
-    member.push(['余额', req.session.currentMember.balance]);
+    member.push(['折扣率', req.session.currentMember.discount * 100 + '%']);
+    member.push(['余额', '￥' + req.session.currentMember.balance]);
+
     member.push(['电话', req.session.currentMember.phone]);
     member.push(['其他联系方式', req.session.currentMember.other_contacts]);
     member.push(['备注', req.session.currentMember.remark]);
@@ -99,6 +102,7 @@ router.post('/check', router.getCon, function(req, res, next) {
                     message: '初始化错误'
                 });
             } else {
+                req.session.commodity = row[0];
                 res.json({
                     err: false,
                     member: member,
@@ -261,6 +265,16 @@ router.post('/listMemberRole', router.getCon, function(req, res, next) {
 
 router.post('/addNewMember', router.getCon, function(req, res, next) {
     let newMember = [];
+    //card_id
+    if (req.body.card_id === undefined || req.body.card_id.length > 30) {
+        res.json({
+            err: true,
+            message: '用户卡号错误'
+        });
+        return;
+    } else {
+        newMember.push(['card_id', req.body.card_id]);
+    };
     //name
     if (req.body.name === undefined || req.body.name.length < 3 || req.body.name.length > 30) {
         res.json({

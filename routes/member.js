@@ -26,6 +26,11 @@ var config = {
             nullable: false, //默认ture
             formatter: 'string',
         })
+        .set('card_id', {
+            //readonly: false,  //默认false
+            nullable: false, //默认ture
+            formatter: 'string',
+        })
         .set('pass', {
             //readonly: false,  //默认false
             nullable: true, //默认ture
