@@ -10,6 +10,8 @@ var config = {
     exportExcelFields: ['id', 'user_id', 'user_name', 'create_time', 'base_wage', 'deduction_wage', 'member_consumption_ids', 'remark'], //array
     mainIndex: 'multi', //multi or single
     dbTable: 'user_wage', //db or view
+    orderFields: ['create_time'],
+    orderMode: 'DESC',
     //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
     fieldsMap: new Map()
         .set('id', {

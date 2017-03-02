@@ -13,7 +13,8 @@ var config = {
     initArray: [{ db: 'member_role', fields: ['id', 'name'] }], // [{ db: 'user_role', fields: ['id', 'name'] }]
     dbTable: 'member',
     viewTable: 'view_member', //db or view
-
+    orderFields: ['create_time'],
+    orderMode: 'DESC',
     //readonly 为 true，才会检测nullable 为false ,才会调用checkEmpty
     fieldsMap: new Map()
         .set('id', {
@@ -37,7 +38,7 @@ var config = {
             formatter: 'pass',
         })
         .set('balance', {
-            //readonly: false,  //默认false
+            readonly: true, //默认false
             nullable: false, //默认ture
             formatter: 'float',
         })

@@ -17,16 +17,18 @@ function createRouter(outConfig) {
     config.viewTable = ''; //db or view
     config.dbTable = '';
     config.fieldsMap = new Map(); //Map()
-    //     .set('id', {
-    //     readonly: true, //默认false
-    //     nullable: false, //默认ture
-    //     formatter: 'int', // string,int,float,pass or function(key,value) return[err,value];
-    // })
+    config.orderFields = ['id'];
+    config.orderMode = 'ASC',
+        //     .set('id', {
+        //     readonly: true, //默认false
+        //     nullable: false, //默认ture
+        //     formatter: 'int', // string,int,float,pass or function(key,value) return[err,value];
+        // })
 
 
 
-    //覆盖初始值
-    config = Object.assign(config, outConfig);
+        //覆盖初始值
+        config = Object.assign(config, outConfig);
     config.viewTable = config.viewTable === '' ? config.dbTable : config.viewTable;
 
 
@@ -312,10 +314,12 @@ function createRouter(outConfig) {
         let selectQueries = [];
         if (req.body.name === undefined || !req.body.value === undefined) {
             selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable);
-            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' ORDER BY ' + config.orderFields.join(',') + ' ' +
+                config.orderMode + ' limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
         } else {
             selectQueries.push('SELECT count(*) as count FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"');
-            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%" limit ' + mysqlPool.escape(offset) + ',' + mysqlPool.escape(rows));
+            selectQueries.push('SELECT ' + dbFields.join(',') + ' FROM ' + config.viewTable + ' where ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"  ORDER BY ' + config.orderFields.join(',') + ' ' +
+                config.orderMode + ' limit ' + mysqlPool.escape(offset) + ', ' + mysqlPool.escape(rows));
         };
 
         req.dbCon.queryAsync(selectQueries.join(';'))

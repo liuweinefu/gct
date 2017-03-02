@@ -94,7 +94,7 @@ router.post('/check', router.getCon, function(req, res, next) {
     member.push(['其他联系方式', req.session.currentMember.other_contacts]);
     member.push(['备注', req.session.currentMember.remark]);
 
-    req.dbCon.queryAsync('SELECT id,name,price,count FROM commodity ORDER BY id; SELECT id,name FROM user WHERE name!="admin" ORDER BY name')
+    req.dbCon.queryAsync('SELECT id,name,price FROM commodity ORDER BY id; SELECT id,name FROM user WHERE name!="admin" ORDER BY name')
         .then(function(row) {
             if (row[0].length < 1 || row[1].length < 1) {
                 res.json({
@@ -205,10 +205,10 @@ router.post('/pay', router.getCon, function(req, res, next) {
                             consumption.price = consumption.price * req.session.currentMember.discount;
                         };
 
-                        console.log('balance:' + row[1][0].balance);
-                        if (consumption.is_cash != '1' && row[1][0].balance - consumption.price < 0) {
-                            return Promise.reject({ message: '会员余额不足' });
-                        };
+                        // console.log('balance:' + row[1][0].balance);
+                        // if (consumption.is_cash != '1' && row[1][0].balance - consumption.price < 0) {
+                        //     return Promise.reject({ message: '会员余额不足' });
+                        // };
 
                         consumption.service_user_id = row[2][0].id;
                         consumption.service_user_name = row[2][0].name;
@@ -306,10 +306,16 @@ router.post('/pay', router.getCon, function(req, res, next) {
             return req.dbCon.queryAsync('SELECT balance FROM member WHERE id=' + mysqlPool.escape(req.session.currentMember.id))
         })
         .then(function(row) {
+            let message = '';
+            if (row[0].balance < 0) {
+                message = '!!!余额为负值!!!结算完成;会员余额:<b>' + row[0].balance + '</b>元';
+            } else {
+                message = '结算完成;会员余额:<b>' + row[0].balance + '</b>元';
+            }
 
             res.json({
                 err: false,
-                message: '结算完成;会员余额:' + row[0].balance + '元',
+                message: message,
             });
             req.dbCon.commitAsync();
         })
