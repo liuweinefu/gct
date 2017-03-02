@@ -30,46 +30,45 @@
     <!--<div data-options="region:'east',title:'详细信息',collapsible:false" style="width:300px"> </div>-->
     <div data-options="region:'center',title:'健康记录'" style="padding:5px;background:#eee;">
         <form id="ff" action="/member/case" method="post" enctype="multipart/form-data">
+            <table style="width:100%">
+                <tr>
+                    <td>
+                        <input name="memberCase" class="easyui-textbox" data-options="label:'情况:',labelWidth:55,labelPosition: 'left',multiline:true,value:'<%= member_case %>',height:50,width:350 ">
+                    </td>
+                    <td>
+                        <input name="memberCaseRemark" class="easyui-textbox" data-options="label: '步骤:',labelWidth:55,labelPosition: 'left',multiline:true,value:'<%= member_case_remark %>',height:50,width:350 ">
+                    </td>
+                </tr>
+            </table>
             <table>
-                <tr>
-                    <td colspan="2">
-                        <label>健康记录备注</label>
-                        <input name="memberCase" class="easyui-textbox" data-options="multiline:true,value:'<%= member_case %>' " style="width:760px;height:50px ">
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <table>
-                            <tr>
-                                <td style="width:180px;float:left;margin-left:0px">
-                                    <label for="upPic ">正面</label>
-                                    <input type="file" name="upPic" class="dropify" data-height="320" data-default-file="memberCase/ID<%= id %>_up.jpg" />
-                                </td>
-                                <td style="width:180px;float:left;margin-left:30px">
-                                    <label for="downPic">背面</label>
-                                    <input type="file" name="downPic" class="dropify" data-height="320" data-default-file="memberCase/ID<%= id %>_down.jpg" />
 
-                                </td>
-                            </tr>
-                        </table>
+                <!--<tr>
+                    <td colspan="2">
+                        <input name="memberCase" class="easyui-textbox" data-options="label: '步骤:',labelPosition: 'top',multiline:true,value:'<%= member_case_remark %>',height:70,width:720 ">
                     </td>
-                    <td>
-                        <table>
-                            <tr>
-                                <td style="width:300px;float:left;margin-left:0px ">
-                                    <label for="leftPic">左侧面</label>
-                                    <input type="file" name="leftPic" class="dropify" data-height="140" data-default-file="memberCase/ID<%= id %>_left.jpg" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="width:300px;float:left;margin-left:0px ">
-                                    <label for="rightPic">右侧面</label>
-                                    <input type="file" name="rightPic" class="dropify" data-height="140" data-default-file="memberCase/ID<%= id %>_right.jpg" />
-                                </td>
-                            </tr>
-                        </table>
+                </tr>-->
+                <tr>
+                    <td style="width:330px;float:left;margin-left:10px">
+                        <label for="upPic ">正面</label>
+                        <input type="file" name="upPic" class="dropify" data-height="240" data-default-file="memberCase/ID<%= id %>_up.jpg" />
+                    </td>
+                    <td style="width:330px;float:left;margin-left:45px">
+                        <label for="downPic">背面</label>
+                        <input type="file" name="downPic" class="dropify" data-height="240" data-default-file="memberCase/ID<%= id %>_down.jpg" />
                     </td>
                 </tr>
+                <tr>
+                    <td style="width:330px;float:left;margin-left:10px">
+                        <label for="rightPic">右侧面</label>
+                        <input type="file" name="rightPic" class="dropify" data-height="240" data-default-file="memberCase/ID<%= id %>_right.jpg" />
+                    </td>
+                    <td style="width:330px;float:left;margin-left:45px">
+                        <label for="leftPic"> 左侧面</label>
+                        <input type="file" name="leftPic" class="dropify" data-height="240" data-default-file="memberCase/ID<%= id %>_left.jpg" />
+
+                    </td>
+                </tr>
+
                 <tr>
                     <td colspan="2">
                         <a href="javascript:void(0)" class="easyui-linkbutton" onclick="memberCase.submit()" style="width:80px;float:right;margin-right:40px ">保存</a>

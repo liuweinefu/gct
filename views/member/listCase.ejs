@@ -11,7 +11,7 @@
 
 <body>
     <p>
-        <b><%= name %></b> 按摩说明:
+        <b><%= name %></b> 说明:
         <%= member_case %>
     </p>
     <hr>
@@ -21,22 +21,29 @@
 
         <tr>
             <td>
-                <img src="/memberCase/ID<%= id %>_up.jpg" alt="正面" style="width:90mm;height:120mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
+                <img src="/memberCase/ID<%= id %>_up.jpg" alt="正面" style="width:100mm;height:120mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
             </td>
             <td>
-                <img src="/memberCase/ID<%= id %>_down.jpg" alt="背面" style="width:90mm;height:120mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
+                <img src="/memberCase/ID<%= id %>_down.jpg" alt="背面" style="width:100mm;height:120mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
             </td>
         </tr>
         <tr>
-            <td>
-                <img src="/memberCase/ID<%= id %>_left.jpg" alt="左面" style="width:90mm;height:80mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
-            </td>
 
             <td>
-                <img src="/memberCase/ID<%= id %>_right.jpg" alt="右面" style="width:90mm;height:80mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
+                <img src="/memberCase/ID<%= id %>_right.jpg" alt="右面" style="width:100mm;height:105mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
             </td>
+            <td>
+                <img src="/memberCase/ID<%= id %>_left.jpg" alt="左面" style="width:100mm;height:105mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm">
+            </td>
+
         </tr>
     </table>
+    <hr>
+    <p>
+        步骤:
+        <%= member_case_remark %>
+    </p>
+
 </body>
 
 </html>

@@ -86,7 +86,7 @@ router.get('/case/:id', router.getCon, function(req, res, next) {
         return;
     }
 
-    req.dbCon.queryAsync('SELECT id,name,phone,other_contacts,remark,member_role_name,member_case FROM ' + config.viewTable + ' WHERE id= ' + mysqlPool.escape(req.params.id))
+    req.dbCon.queryAsync('SELECT id,name,phone,other_contacts,remark,member_role_name,member_case,member_case_remark FROM ' + config.viewTable + ' WHERE id= ' + mysqlPool.escape(req.params.id))
         .then(function(rows) {
             req.session.currentMember = Object.assign({}, rows[0]);
             res.render(router.getFileName(config.routerName, true) + 'case', req.session.currentMember);
@@ -142,47 +142,42 @@ router.post('/case', router.getCon, function(req, res, next) {
         } else {
             fs.unlinkSync(files.rightPic[0].path);
             localMessage.push('右侧未更新');
-        }
+        };
 
 
 
+        function return2Br(str) {
+            return str.replace(/\r?\n/g, " ");
+        };
+        fields.memberCase[0] = return2Br(fields.memberCase[0]);
+        fields.memberCaseRemark[0] = return2Br(fields.memberCaseRemark[0]);
 
-        if (Array.isArray(fields.memberCase) && fields.memberCase.length !== 0 && fields.memberCase[0] !== req.session.currentMember.member_case) {
-            //回车转为br标签
-            function return2Br(str) {
-                return str.replace(/\r?\n/g, " ");
-            }
-            // //普通字符转换成转意符
-            // function html2Escape(sHtml) {
-            //     return sHtml.replace(/[<>&"]/g, function(c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]; });
-            // }
-
-            fields.memberCase[0] = return2Br(fields.memberCase[0]);
-
-            req.dbCon.queryAsync('UPDATE ' + config.dbTable + ' SET member_case=' + mysqlPool.escape(fields.memberCase[0]) + ' WHERE id=' + req.session.currentMember.id)
-                .then(function(rows) {
-                    req.session.currentMember.member_case = mysqlPool.escape(fields.memberCase[0]);
-                    localMessage.push('健康记录更新成功');
-                    res.json({
-                        err: false,
-                        message: localMessage
-                    });
-                })
-                .catch(function(err) {
-                    next(err);
-                })
-                .finally(function() {
-                    req.dbCon.release();
-                });
-
-
-        } else {
-            localMessage.push('健康记录未更新');
+        if (req.session.currentMember.member_case == mysqlPool.escape(fields.memberCase[0]) &&
+            req.session.currentMember.member_case_remark == mysqlPool.escape(fields.memberCaseRemark[0])) {
+            localMessage.push('情况及步骤未更新');
             res.json({
                 err: false,
                 message: localMessage
             });
+            return;
         }
+        req.dbCon.queryAsync('UPDATE ' + config.dbTable + ' SET member_case=' + mysqlPool.escape(fields.memberCase[0]) + ',member_case_remark=' + mysqlPool.escape(fields.memberCaseRemark[0]) + ' WHERE id=' + req.session.currentMember.id)
+            .then(function(rows) {
+                req.session.currentMember.member_case = mysqlPool.escape(fields.memberCase[0]);
+                req.session.currentMember.member_case_remark = mysqlPool.escape(fields.memberCaseRemark[0]);
+                localMessage.push('情况及步骤更新成功');
+                res.json({
+                    err: false,
+                    message: localMessage
+                });
+            })
+            .catch(function(err) {
+                next(err);
+            })
+            .finally(function() {
+                req.dbCon.release();
+            });
+
     });
 });
 
