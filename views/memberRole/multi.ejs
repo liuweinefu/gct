@@ -44,7 +44,7 @@
         field: 'name',
         title: '会员类型',
         width: 100,
-        sortable: false,
+        sortable: true,
         editor: {
             type: 'textbox',
             options: {}
@@ -54,7 +54,7 @@
         field: 'discount',
         title: '折扣率',
         width: 100,
-        sortable: false,
+        sortable: true,
         formatter: function(value, row, index) {
             return Number.parseFloat(value).toFixed(2);
         },
@@ -149,7 +149,6 @@
         pageNumber: 1,
         pageSize: '30',
         pageList: [30, 50, 100],
-        sortName: 'id',
         remoteSort: false,
         multiSort: true,
         columns: memberRole.fields,

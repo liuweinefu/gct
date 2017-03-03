@@ -119,6 +119,7 @@
             field: 'create_time',
             title: '入会时间',
             width: 160,
+            sortable: true,
             formatter: function(value, row, index) {
                 if (!Number.isNaN(Date.parse(value))) {
                     return new Date(Date.parse(value)).toLocaleString();
@@ -132,7 +133,7 @@
             field: 'phone',
             title: '手机',
             width: 100,
-            sortable: false,
+            sortable: true,
             editor: {
                 type: 'validatebox',
                 options: {
@@ -146,7 +147,7 @@
             field: 'other_contacts',
             title: '其他联系方式',
             width: 200,
-            sortable: false,
+            sortable: true,
             editor: {
                 type: 'textbox',
                 options: {}
@@ -156,7 +157,7 @@
             field: 'remark',
             title: '备注',
             width: 100,
-            sortable: false,
+            sortable: true,
             editor: {
                 type: 'textbox',
                 options: {}
@@ -166,6 +167,7 @@
             field: 'member_role_id',
             title: '会员类型',
             width: 120,
+            sortable: true,
             limitToList: true,
             formatter: function(value, row, index) {
                 return member.roles.find(function(element) {

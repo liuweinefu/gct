@@ -28,9 +28,9 @@ router.post('/', router.getCon, function(req, res, next) {
     }
     let query = '';
     if (req.body.isStrict === "true") {
-        query = 'SELECT id,card_id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case,discount FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' = "' + req.body.value.trim() + '"';
+        query = 'SELECT id,card_id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case,discount,member_case_remark FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' = "' + req.body.value.trim() + '"';
     } else {
-        query = 'SELECT id,card_id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case,discount FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"';
+        query = 'SELECT id,card_id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case,discount,member_case_remark FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"';
     }
 
     req.dbCon.queryAsync(query)

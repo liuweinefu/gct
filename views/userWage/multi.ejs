@@ -40,22 +40,20 @@
         fields[0].push({
             field: 'id',
             title: '工资结算ID',
-            width: 80
-        });
-        fields[0].push({
-            field: 'user_id',
-            title: '员工ID',
-            width: 80
+            width: 80,
+            sortable: true,
         });
         fields[0].push({
             field: 'user_name',
             title: '员工名',
             width: 100,
+            sortable: true,
         });
         fields[0].push({
             field: 'create_time',
             title: '创建时间',
             width: 100,
+            sortable: true,
             formatter: function(value, row, index) {
                 if (!Number.isNaN(Date.parse(value))) {
                     return new Date(Date.parse(value)).toLocaleString();
@@ -68,6 +66,7 @@
             field: 'base_wage',
             title: '底薪',
             width: 100,
+            sortable: true,
             formatter: function(value, row, index) {
                 return '￥' + Number.parseFloat(value).toFixed(2);
             },
@@ -76,6 +75,7 @@
             field: 'deduction_wage',
             title: '奖金',
             width: 100,
+            sortable: true,
             formatter: function(value, row, index) {
                 return '￥' + Number.parseFloat(value).toFixed(2);
             },
@@ -83,7 +83,6 @@
         fields[0].push({
             field: 'member_consumption_ids',
             title: '会员消费记录',
-            sortable: true,
             width: 100,
         });
         fields[0].push({
@@ -271,13 +270,13 @@
                             title: '消费记录ID',
                             width: 80
                         }, {
-                            field: 'service_user_name',
-                            title: '服务员工',
+                            field: 'member_name',
+                            title: '会员名',
                             width: 100,
                         }, {
                             field: 'create_time',
                             title: '消费时间',
-                            width: 80,
+                            width: 160,
                             formatter: function(value, row, index) {
                                 if (!Number.isNaN(Date.parse(value))) {
                                     return new Date(Date.parse(value)).toLocaleString();
@@ -309,12 +308,8 @@
                             title: '商品售价',
                             width: 100,
                         }, {
-                            field: 'member_name',
-                            title: '会员名',
-                            width: 100,
-                        }, {
-                            field: 'write_user_name',
-                            title: '记录员工',
+                            field: 'service_user_name',
+                            title: '服务员工',
                             width: 100,
                         }, {
                             field: 'is_close',
@@ -323,6 +318,10 @@
                             formatter: function(value, row, index) {
                                 return value === 1 ? '是' : '否';
                             },
+                        }, {
+                            field: 'write_user_name',
+                            title: '记录员工',
+                            width: 100,
                         }]
                     ],
                     groupField: 'commodity_id',
