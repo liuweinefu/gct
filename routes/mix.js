@@ -358,7 +358,7 @@ router.post('/addNewMember', router.getCon, function(req, res, next) {
         newMember.push(['card_id', Number.parseInt(req.body.card_id)]);
     };
     //name
-    if (req.body.name === undefined || req.body.name.length < 3 || req.body.name.length > 30) {
+    if (req.body.name === undefined || req.body.name.length < 2 || req.body.name.length > 30) {
         res.json({
             err: true,
             message: '用户名错误'
