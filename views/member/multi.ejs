@@ -166,7 +166,7 @@
         fields[0].push({
             field: 'member_role_id',
             title: '会员类型',
-            width: 120,
+            width: 180,
             sortable: true,
             limitToList: true,
             formatter: function(value, row, index) {
@@ -502,7 +502,12 @@
         // Basic
         $.post('member/initData', {}, function(data) {
             if (!data.err) {
-                member.roles = data.result;
+                member.roles = data.result.map(function(item) {
+                    let backObject = {};
+                    backObject.id = item.id;
+                    backObject.name = item.name + '(' + item.discount * 100 + '%--' + item.remark + ')';
+                    return backObject;
+                });
                 member.init();
             } else {
                 $.messager.alert('失败', data.message, 'warning', function() {

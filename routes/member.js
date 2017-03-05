@@ -10,7 +10,7 @@ var config = {
     importAble: true,
     exportAble: true,
     exportExcelFields: ['name', 'pass', 'balance', 'phone', 'other_contacts', 'create_time', 'remark', 'member_role_id', 'member_role_name', 'member_case'], //array
-    initArray: [{ db: 'member_role', fields: ['id', 'name'] }], // [{ db: 'user_role', fields: ['id', 'name'] }]
+    initArray: [{ db: 'member_role', fields: ['id', 'name', 'discount', 'remark'] }], // [{ db: 'user_role', fields: ['id', 'name'] }]
     dbTable: 'member',
     viewTable: 'view_member', //db or view
     orderFields: ['create_time'],

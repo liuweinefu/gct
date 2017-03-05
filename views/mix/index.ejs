@@ -108,8 +108,12 @@
     mix.user = [];
     mix.member = {};
     mix.hasInitTable = false;
+    mix.hstInitEnter = false;
 
     mix.tbSearchName = function(value, name) {
+        if (!mix.hasInitEnter) {
+            mix.initEnter();
+        };
 
         $.post("mix ", {
                 name: name,
@@ -122,7 +126,7 @@
                     $('#mixSearchbox').searchbox('clear');
                 } else {
                     $('#mixPassDlg').dialog('open');
-                    $('#mixrecharge').textbox('textbox').focus();
+                    $('#mixPass').textbox('textbox').focus();
                 }
 
             },
@@ -135,7 +139,9 @@
 
     };
     mix.addMemberShow = function() {
-
+        if (!mix.hasInitEnter) {
+            mix.initEnter();
+        };
         $('#mixaddMemberDlg').dialog('open');
         $('#newMember_card_id').textbox('clear');
         $('#newMember_card_id').textbox('textbox').focus();
@@ -146,7 +152,7 @@
         $('#newMember_phone').textbox('clear');
         $('#newMember_other_contacts').textbox('clear');
         $('#newMember_remark').textbox('clear');
-    }
+    };
     mix.addMember = function() {
         let newMember = {
             card_id: $('#newMember_card_id').textbox('getValue'),
@@ -168,7 +174,7 @@
             }
         });
 
-    }
+    };
 
     mix.recharge = function() {
         value = $('#mixrecharge').textbox('getValue');
@@ -190,7 +196,7 @@
                 }
             });
         }
-    }
+    };
 
     mix.check = function() {
         pass = $('#mixPass').textbox('getValue');
@@ -547,5 +553,24 @@
     };
     mix.close = function() {
         $('#p').panel('close');
+    };
+
+
+    mix.initEnter = function() {
+        $('#mixPassDlg').dialog('window').keydown(function(e) {
+            if (e.key === 'Enter') {
+                mix.check();
+            }
+        });
+        $('#mixrechargeDlg').dialog('window').keydown(function(e) {
+            if (e.key === 'Enter') {
+                mix.recharge();
+            }
+        });
+        $('#mixaddMemberDlg').dialog('window').keydown(function(e) {
+            if (e.key === 'Enter') {
+                mix.addMember();
+            }
+        });
     };
 </script>

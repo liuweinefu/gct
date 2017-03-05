@@ -237,71 +237,7 @@ router.post('/pay', router.getCon, function(req, res, next) {
 
             }, 0);
 
-
-
-            //返回一个promise数组
-            // return req.body.map(function(item) {
-            //     //处理每条记录
-            //     let consumption = Object.assign({}, item);
-
-            //     let queries = [];
-            //     queries.push('SELECT id,name,count,price FROM commodity WHERE id=' + mysqlPool.escape(consumption.commodity_id));
-            //     queries.push('SELECT balance FROM member WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
-            //     queries.push('SELECT id,name FROM user WHERE id=' + mysqlPool.escape(consumption.service_user_id));
-            //     return req.dbCon.queryAsync(queries.join(';'))
-            //         .then(function(row) {
-
-            //             consumption.count = Number.parseInt(consumption.count);
-            //             if (Number.isNaN(consumption.count) || consumption.count === 0) {
-            //                 return Promise.reject({ message: row[0][0].name + '消费数量无效' });
-            //             };
-            //             if (row[0][0].count - consumption.count < 0) {
-            //                 return Promise.reject({ message: row[0][0].name + '库存不足' });
-            //             };
-
-            //             consumption.commodity_id = row[0][0].id;
-            //             consumption.commodity_name = row[0][0].name;
-            //             consumption.commodity_price = row[0][0].price * 100 / 100;
-
-
-
-            //             consumption.price = consumption.commodity_price * consumption.count;
-            //             if (consumption.is_discount == '1') {
-            //                 consumption.price = consumption.price * req.session.currentMember.discount;
-            //             };
-
-            //             console.log('balance:' + row[1][0].balance);
-            //             if (consumption.is_cash != '1' && row[1][0].balance - consumption.price < 0) {
-            //                 return Promise.reject({ message: '会员余额不足' });
-            //             };
-
-            //             consumption.service_user_id = row[2][0].id;
-            //             consumption.service_user_name = row[2][0].name;
-
-            //             consumption.member_id = req.session.currentMember.id;
-            //             consumption.member_name = req.session.currentMember.name;
-
-            //             consumption.write_user_id = req.session.user.id;
-            //             consumption.write_user_name = req.session.user.name;
-
-            //             let queries = [];
-            //             queries.push('INSERT INTO member_consumption (' + Object.keys(consumption).join(',') + ') VALUES (' + Object.keys(consumption).map(function(key) { return '"' + consumption[key] + '"'; }).join(',') + ')');
-            //             queries.push('UPDATE commodity SET count=count-' + consumption.count + ' WHERE id=' + mysqlPool.escape(item.commodity_id));
-            //             queries.push('UPDATE member SET balance=balance-' + consumption.price + ' WHERE id=' + mysqlPool.escape(req.session.currentMember.id));
-
-            //             if (consumption.is_cash == '1') {
-            //                 queries.pop();
-            //             }
-            //             return req.dbCon.queryAsync(queries.join(';'))
-            //         });
-
-
-            // });
-
         })
-        // .then(function(PromiseArray) {
-        //     return Promise.all(PromiseArray);
-        // })
         .then(function(value) {
             return req.dbCon.queryAsync('SELECT balance FROM member WHERE id=' + mysqlPool.escape(req.session.currentMember.id))
         })
@@ -331,10 +267,17 @@ router.post('/pay', router.getCon, function(req, res, next) {
 
 router.post('/listMemberRole', router.getCon, function(req, res, next) {
 
-    req.dbCon.queryAsync('SELECT id,name FROM member_role ORDER BY id')
+    req.dbCon.queryAsync('SELECT id,name,discount,remark FROM member_role ORDER BY id')
         .then(function(rows) {
+
             req.session.memberRole = rows;
-            res.json(rows);
+
+            res.json(rows.map(function(item) {
+                let backObject = {};
+                backObject.id = item.id;
+                backObject.name = item.name + '(' + item.discount * 100 + '%--' + item.remark + ')';
+                return backObject;
+            }));
         })
         .catch(function(err) {
             next(err);
