@@ -267,7 +267,7 @@ router.post('/pay', router.getCon, function(req, res, next) {
 
 router.post('/listMemberRole', router.getCon, function(req, res, next) {
 
-    req.dbCon.queryAsync('SELECT id,name,discount,remark FROM member_role ORDER BY id')
+    req.dbCon.queryAsync('SELECT id,name,discount,remark FROM member_role ORDER BY discount desc')
         .then(function(rows) {
 
             req.session.memberRole = rows;
@@ -275,7 +275,8 @@ router.post('/listMemberRole', router.getCon, function(req, res, next) {
             res.json(rows.map(function(item) {
                 let backObject = {};
                 backObject.id = item.id;
-                backObject.name = item.name + '(' + item.discount * 100 + '%--' + item.remark + ')';
+                //backObject.name = item.name + '(' + Number.parseInt(item.discount * 100) + '%--' + item.remark + ')';
+                backObject.name = item.name;
                 return backObject;
             }));
         })

@@ -236,7 +236,7 @@
             $('#mainImport').window({
                 title: '健康记录',
                 width: 800,
-                height: 800,
+                height: 600,
                 collapsible: false,
                 minimizable: false,
                 maximizable: false,
@@ -505,7 +505,8 @@
                 member.roles = data.result.map(function(item) {
                     let backObject = {};
                     backObject.id = item.id;
-                    backObject.name = item.name + '(' + item.discount * 100 + '%--' + item.remark + ')';
+                    //backObject.name = item.name + '(' + Number.parseInt(item.discount * 100) + '%--' + item.remark + ')';
+                    backObject.name = item.name;
                     return backObject;
                 });
                 member.init();

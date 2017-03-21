@@ -13,7 +13,7 @@ function createRouter(outConfig) {
     config.importAble = false; //boolean
     config.multiData = true; //boolean
     config.singleData = true; //boolean
-    config.initArray = []; // [{ db: 'user_role', fields: ['id', 'name'] }]
+    config.initArray = []; // [{ db: 'user_role', fields: ['id', 'name'] ,oder:['name']}]
     config.viewTable = ''; //db or view
     config.dbTable = '';
     config.fieldsMap = new Map(); //Map()
