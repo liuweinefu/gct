@@ -153,6 +153,10 @@ router.post('/recharge', router.getCon, function(req, res, next) {
             return req.dbCon.queryAsync(queries.join(';'));
         })
         .then(function(rows) {
+            if (rows[0].affectedRows != 1 || rows[1].affectedRows != 1) {
+                throw new Error('充值失败!update or insert Error');
+                return;
+            }
             res.json({
                 err: false,
                 message: '充值完成!</br>本次充值:' + req.body.value + '元</br>会员余额:' + rows[2][0].balance + '元',
