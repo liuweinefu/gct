@@ -177,11 +177,18 @@
     };
 
     mix.recharge = function() {
+
         value = $('#mixrecharge').textbox('getValue');
-        console.log('value:' + value);
+        //console.log('value:' + value);
+        if (!value) {
+            //避免连续回车
+            return;
+        }
         if (value * 100 <= 0) {
             $.messager.alert('错误', '充值金额必须大于0', 'error');
         } else {
+            $('#mixrecharge').textbox('clear');
+            $('#mixrechargeDlg').dialog('close');
             $.post("mix/recharge", {
                 value: value,
             }, function(data) {
@@ -190,8 +197,8 @@
                 } else {
                     $($("#member_info > tbody > tr >td")[4]).empty().append('余额:<b>￥' + data.balance + '</b>');
                     $.messager.alert('信息', data.message, 'info', function() {
-                        $('#mixrecharge').textbox('clear');
-                        $('#mixrechargeDlg').dialog('close');
+                        // $('#mixrecharge').textbox('clear');
+                        // $('#mixrechargeDlg').dialog('close');
                     });
                 }
             });

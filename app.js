@@ -43,10 +43,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 //初始化allPrivileges 及 xhr检测***************************************************************
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     if (allPrivileges.length === 0) {
-        mysqlPool.getConnection(function(err, con) {
-            con.query('SELECT id,name,url,type FROM privilege', function(err, rows) {
+        mysqlPool.getConnection(function (err, con) {
+            con.query('SELECT id,name,url,type FROM privilege', function (err, rows) {
                 con.release();
                 if (err) { next(new Error('权限初始化错误')) };
                 allPrivileges = rows;
@@ -58,12 +58,12 @@ app.use(function(req, res, next) {
     }
 });
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     //req.xhr不能完全判断是否ajax请求，在之后的ajax请求处理时，强制约定设置res.locals.xhr
     res.locals.xhr = req.xhr;
     next();
 })
-app.post('/', function(req, res, next) {
+app.post('/', function (req, res, next) {
     //默认设置所有post都是Ajax操作
     res.locals.xhr = true;
     next();
@@ -72,7 +72,7 @@ app.post('/', function(req, res, next) {
 //初始化allPrivileges 及 xhr检测***************************************************************
 
 //登录权限检测***************************************************************
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     // console.log("check login-----------start");
     // console.log(req.path);
     // console.log("check login-----------end");
@@ -154,34 +154,42 @@ app.use('/commodityRecharge', commodityRecharge);
 
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     var err = new Error('Not Found');
     err.status = 404;
     next(err);
 });
 
 //xhr模式回复错误
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
     if (req.xhr || res.locals.xhr) {
         return res.json({
             err: true,
             message: err.message,
             error: req.app.get('env') === 'development' ? err : {}
         });
+    } else {
+        // set locals, only providing error in development
+        res.locals.message = err.message;
+        res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+        // render the error page
+        res.status(err.status || 500);
+        res.render('error');
     }
-    next(err);
+
 });
 
-
+//目前看所有的error函数都要执行，所以没法拆开。不知道以后是什么样子。
 // error handler
-app.use(function(err, req, res, next) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
+// app.use(function(err, req, res, next) {
+//     // set locals, only providing error in development
+//     res.locals.message = err.message;
+//     res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
-});
+//     // render the error page
+//     res.status(err.status || 500);
+//     res.render('error');
+// });
 
 module.exports = app;
