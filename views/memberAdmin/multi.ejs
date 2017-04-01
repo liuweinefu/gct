@@ -1,0 +1,511 @@
+<!--用户管理页面 -->
+<table id="memberAdmin_table">
+</table>
+<div id="memberAdmin_table_toolbar">
+    <table style="width:100%">
+        <tr>
+            <td style="width:40%">
+                <input class="easyui-searchbox" data-options="prompt:'输入查找值',searcher:memberAdmin.tbSearchName,menu:'#memberAdmin_table_toolbar_serchbox_mm'" style="width:80%">
+                <div id="memberAdmin_table_toolbar_serchbox_mm" style="width:120px">
+                    <div data-options="name:'card_id'">会员卡号</div>
+                    <div data-options="name:'name'">会员姓名</div>
+                    <div data-options="name:'member_role_name'">会员类型</div>
+                    <div data-options="name:'phone'">手机</div>
+                    <div data-options="name:'other_contacts'">其他联系方式</div>
+                    <div data-options="name:'remark'">备注</div>
+
+                </div>
+            </td>
+            <td>
+                <div>
+                    <!--<a href="#" class="easyui-linkbutton" iconCls="icon-folder_add" plain="true" onclick="memberAdmin.import()">导入(<ins>W</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="memberAdmin.export()">导出(<ins>Q</ins>)</a>
+                    <!--<a href="/excel/memberAdmin" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="memberAdmin.add()">增加(<ins>A</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="memberAdmin.delete()">删除(<ins>D</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="memberAdmin.save()">保存(<ins>S</ins>)</a>
+                    <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="memberAdmin.redo()">撤销(<ins>R</ins>)</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    memberAdmin = {};
+    memberAdmin.roles = []; //需初始化数据    
+
+    //表格字段设置*************************************************************************
+    memberAdmin.setFields = function() {
+        let fields = [];
+        fields[0] = [];
+        fields[0].push({
+            field: 'ck',
+            checkbox: true
+        });
+        fields[0].push({
+            field: 'id',
+            title: '会员ID',
+            sortable: true,
+            width: 60,
+        });
+        fields[0].push({
+            field: 'card_id',
+            title: '会员卡号',
+            sortable: true,
+            width: 60,
+            editor: {
+                type: 'textbox',
+                options: {}
+            }
+        });
+        fields[0].push({
+            field: 'name',
+            title: '会员姓名',
+            width: 100,
+            sortable: true,
+            editor: {
+                type: 'textbox',
+                options: {}
+            }
+        });
+        fields[0].push({
+            field: 'pass',
+            title: '密码',
+            width: 100,
+            sortable: false,
+            formatter: function(value, row, index) {
+                return '******';
+            },
+            editor: {
+                type: 'passwordbox',
+                options: {
+                    prompt: '重置密码',
+                    validType: 'length[6,30]',
+                    invalidMessage: '请输入至少6位密码',
+                    showEye: true
+                }
+            }
+        });
+        fields[0].push({
+            field: 'cleanPass',
+            title: '删除密码',
+            width: 90,
+            formatter: function(value, row, index) {
+                return '<button onclick="memberAdmin.cleanPass(\'' + row.id + '\')">清空密码</button>';
+            },
+        });
+        fields[0].push({
+            field: 'balance',
+            title: '余额',
+            width: 100,
+            sortable: true,
+            formatter: function(value, row, index) {
+                return '￥' + Number.parseFloat(value).toFixed(2);
+            },
+            editor: {
+                type: 'numberbox',
+                options: {
+                    required: true,
+                    prefix: '￥',
+                }
+            }
+
+        });
+        fields[0].push({
+            field: 'create_time',
+            title: '入会时间',
+            width: 160,
+            sortable: true,
+            formatter: function(value, row, index) {
+                if (!Number.isNaN(Date.parse(value))) {
+                    return new Date(Date.parse(value)).toLocaleString();
+                } else {
+                    return '';
+                }
+            },
+        });
+
+        fields[0].push({
+            field: 'phone',
+            title: '手机',
+            width: 100,
+            sortable: true,
+            editor: {
+                type: 'validatebox',
+                options: {
+                    required: true,
+                    validType: 'length[11,11]',
+                    invalidMessage: '请输入11位手机号'
+                }
+            }
+        });
+        fields[0].push({
+            field: 'other_contacts',
+            title: '其他联系方式',
+            width: 200,
+            sortable: true,
+            editor: {
+                type: 'textbox',
+                options: {}
+            }
+        });
+        fields[0].push({
+            field: 'remark',
+            title: '备注',
+            width: 100,
+            sortable: true,
+            editor: {
+                type: 'textbox',
+                options: {}
+            }
+        });
+        fields[0].push({
+            field: 'member_role_id',
+            title: '会员类型',
+            width: 180,
+            sortable: true,
+            limitToList: true,
+            formatter: function(value, row, index) {
+                return memberAdmin.roles.find(function(element) {
+                    return element.id == value;
+                }).name;
+                //console.log(value);
+                //return row.member_role_name;
+            },
+            editor: {
+                type: 'combobox',
+                options: {
+                    panelWidth: 160,
+                    editable: false,
+                    valueField: 'id',
+                    textField: 'name',
+                    data: memberAdmin.roles,
+                    //url: 'member/roles',
+                    // onLoadSuccess: function() {
+                    //     member.roles = $(this).combobox('getData');
+                    // },
+                }
+            }
+        });
+
+        return fields;
+    }
+
+
+    //绑定菜单按钮的键盘设置*************************************************************************
+    memberAdmin.keydown = function(e) {
+        //console.log(e);
+        if (e.altKey === false) {
+            return;
+        }
+        switch (e.key) {
+            case "w":
+                memberAdmin.import();
+                break;
+            case "q":
+                memberAdmin.export();
+                break;
+            case "s":
+                memberAdmin.save();
+                break;
+            case "a":
+                memberAdmin.add();
+                break;
+            case "d":
+                memberAdmin.delete();
+                break;
+            case "r":
+                memberAdmin.redo();
+                break;
+
+        }
+    };
+
+
+    //button设置*************************************************************************
+    memberAdmin.listCase = function(memberID) {
+        if (memberID === undefined) {
+            $.messager.alert('提示', '无当前用户', 'info', function() {
+                $('#memberAdmin_table').datagrid('getPanel').focus(); //重置焦点
+            });
+        } else {
+            $('#mainImport').window({
+                title: '健康记录',
+                width: 800,
+                height: 600,
+                collapsible: false,
+                minimizable: false,
+                maximizable: false,
+                modal: true,
+                href: 'memberAdmin/case/' + memberID,
+
+            });
+        }
+    }
+    memberAdmin.listConsumption = function(memberID) {
+        $('#mainImport').window({
+            title: '消费记录',
+            width: 800,
+            height: 600,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            modal: true,
+            href: 'memberAdmin/importExcel',
+            onClose: function() {
+                $('#memberAdmin_table').datagrid('reload');
+
+            }
+        });
+
+    }
+    memberAdmin.tbSearchName = function(value, name) {
+
+        $('#memberAdmin_table').datagrid('load', {
+            name: name,
+            value: value
+        });
+
+
+    };
+
+    memberAdmin.save = function() {
+        //console.log($('#member_table').datagrid('cell'));
+        //接受当前编辑内容，并结束编辑
+        if ($('#memberAdmin_table').datagrid('cell')) {
+            $('#memberAdmin_table').datagrid('endEdit', $('#memberAdmin_table').datagrid('cell').index);
+        };
+
+
+        $('#memberAdmin_table').datagrid('loading');
+        let sendObject = {}
+        sendObject.insert = $('#memberAdmin_table').datagrid('getChanges', 'inserted');
+        sendObject.delete = $('#memberAdmin_table').datagrid('getChanges', 'deleted');
+        sendObject.update = $('#memberAdmin_table').datagrid('getChanges', 'updated');
+        if (sendObject.insert.length === 0 && sendObject.delete.length === 0 && sendObject.update.length === 0) {
+            $.messager.alert('提示', '没有更改', 'info', function() {
+                $('#memberAdmin_table').datagrid('loaded');
+                $('#memberAdmin_table').datagrid('getPanel').focus(); //重置焦点
+            });
+            return;
+        }
+        let sendString = JSON.stringify(sendObject);
+        sendObject = {
+            value: sendString
+        };
+        //console.log(JSON.stringify(sendObject));
+        $.post('/memberAdmin/multi/save', sendObject)
+            .done(function(data) {
+                $.messager.alert('提示', data.message, 'info', function() {
+                    $('#memberAdmin_table').datagrid('getPanel').focus(); //重置焦点
+                });
+                $('#memberAdmin_table').datagrid('reload');
+                $('#memberAdmin_table').datagrid('loaded');
+            })
+            .fail(function(err) {
+                $.messager.alert('失败', '请检查网络连接', 'warning', function() {
+                    $('#memberAdmin_table').datagrid('getPanel').focus(); //重置焦点
+                });
+            });
+    };
+
+    memberAdmin.add = function() {
+        $('#memberAdmin_table').datagrid('appendRow', {
+            id: 'N ' + Math.round(Math.random() * 1000),
+            name: '新会员 ' + Math.round(Math.random() * 1000),
+            balance: 0,
+            member_role_id: 1,
+        });
+    };
+    memberAdmin.delete = function() {
+        let allChecked = $('#memberAdmin_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
+        let allDeleteId = [];
+        if (Array.isArray(allChecked) && allChecked.length != 0) {
+            allChecked.forEach(function(item) {
+                allDeleteId.push(item.id);
+            })
+        };
+        allDeleteId.forEach(function(id) {
+            $('#memberAdmin_table').datagrid('deleteRow', $('#memberAdmin_table').datagrid('getRowIndex', id));
+        });
+
+    };
+    memberAdmin.redo = function() {
+        $('#memberAdmin_table').datagrid('rejectChanges');
+    };
+    memberAdmin.export = function() {
+        window.location.href = "memberAdmin/exportExcel";
+    };
+    memberAdmin.import = function() {
+
+        //let mainImport = $('#mainImport');
+        //console.log(mainImport);
+        //mainImport.panel('destroy');
+        $('#mainImport').window({
+            title: '用户导入',
+            width: 800,
+            height: 600,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            modal: true,
+            href: 'memberAdmin/importExcel',
+            onClose: function() {
+                $('#memberAdmin_table').datagrid('reload');
+                //console.log('window close!');
+            }
+        });
+
+    };
+    memberAdmin.init = function() {
+
+        $('#memberAdmin_table').datagrid({
+            idField: 'id',
+            //loadMsg: '数据加载中,请稍后',
+            fit: true,
+            fitColumns: true,
+            singleSelect: false,
+            url: '/memberAdmin/multi',
+            method: 'post',
+            toolbar: '#memberAdmin_table_toolbar',
+            striped: true,
+            pagination: true,
+            rownumbers: true,
+            pageNumber: 1,
+            pageSize: '30',
+            pageList: [30, 50, 100],
+
+            remoteSort: false,
+            multiSort: true,
+            columns: memberAdmin.setFields(),
+            //根据字段类型设置编辑器初始状态
+            onCellEdit: function(index, field, value) {
+                var ed = $(this).datagrid('getEditor', {
+                    index: index,
+                    field: field
+                });
+                switch (field) {
+                    case 'phone':
+                        break;
+                    case 'member_role_id':
+                        $(ed.target).combogrid('textbox').select();
+                        $(ed.target).combogrid('showPanel');
+                        break;
+                    default:
+                        $(ed.target).textbox('textbox').select();
+                        break;
+                }
+
+            },
+
+            //显示病例列表
+            // view: detailview,
+            // detailFormatter: function(index, row) {
+            //     return '<div style="padding:2px" ><table class="ddv"></table></div>';
+            // },
+            // onExpandRow: function(index, row) {
+            //     var ddv = $(this).datagrid('getRowDetail', index).find('table.ddv');
+            //     ddv.datagrid({
+            //         // url: '/member/multi', //'datagrid22_getdetail.php?itemid=' + row.itemid,
+            //         url: '/privilege/multi', //'datagrid22_getdetail.php?itemid=' + row.itemid,
+            //         fitColumns: true,
+            //         singleSelect: true,
+            //         rownumbers: true,
+            //         loadMsg: '',
+            //         height: 'auto',
+            //         toolbar: [{
+            //             iconCls: 'icon-add',
+            //             text: '添加病例',
+            //             handler: function() {
+            //                 alert('编辑按钮')
+            //             }
+            //         }],
+            //         columns: [
+            //             [{
+            //                 field: 'nothing',
+            //                 title: '操作',
+            //                 width: 80,
+            //                 formatter: function(value, row, index) {
+            //                     return '<button onclick="member.addCase(\'' + row.name + '\')">编辑</button> <button onclick="member.addCase(\'' + row.phone + '\')">打印</button> <button onclick="member.addCase(\'' + row.phone + '\')">删除</button>';
+            //                     //return '<a href="#" onclick="member.add()">添加病例</a>';
+            //                     //return '<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="user.add()">添加病例</a>';
+            //                 },
+
+            //             }, {
+            //                 field: 'id',
+            //                 title: '会员ID',
+            //                 width: 50,
+            //             }, {
+            //                 field: 'name',
+            //                 title: '会员名',
+            //                 width: 50,
+            //                 align: 'right'
+            //             }, {
+            //                 field: 'phone',
+            //                 title: '电话',
+            //                 width: 50,
+            //                 align: 'right'
+            //             }]
+            //         ],
+            //         onResize: function() {
+            //             $('#member_table').datagrid('fixDetailRowHeight', index);
+            //         },
+            //         onLoadSuccess: function() {
+            //             setTimeout(function() {
+            //                 $('#member_table').datagrid('fixDetailRowHeight', index);
+            //             }, 0);
+            //         }
+            //     });
+            //     $('#member_table').datagrid('fixDetailRowHeight', index);
+            // }
+
+        }).datagrid('enableCellEditing');
+
+        $('#memberAdmin_table').datagrid('getPanel').keydown(memberAdmin.keydown);
+    }
+    memberAdmin.cleanPass = function(memberID) {
+        let memberAdminName = $('#memberAdmin_table').datagrid('getData').rows.find(function(item) {
+            return item.id == memberID;
+        }).name;
+
+        $('#memberAdmin_table').datagrid('loading');
+        $.messager.confirm('确认信息', '<b>' + memberAdminName + '</b>的密码将被清空？', function(r) {
+            if (r) {
+                $.post('/memberAdmin/cleanPass', {
+                    id: memberID
+                }).done(function(data) {
+                    $.messager.alert('信息', data.message, 'info', function() {
+                        $('#memberAdmin_table').datagrid('loaded');
+                    });
+
+                });
+            } else {
+                $('#memberAdmin_table').datagrid('loaded');
+            }
+        });
+
+
+    };
+
+    //表格初始化*************************************************************************
+    $(document).ready(function() {
+        // Basic
+        $.post('memberAdmin/initData', {}, function(data) {
+            if (!data.err) {
+                memberAdmin.roles = data.result.map(function(item) {
+                    let backObject = {};
+                    backObject.id = item.id;
+                    //backObject.name = item.name + '(' + Number.parseInt(item.discount * 100) + '%--' + item.remark + ')';
+                    backObject.name = item.name;
+                    return backObject;
+                });
+                memberAdmin.init();
+            } else {
+                $.messager.alert('失败', data.message, 'warning', function() {
+                    $('#memberAdmin_table').datagrid('getPanel').focus(); //重置焦点
+                });
+            }
+        });
+
+    });
+</script>
