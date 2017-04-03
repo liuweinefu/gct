@@ -4,19 +4,37 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>關承堂_按摩示意图_
-        <%= name %>
-    </title>
 </head>
 
 <body>
-    <p>
-        <b><%= name %></b> 说明:
-        <%= member_case %>
-    </p>
+
+    <table style="width:210mm;" border="0">
+        <tr>
+            <td>卡号：
+                <%= card_id %>
+            </td>
+            <td>日期：
+                <%= create_time %>
+            </td>
+            <td rowspan="3"> <img src="/LOGO.jpg" alt="logo" style="width:30mm;height:20mm;clear:both;display:block; margin:auto;padding-bottom:2mm;padding-top:2mm"></td>
+        </tr>
+        <tr>
+            <td>姓名：
+                <%= name %>
+            </td>
+            <td rowspan="2">描述：
+                <%= member_case %>
+            </td>
+
+        </tr>
+        <tr>
+            <td>电话：
+                <%= phone%>
+            </td>
+
+        </tr>
+    </table>
     <hr>
-
-
     <table style="width:210mm;" border="0">
 
         <tr>
@@ -40,7 +58,7 @@
     </table>
     <hr>
     <p>
-        步骤:
+        治疗方案:
         <%= member_case_remark %>
     </p>
 
