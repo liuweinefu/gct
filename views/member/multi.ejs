@@ -176,24 +176,11 @@
                 //console.log(value);
                 //return row.member_role_name;
             },
-            editor: {
-                type: 'combobox',
-                options: {
-                    panelWidth: 160,
-                    editable: false,
-                    valueField: 'id',
-                    textField: 'name',
-                    data: member.roles,
-                    //url: 'member/roles',
-                    // onLoadSuccess: function() {
-                    //     member.roles = $(this).combobox('getData');
-                    // },
-                }
-            }
+
         });
 
         return fields;
-    }
+    };
 
 
     //绑定菜单按钮的键盘设置*************************************************************************
