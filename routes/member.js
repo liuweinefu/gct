@@ -86,7 +86,7 @@ router.get('/case/:id', router.getCon, function(req, res, next) {
         return;
     }
 
-    req.dbCon.queryAsync('SELECT id,name,phone,other_contacts,remark,member_role_name,member_case,member_case_remark FROM ' + config.viewTable + ' WHERE id= ' + mysqlPool.escape(req.params.id))
+    req.dbCon.queryAsync('SELECT id,name,card_id,create_time,phone,other_contacts,remark,member_role_name,member_case,member_case_remark FROM ' + config.viewTable + ' WHERE id= ' + mysqlPool.escape(req.params.id))
         .then(function(rows) {
             req.session.currentMember = Object.assign({}, rows[0]);
             res.render(router.getFileName(config.routerName, true) + 'case', req.session.currentMember);
