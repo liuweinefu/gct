@@ -89,6 +89,7 @@ router.get('/case/:id', router.getCon, function(req, res, next) {
     req.dbCon.queryAsync('SELECT id,name,card_id,create_time,phone,other_contacts,remark,member_role_name,member_case,member_case_remark FROM ' + config.viewTable + ' WHERE id= ' + mysqlPool.escape(req.params.id))
         .then(function(rows) {
             req.session.currentMember = Object.assign({}, rows[0]);
+
             res.render(router.getFileName(config.routerName, true) + 'case', req.session.currentMember);
         })
         .catch(function(err) {
@@ -184,7 +185,9 @@ router.post('/case', router.getCon, function(req, res, next) {
 
 router.get('/listCase', function(req, res, next) {
     if (req.session.currentMember === undefined) { next(); return; };
-    res.render(router.getFileName(config.routerName, true) + 'listCase', req.session.currentMember);
+    var currentMember = req.session.currentMember;
+    currentMember.create_time = new Date(Date.parse(req.session.currentMember.create_time)).toLocaleString()
+    res.render(router.getFileName(config.routerName, true) + 'listCase', currentMember);
 
 });
 
