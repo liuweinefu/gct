@@ -63,9 +63,9 @@ var config = {
             //formatter: 'string',
         })
         .set('member_role_id', {
-            //readonly: false,  //默认false
-            nullable: false, //默认ture
-            formatter: 'int',
+            readonly: true, //默认false
+            // nullable: false, //默认ture
+            // formatter: 'int',
         })
         .set('member_case', {
             //readonly: true, //默认false
