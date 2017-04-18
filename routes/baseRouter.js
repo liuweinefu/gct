@@ -18,17 +18,17 @@ function createRouter(outConfig) {
     config.dbTable = '';
     config.fieldsMap = new Map(); //Map()
     config.orderFields = ['id'];
-    config.orderMode = 'ASC',
-        //     .set('id', {
-        //     readonly: true, //默认false
-        //     nullable: false, //默认ture
-        //     formatter: 'int', // string,int,float,pass or function(key,value) return[err,value];
-        // })
+    config.orderMode = 'ASC';
+    //     .set('id', {
+    //     readonly: true, //默认false
+    //     nullable: false, //默认ture
+    //     formatter: 'int', // string,int,float,pass or function(key,value) return[err,value];
+    // })
 
 
 
-        //覆盖初始值
-        config = Object.assign(config, outConfig);
+    //覆盖初始值
+    config = Object.assign(config, outConfig);
     config.viewTable = config.viewTable === '' ? config.dbTable : config.viewTable;
 
 
