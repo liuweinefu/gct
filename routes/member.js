@@ -196,7 +196,7 @@ router.post('/cleanPass', router.getCon, function(req, res, next) {
         next();
         return;
     };
-    req.dbCon.queryAsync('UPDATE ' + config.dbTable + ' SET pass=""')
+    req.dbCon.queryAsync('UPDATE ' + config.dbTable + ' SET pass="" WHERE id=' + mysqlPool.escape(req.body.id))
         .then(function(rows) {
             res.json({
                 err: false,
