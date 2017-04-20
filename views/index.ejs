@@ -4,8 +4,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>關承堂管理系统</title>
-    <link rel="stylesheet" type="text/css" href="./dropify/css/dropify.min.css">
+    <title>东北林业大学就业管理系统</title>
+    <!--<link rel="stylesheet" type="text/css" href="./dropify/css/dropify.min.css">-->
     <link rel="stylesheet" type="text/css" href="./easyui/themes/default/easyui.css">
     <link rel="stylesheet" type="text/css" href="./easyui/themes/icon.css">
     <script type="text/javascript" src="./easyui/jquery.min.js"></script>
@@ -19,36 +19,27 @@
     <!--<script type="text/javascript" src="./jscode/local.js"></script>-->
 
 
-    <script type="text/javascript" src="./dropify/js/dropify.min.js"></script>
+    <!--<script type="text/javascript" src="./dropify/js/dropify.min.js"></script>-->
 
 
 </head>
 
-<body class="easyui-layout">
-    <!--<div data-options="region:'north',title:'North Title',split:true" style="height:100px;"></div>-->
-    <div data-options="region:'south'" style="height:30px;">
-        <div id='mainfooter' style="margin:0 auto; width:400px; height:25px;"></div>
+<!--<body class="easyui-layout">-->
+
+<body>
+    <div class="easyui-layout" data-options="fit:true,">
+        <!--<div data-options="region:'north',title:'North Title',split:true" style="height:100px;"></div>-->
+        <div data-options="region:'south'" style="height:30px;">
+            <div id='mainFooter' style="margin:0 auto; width:400px; height:25px;"></div>
+        </div>
+        <!--<div data-options="region:'east',iconCls:'icon-reload',title:'East',split:true" style="width:100px;"></div>-->
+        <div data-options="region:'west',title:'菜单',split:true,maxWidth:'150px'" style="width:150px;">
+            <ul id="mainMenu"></ul>
+        </div>
+        <div data-options="region:'center'" style="padding:5px;background:#eee;">
+            <div id="mainTab"></div>
+        </div>
     </div>
-    <!--<div data-options="region:'east',iconCls:'icon-reload',title:'East',split:true" style="width:100px;"></div>-->
-    <div data-options="region:'west',title:'菜单',split:true,maxWidth:'150px'" style="width:150px;">
-        <ul id="mainMenu"></ul>
-    </div>
-    <div data-options="region:'center'" style="padding:5px;background:#eee;">
-        <div id="mainTab"></div>
-    </div>
-    <!--<div id="mainfooter"></div>-->
-
-    <div id="mainWindow"></div>
-    <div id="mainImport"></div>
-
-    <!--<body>-->
-
-
-    <!--<div id="mainMenu"></div>
-    <div id="mainTab"></div>
-    <div id="mainWindow"></div>
-    <div id="mainImport"></div>
-    <div id="mainfooter"></div>-->
 
 
     <div id="loginDialog" class="easyui-dialog" title="请登录" data-options="closed:true,closable: false," style="width:380px;height:250px;padding:10px">
@@ -57,7 +48,7 @@
                 <input class="easyui-textbox" id="userName" name="userName" style="width:90%" data-options="label:'用户名:',required:true,type:'text'">
             </div>
             <div style="margin-bottom:20px">
-                <input class="easyui-textbox" id="userPass" name="userPass" style="width:90%" data-options="label:'密码:',required:true,type:'password'">
+                <input class="easyui-passwordbox" id="userPass" name="userPass" style="width:90%" data-options="label:'密码:',required:true, showEye: true ">
             </div>
             <div>
                 <p id="captchaPIC" style="text-align:center" onclick="login.captcha()"> </p>
@@ -71,210 +62,183 @@
 
 
     <script>
-        //初始化main变量
-        main = {};
-        // main._addMainWindow = function(window) {}
-        // main.openMainWindow = function(window) {
-        //     let mainWindow = $('#mainWindow');
-        //     mainWindow.window({
-        //         title: window.name,
-        //         width: 800,
-        //         height: 600,
-        //         collapsible: false,
-        //         minimizable: false,
-        //         maximizable: false,
-        //         modal: true,
-        //         href: window.url,
-        //         onClose: function() {
-        //             //console.log('window close!');
-        //         }
-        //     });
-        // }
-        main._addMainTab = function(tab) {
-            if (tab.closeable === undefined) {
-                tab.closeable = false;
-            }
-            $('#mainTab').tabs('add', {
-                title: tab.name,
-                selected: true,
-                href: tab.url,
-                closable: tab.closeable,
-            })
-        }
-        main.openMainTab = function(tab) {
-            if (!($('#mainTab').tabs('getTab', tab.name))) {
-                this._addMainTab(tab);
-            } else {
-                $('#mainTab').tabs('select', tab.name)
-            }
-        }
-        main.setUser = function(user) {
-            function getNowFormatDate() {
-                var date = new Date();
-                var seperator1 = "-";
-                var seperator2 = ":";
-                var month = date.getMonth() + 1;
-                var strDate = date.getDate();
-                if (month >= 1 && month <= 9) {
-                    month = "0" + month;
-                }
-                if (strDate >= 0 && strDate <= 9) {
-                    strDate = "0" + strDate;
-                }
-                var currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate +
-                    " " + date.getHours() + seperator2 + date.getMinutes() +
-                    seperator2 + date.getSeconds();
-                return currentdate;
-            }
-            $('#mainfooter').empty().append('<b>GCT-2017     当前用户：' + user.name + '（' + user.user_role_name + '）' + getNowFormatDate() + '登录</b>');
-        }
+        var main;
+        var login;
 
-        main._builtMenuList = function(menus) {
-
-            function _builtRoot(item) {
-                return {
-                    id: item.id,
-                    text: item.name,
-                    children: []
-                };
-            }
-
-            function _builtLeaf(item) {
-                return {
-                    id: item.id,
-                    text: item.name,
-                    attributes: {
-                        url: item.url
-                    }
-                };
-            }
-
-            let list = [];
-            let tree = {};
-            if (typeof menus[0].url !== 'string' || menus[0].url.trim() !== '') {
-                tree = {
-                    id: 0,
-                    text: '菜单',
-                    children: []
-                }
+        main = new function() {
+            this.init = function(data) {
+                setFooter(data.user);
+                setMenu(data.menus);
+                setTab(data.tabs);
             };
 
-            for (item of menus) {
-                if (typeof item.url === 'string' && item.url.trim() === '') {
-                    if (Object.keys(tree).length === 0) {
-                        tree = _builtRoot(item);
-                    } else {
+            var menuDom = $('#mainMenu');
+            var tabDom = $('#mainTab');
+            var footerDom = $('#mainFooter');
+
+            //menuDom 
+            function setMenu(menus) {
+                function builtMenuList(menus) {
+
+                    function builtRoot(item) {
+                        return {
+                            id: item.id,
+                            text: item.name,
+                            children: []
+                        };
+                    };
+
+                    function builtLeaf(item) {
+                        return {
+                            id: item.id,
+                            text: item.name,
+                            attributes: {
+                                url: item.url
+                            }
+                        };
+                    };
+
+                    var list = [];
+                    var tree = {};
+                    if (typeof menus[0].url !== 'string' || menus[0].url.trim() !== '') {
+                        tree = {
+                            id: 0,
+                            text: '菜单',
+                            children: []
+                        }
+                    };
+
+                    for (item of menus) {
+                        if (typeof item.url === 'string' && item.url.trim() === '') {
+                            if (Object.keys(tree).length === 0) {
+                                tree = builtRoot(item);
+                            } else {
+                                list.push(tree);
+                                tree = builtRoot(item);
+                            }
+                        } else {
+                            tree.children.push(builtLeaf(item));
+                        }
+                    }
+                    if (Array.isArray(tree.children) && tree.children.length !== 0) {
                         list.push(tree);
-                        tree = _builtRoot(item);
                     }
-                } else {
-                    tree.children.push(_builtLeaf(item));
-                }
-            }
-            if (Array.isArray(tree.children) && tree.children.length !== 0) {
-                list.push(tree);
-            }
-            //console.log(list);
-            return list;
+                    //console.log(list);
+                    return list;
 
-        }
+                };
+                //初始化菜单
+                menuDom.tree({
+                    data: builtMenuList(menus),
+                    onClick: function(node) {
+                        //console.log(node);
+                        if (menuDom.tree('isLeaf', node.target)) {
+                            //打开tab
+                            var tab = {};
+                            tab.name = node.text;
+                            tab.url = node.attributes.url;
+                            tab.closeable = true;
 
-        main.setMenu = function(menus) {
-            //初始化菜单
-            $('#mainMenu').tree({
-                data: main._builtMenuList(menus),
-                onClick: function(node) {
-                    //console.log(node);
-                    if ($('#mainMenu').tree('isLeaf', node.target)) {
-                        //打开tab
-                        let tab = {};
-                        tab.name = node.text;
-                        tab.url = node.attributes.url;
-                        tab.closeable = true;
-
-                        if (tab.url !== '') {
-                            main.openMainTab(tab);
-                        } else {
-                            $.messager.alert('菜单错误', tab.name + '无有效url', 'warning');
-                        }
-
-                    } else {
-                        if (node.state === 'open') {
-                            $('#mainMenu').tree('collapseAll', node.target)
-                        } else {
-                            $('#mainMenu').tree('expandAll', node.target)
-                        }
-
-                    }
-
-                },
-
-            });
-
-
-        };
-        main.setTab = function(tabs) {
-            $('#mainTab').tabs({
-                plain: true,
-                narrow: true,
-                fit: true,
-                border: false,
-            });
-            for (let tab of tabs) {
-                if (tab.url !== '') {
-                    main.openMainTab(tab);
-                } else {
-                    $.messager.alert('初始化菜单错误', tab.name + '无有效url', 'warning');
-                }
-            }
-        }
-        main.init = function(data) {
-            main.setUser(data.user);
-            main.setMenu(data.menus);
-            main.setTab(data.tabs);
-        }
-
-
-        login = {};
-        login.captcha = function() {
-            //console.log('setCaptcha');
-            $.post('/captcha', {}, function(data) {
-                // $.parseJSON(data);
-                $('#captchaPIC').html(data.captcha);
-            });
-
-        };
-        login.submit = function() {
-            //console.log("I'm login.Submit");
-            $('#loginForm').form('submit', {
-                url: '/',
-                success: function(data) {
-                    data = $.parseJSON(data);
-                    if (!data.err) {
-                        main.init(data);
-                        $('#loginDialog').dialog('close');
-                    } else {
-                        function escape2Html(str) {
-                            var arrEntities = {
-                                'lt': '<',
-                                'gt': '>',
-                                'nbsp': ' ',
-                                'amp': '&',
-                                'quot': '"'
+                            if (tab.url !== '') {
+                                openTab(tab);
+                            } else {
+                                $.messager.alert('菜单错误', tab.name + '无有效url', 'warning');
                             };
-                            return str.replace(/&(lt|gt|nbsp|amp|quot);/ig, function(all, t) {
-                                return arrEntities[t];
-                            });
-                        }
-                        $.messager.alert('登录错误', data.message, 'warning', function() {
-                            $('#captchaPIC').html(escape2Html(data.captcha));
-                            $('#loginDialog').dialog('open');
-                        });
-                    }
 
-                }
-            });
-        }
+                        } else {
+                            if (node.state === 'open') {
+                                menuDom.tree('collapseAll', node.target)
+                            } else {
+                                menuDom.tree('expandAll', node.target)
+                            };
+                        };
+                    },
+
+                });
+            };
+
+            //tabDom 
+            function openTab(tab) {
+                function addTab(tab) {
+                    tabDom.tabs('add', {
+                        title: tab.name,
+                        selected: true,
+                        href: tab.url,
+                        closable: tab.closeable === undefined ? false : true,
+                    });
+                };
+
+                if (!tabDom.tabs('getTab', tab.name)) {
+                    addTab(tab);
+                } else {
+                    tabDom.tabs('select', tab.name);
+                };
+            };
+
+            function setTab(tabs) {
+                tabDom.tabs({
+                    plain: true,
+                    narrow: true,
+                    fit: true,
+                    border: false,
+                });
+                for (var tab of tabs) {
+                    if (tab.url !== '') {
+                        openTab(tab);
+                    } else {
+                        $.messager.alert('初始化菜单错误', tab.name + '无有效url', 'warning');
+                    };
+                };
+            };
+
+            //footerDom 
+            function setFooter(user) {
+                footerDom.empty().append('<b>JobWork-2017     当前用户：' + user.name + '（' + user.user_role_name + '）' + (new Date()).toLocaleString() + '登录</b>');
+            };
+
+        };
+
+        login = new function() {
+            var loginDom = $('#loginDialog');
+            var userNameDom = $('#userName');
+            var userPassDom = $('#userPass');
+            var captchaDom = $('#captcha');
+            var captchaPICDom = $('#captchaPIC');
+
+
+            this.captcha = function() {
+                $.post('/captcha')
+                    .done(function(data) {
+                        captchaPICDom.html(data.captcha);
+                    })
+                    .fail(function() {
+                        $.messager.alert('验证码加载错误', '验证码加载错误', 'warning');
+                    });
+            };
+
+            this.submit = function() {
+                $.post('/', {
+                        userName: userNameDom.textbox('getValue'),
+                        userPass: userPassDom.textbox('getValue'),
+                        captcha: captchaDom.textbox('getValue'),
+                    })
+                    .done(function(data) {
+                        if (!data.err) {
+                            main.init(data);
+                            loginDom.dialog('close');
+                        } else {
+                            $.messager.alert('登录错误', data.message, 'warning', function() {
+                                captchaPICDom.html(data.captcha);
+                                loginDom.dialog('open');
+                            });
+                        };
+                    })
+                    .fail(function() {
+                        $.messager.alert('登入错误', '登入超时错误', 'warning');
+                    });
+            };
+
+        };
 
         //dom加载后开始执行
         $(function() {
@@ -285,19 +249,20 @@
                 }
             });
 
-            $.post('/', {}, function(data) {
-                if (!data.err) {
-                    main.init(data);
-                    $('#loginDialog').dialog('close');
-                } else {
-                    $('#captchaPIC').html(data.captcha);
-                    $('#loginDialog').dialog('open');
-                }
-            })
-
-
-
-        })
+            $.post('/')
+                .done(function(data) {
+                    if (!data.err) {
+                        main.init(data);
+                        $('#loginDialog').dialog('close');
+                    } else {
+                        $('#captchaPIC').html(data.captcha);
+                        $('#loginDialog').dialog('open');
+                    };
+                })
+                .fail(function() {
+                    $.messager.alert('登入错误', '后台无响应', 'warning');
+                });
+        });
     </script>
 </body>
 
