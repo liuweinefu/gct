@@ -94,7 +94,7 @@ router.post('/check', router.getCon, function(req, res, next) {
     member.push(['其他联系方式', req.session.currentMember.other_contacts]);
     member.push(['备注', req.session.currentMember.remark]);
 
-    req.dbCon.queryAsync('SELECT id,name,price FROM commodity ORDER BY id; SELECT id,name FROM user WHERE name!="admin" ORDER BY name')
+    req.dbCon.queryAsync('SELECT id,name,price FROM commodity ORDER BY name; SELECT id,name FROM user WHERE name!="admin" ORDER BY name')
         .then(function(row) {
             if (row[0].length < 1 || row[1].length < 1) {
                 res.json({
