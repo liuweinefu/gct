@@ -28,9 +28,9 @@ router.post('/', router.getCon, function(req, res, next) {
     }
     let query = '';
     if (req.body.isStrict === "true") {
-        query = 'SELECT id,card_id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case,discount,member_case_remark FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' = "' + req.body.value.trim() + '"';
+        query = 'SELECT id,card_id,name,pass,create_time,balance,phone,other_contacts,remark,member_role_name,member_case,discount,member_case_remark FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' = "' + req.body.value.trim() + '"';
     } else {
-        query = 'SELECT id,card_id,name,pass,balance,phone,other_contacts,remark,member_role_name,member_case,discount,member_case_remark FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"';
+        query = 'SELECT id,card_id,name,pass,create_time,balance,phone,other_contacts,remark,member_role_name,member_case,discount,member_case_remark FROM view_member WHERE ' + mysqlPool.escapeId(req.body.name) + ' like "%' + req.body.value.trim() + '%"';
     }
 
     req.dbCon.queryAsync(query)
@@ -87,7 +87,7 @@ router.post('/check', router.getCon, function(req, res, next) {
     member.push(['会员名', req.session.currentMember.name]);
     member.push(['会员卡号', req.session.currentMember.card_id]);
     member.push(['用户类型', req.session.currentMember.member_role_name]);
-    member.push(['折扣率', req.session.currentMember.discount * 100 + '%']);
+    member.push(['折扣率', Number.parseInt(req.session.currentMember.discount * 100) + '%']);
     member.push(['余额', '￥' + req.session.currentMember.balance]);
 
     member.push(['电话', req.session.currentMember.phone]);
