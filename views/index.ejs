@@ -207,7 +207,7 @@
 
 
             this.captcha = function() {
-                $.post('/captcha')
+                $.post('./captcha')
                     .done(function(data) {
                         captchaPICDom.html(data.captcha);
                     })
@@ -217,7 +217,7 @@
             };
 
             this.submit = function() {
-                $.post('/', {
+                $.post('./', {
                         userName: userNameDom.textbox('getValue'),
                         userPass: userPassDom.textbox('getValue'),
                         captcha: captchaDom.textbox('getValue'),
@@ -249,7 +249,7 @@
                 }
             });
 
-            $.post('/')
+            $.post('./')
                 .done(function(data) {
                     if (!data.err) {
                         main.init(data);

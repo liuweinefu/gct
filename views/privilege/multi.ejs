@@ -90,7 +90,7 @@
         fit: true,
         fitColumns: true,
         singleSelect: false,
-        url: '/privilege/multi',
+        url: './privilege/multi',
         method: 'post',
         toolbar: '#privilege_table_toolbar',
         striped: true,
@@ -196,7 +196,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/privilege/multi/save', sendObject)
+        $.post('./privilege/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#privilege_table').datagrid('getPanel').focus(); //重置焦点
@@ -236,7 +236,7 @@
         $('#privilege_table').datagrid('rejectChanges');
     };
     privilege.export = function() {
-        window.location.href = "privilege/exportExcel";
+        window.location.href = "./privilege/exportExcel";
     };
     privilege.import = function() {
 
@@ -251,7 +251,7 @@
             minimizable: false,
             maximizable: false,
             modal: true,
-            href: 'privilege/importExcel',
+            href: './privilege/importExcel',
             onClose: function() {
                 $('#privilege_table').datagrid('reload');
                 //console.log('window close!');
