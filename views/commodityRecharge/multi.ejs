@@ -184,7 +184,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/commodityRecharge/multi/save', sendObject)
+        $.post('./commodityRecharge/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#commodityRecharge_table').datagrid('getPanel').focus(); //重置焦点
@@ -235,7 +235,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/commodityRecharge/multi',
+            url: './commodityRecharge/multi',
             method: 'post',
             toolbar: '#commodityRecharge_table_toolbar',
             striped: true,

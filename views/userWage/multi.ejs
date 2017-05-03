@@ -167,7 +167,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/userWage/multi/save', sendObject)
+        $.post('./userWage/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#userWage_table').datagrid('getPanel').focus(); //重置焦点
@@ -218,7 +218,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/userWage/multi',
+            url: './userWage/multi',
             method: 'post',
             toolbar: '#userWage_table_toolbar',
             striped: true,

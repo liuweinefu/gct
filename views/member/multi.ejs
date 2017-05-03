@@ -291,7 +291,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/member/multi/save', sendObject)
+        $.post('./member/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#member_table').datagrid('getPanel').focus(); //重置焦点
@@ -362,7 +362,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/member/multi',
+            url: './member/multi',
             method: 'post',
             toolbar: '#member_table_toolbar',
             striped: true,
@@ -468,7 +468,7 @@
         $('#member_table').datagrid('loading');
         $.messager.confirm('确认信息', '<b>' + memberName + '</b>的密码将被清空？', function(r) {
             if (r) {
-                $.post('/member/cleanPass', {
+                $.post('./member/cleanPass', {
                     id: memberID
                 }).done(function(data) {
                     $.messager.alert('信息', data.message, 'info', function() {
@@ -487,7 +487,7 @@
     //表格初始化*************************************************************************
     $(document).ready(function() {
         // Basic
-        $.post('member/initData', {}, function(data) {
+        $.post('./member/initData', {}, function(data) {
             if (!data.err) {
                 member.roles = data.result.map(function(item) {
                     let backObject = {};

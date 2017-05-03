@@ -315,7 +315,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/userRole/multi/save', sendObject)
+        $.post('./userRole/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#userRole_table').datagrid('getPanel').focus(); //重置焦点
@@ -386,7 +386,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/userRole/multi',
+            url: './userRole/multi',
             method: 'post',
             toolbar: '#userRole_table_toolbar',
             striped: true,
@@ -432,7 +432,7 @@
     };
 
     //表格初始化*************************************************************************
-    $.post('userRole/initData', {}, function(data) {
+    $.post('./userRole/initData', {}, function(data) {
         if (!data.err) {
             userRole.privileges = data.result;
             userRole.init();

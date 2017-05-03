@@ -160,7 +160,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/memberRecharge/multi/save', sendObject)
+        $.post('./memberRecharge/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#memberRecharge_table').datagrid('getPanel').focus(); //重置焦点
@@ -211,7 +211,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/memberRecharge/multi',
+            url: './memberRecharge/multi',
             method: 'post',
             toolbar: '#memberRecharge_table_toolbar',
             striped: true,

@@ -142,7 +142,7 @@
         $.messager.confirm('确认结算', message, function(save) {
             if (save) {
                 $('#wage_table').datagrid('loading');
-                $.post('user/saveWage', {
+                $.post('./user/saveWage', {
                     baseWage: baseWage,
                     deductionWage: deductionWage,
                     deleteIDs: JSON.stringify(deleteIDs),
@@ -183,7 +183,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/user/wage',
+            url: './user/wage',
             method: 'post',
             toolbar: '#wage_table_toolbar',
             striped: true,

@@ -48,7 +48,7 @@
                             </div>
                             <div>
                                 <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.rechargeShow()">充值</a>
-                                <a href="member/listCase" target="_blank" class="easyui-linkbutton">打印</a> &nbsp;&nbsp;&nbsp;
+                                <a href="./member/listCase" target="_blank" class="easyui-linkbutton">打印</a> &nbsp;&nbsp;&nbsp;
                                 <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.add()">添加</a>
                                 <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.delete()">删除</a>
                                 <a href="#" class="easyui-linkbutton" iconCls="" plain="false" onclick="mix.save()">结算</a>
@@ -189,7 +189,7 @@
         } else {
             $('#mixrecharge').textbox('clear');
             $('#mixrechargeDlg').dialog('close');
-            $.post("mix/recharge", {
+            $.post("./mix/recharge", {
                 value: value,
             }, function(data) {
                 if (data.err) {
@@ -207,7 +207,7 @@
 
     mix.check = function() {
         pass = $('#mixPass').textbox('getValue');
-        $.post("mix/check ", {
+        $.post("./mix/check ", {
                 pass: pass,
             },
             function(data) {
@@ -535,7 +535,7 @@
         $.messager.confirm('确认结算', message, function(save) {
             if (save) {
                 $('#mix_table').datagrid('loading');
-                $.post('mix/pay', {
+                $.post('./mix/pay', {
                     value: JSON.stringify($('#mix_table').datagrid('getData').rows)
                 }, function(data) {
                     //console.log(data);

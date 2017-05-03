@@ -218,7 +218,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/memberConsumption/multi/save', sendObject)
+        $.post('./memberConsumption/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#memberConsumption_table').datagrid('getPanel').focus(); //重置焦点
@@ -269,7 +269,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/memberConsumption/multi',
+            url: './memberConsumption/multi',
             method: 'post',
             toolbar: '#memberConsumption_table_toolbar',
             striped: true,

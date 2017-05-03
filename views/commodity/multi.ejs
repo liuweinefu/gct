@@ -207,7 +207,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/commodity/multi/save', sendObject)
+        $.post('./commodity/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#commodity_table').datagrid('getPanel').focus(); //重置焦点
@@ -283,7 +283,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/commodity/multi',
+            url: './commodity/multi',
             method: 'post',
             toolbar: '#commodity_table_toolbar',
             striped: true,
@@ -327,7 +327,7 @@
 
 
     //表格初始化*************************************************************************
-    $.post('commodity/initData', {}, function(data) {
+    $.post('./commodity/initData', {}, function(data) {
         if (!data.err) {
             commodity.types = data.result;
             commodity.init();

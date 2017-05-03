@@ -249,7 +249,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/memberConsumptionCount/multi/save', sendObject)
+        $.post('./memberConsumptionCount/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#memberConsumptionCount_table').datagrid('getPanel').focus(); //重置焦点
@@ -300,7 +300,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/memberConsumptionCount/multiCount',
+            url: './memberConsumptionCount/multiCount',
             method: 'post',
             toolbar: '#memberConsumptionCount_table_toolbar',
             striped: true,

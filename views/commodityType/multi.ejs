@@ -58,7 +58,7 @@
         //loadMsg: '数据加载中,请稍后',
         fit: true,
         singleSelect: false,
-        url: '/commodityType/multi',
+        url: './commodityType/multi',
         method: 'post',
         toolbar: '#commodityType_table_toolbar',
         striped: true,
@@ -163,7 +163,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/commodityType/multi/save', sendObject)
+        $.post('./commodityType/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#commodityType_table').datagrid('getPanel').focus(); //重置焦点

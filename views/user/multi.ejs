@@ -240,7 +240,7 @@
             value: sendString
         };
         //console.log(JSON.stringify(sendObject));
-        $.post('/user/multi/save', sendObject)
+        $.post('./user/multi/save', sendObject)
             .done(function(data) {
                 $.messager.alert('提示', data.message, 'info', function() {
                     $('#user_table').datagrid('getPanel').focus(); //重置焦点
@@ -312,7 +312,7 @@
             fit: true,
             fitColumns: true,
             singleSelect: false,
-            url: '/user/multi',
+            url: './user/multi',
             method: 'post',
             toolbar: '#user_table_toolbar',
             striped: true,
@@ -384,7 +384,7 @@
 
     //表格初始化*************************************************************************
     $(document).ready(function() {
-        $.post('user/initData', {}, function(data) {
+        $.post('./user/initData', {}, function(data) {
             if (!data.err) {
                 user.roles = data.result;
                 user.init();

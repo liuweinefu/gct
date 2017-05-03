@@ -76,7 +76,7 @@
         let message = '数量:' + value.count + '</br>总价:' + value.allPrice + '</br>是否入库';
         $.messager.confirm('提示', message, function(r) {
             if (r) {
-                $.post("commodity/recharge", {
+                $.post("./commodity/recharge", {
                     count: value.count,
                     allPrice: value.allPrice,
                     remark: value.remark
