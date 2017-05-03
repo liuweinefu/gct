@@ -3,7 +3,8 @@
         "name": "gct", //名称
         "script": "./bin/www", //程序入库
         "cwd": "./", //根目录
-        "instances": 2,
+        "exec_mode": "fork",
+        "instances": 1,
         "watch": [
             "bin",
             "routes",
