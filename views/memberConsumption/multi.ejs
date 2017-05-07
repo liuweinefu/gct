@@ -23,7 +23,7 @@
                     <a href="#" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" onclick="memberConsumption.export()">导出(<ins>Q</ins>)</a>
                     <!--<a href="/excel/user" class="easyui-linkbutton" iconCls="icon-folder_go" plain="true" >导出(<ins>Q</ins>)</a>-->
                     <!--<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="memberConsumption.add()">增加(<ins>A</ins>)</a>-->
-                    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="memberConsumption.delete()">删除(<ins>D</ins>)</a>
+                    <!--<a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="memberConsumption.delete()">删除(<ins>D</ins>)</a>-->
                     <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="memberConsumption.save()">保存(<ins>S</ins>)</a>
                     <a href="#" class="easyui-linkbutton" iconCls="icon-redo" plain="true" onclick="memberConsumption.redo()">撤销(<ins>R</ins>)</a>
                 </div>
@@ -171,9 +171,9 @@
                 // case "a":
                 //     memberConsumption.add();
                 //     break;
-            case "d":
-                memberConsumption.delete();
-                break;
+                // case "d":
+                //     memberConsumption.delete();
+                //     break;
             case "r":
                 memberConsumption.redo();
                 break;
@@ -240,20 +240,20 @@
     //         commodity_name: '足底',
     //     });
     // };
-    memberConsumption.delete = function() {
+    // memberConsumption.delete = function() {
 
-        let allChecked = $('#memberConsumption_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
-        let allDeleteId = [];
-        if (Array.isArray(allChecked) && allChecked.length != 0) {
-            allChecked.forEach(function(item) {
-                allDeleteId.push(item.id);
-            })
-        };
-        allDeleteId.forEach(function(id) {
-            $('#memberConsumption_table').datagrid('deleteRow', $('#memberConsumption_table').datagrid('getRowIndex', id));
-        });
+    //     let allChecked = $('#memberConsumption_table').datagrid('getChecked'); //动态变化，所以需要先复制再删除
+    //     let allDeleteId = [];
+    //     if (Array.isArray(allChecked) && allChecked.length != 0) {
+    //         allChecked.forEach(function(item) {
+    //             allDeleteId.push(item.id);
+    //         })
+    //     };
+    //     allDeleteId.forEach(function(id) {
+    //         $('#memberConsumption_table').datagrid('deleteRow', $('#memberConsumption_table').datagrid('getRowIndex', id));
+    //     });
 
-    };
+    // };
     memberConsumption.redo = function() {
         $('#memberConsumption_table').datagrid('rejectChanges');
     };
