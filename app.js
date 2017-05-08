@@ -6,6 +6,8 @@ var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var bodyParser = require('body-parser');
 
+//测试
+
 //项目添加******************************************************************
 global.Promise = require('bluebird');
 global.mysqlPool = require('mysql').createPool(require('./config').db);
