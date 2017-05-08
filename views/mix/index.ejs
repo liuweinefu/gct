@@ -163,7 +163,7 @@
             other_contacts: $('#newMember_other_contacts').textbox('getValue'),
             remark: $('#newMember_remark').textbox('getValue'),
         };
-        $.post('/mix/addNewMember', newMember, function(data) {
+        $.post('./mix/addNewMember', newMember, function(data) {
             if (data.err) {
                 $.messager.alert('错误', data.message, 'error');
             } else {
