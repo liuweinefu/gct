@@ -283,7 +283,7 @@ function createRouter(outConfig) {
     //路由设置
 
     router.get('/', function(req, res, next) {
-        res.redirect(router.getFileName(config.routerName) + '/' + config.mainIndex);
+        res.redirect(router.getFileName(config.routerName,true) + '/' + config.mainIndex);
         //console.log(config);
         //res.render(router.getFileName(config.routerName, true) + 'index');
     });
