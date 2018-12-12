@@ -43,13 +43,13 @@ function createRouter(outConfig) {
 
         if (fileName.lastIndexOf('\\') !== -1) {
             backFileName = fileName.substr(fileName.lastIndexOf('\\') + 1, fileName.lastIndexOf('.') - fileName.lastIndexOf('\\') - 1);
-            backPathName = '.\\' + backFileName + '\\';
+            // backPathName = '.\\' + backFileName + '\\';
         }
         if (fileName.lastIndexOf('/') !== -1) {
             backFileName = fileName.substr(fileName.lastIndexOf('/') + 1, fileName.lastIndexOf('.') - fileName.lastIndexOf('/') - 1);
-            backPathName = './' + backFileName + '/';
+            // backPathName = './' + backFileName + '/';
         }
-
+        backPathName = './' + backFileName + '/';
         if (backFileName === '') { return backFileName; }
         if (needPath) {
             return backPathName;
@@ -283,7 +283,10 @@ function createRouter(outConfig) {
     //路由设置
 
     router.get('/', function(req, res, next) {
-        res.redirect(router.getFileName(config.routerName,true) + '/' + config.mainIndex);
+        let url = router.getFileName(config.routerName,true);
+            //url = '/'+url+'/'+config.mainIndex;
+            url = url+config.mainIndex;
+        res.redirect(url);
         //console.log(config);
         //res.render(router.getFileName(config.routerName, true) + 'index');
     });
